@@ -740,7 +740,9 @@ export const BASELINES = {
     // same hit tests as a press, and a 24 px target for a mouse or a pen.
     // #184 part 6 (2026-11-16): 31900 -> 32135, `onContextMenu` from a long press or a right-click,
     // and a finger's pressed outline and lifted state (TOUCH_EXPERIENCE.md section 10).
-    diagramengineLines: 32135,
+    // #183 (2026-11-17): 32135 -> 32309, the wheel pans and `Ctrl` + wheel zooms, Safari's
+    // trackpad pinch, and the opt-in `zoomControls` buttons (TOUCH_EXPERIENCE.md sections 5 and 8).
+    diagramengineLines: 32309,
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,

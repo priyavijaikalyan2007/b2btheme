@@ -1040,6 +1040,15 @@ export interface DiagramEngineOptions
     embedded?: boolean;
 
     /**
+     * Shows zoom in, zoom out and fit-to-view buttons in the bottom right
+     * corner of the canvas. They are the tap alternative to a pinch and
+     * to `Ctrl` + wheel (TOUCH_EXPERIENCE.md section 8). Default false.
+     * Leave it off when the app's own toolbar has these buttons and calls
+     * `zoomIn`, `zoomOut` and `zoomToFit`.
+     */
+    zoomControls?: boolean;
+
+    /**
      * Custom content renderer for objects. Called before the
      * default renderer. Return true to suppress default rendering.
      *

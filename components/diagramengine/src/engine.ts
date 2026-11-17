@@ -85,6 +85,18 @@ type DragReport = Parameters<NonNullable<GestureOptions["onDragStart"]>>[0];
 type TwoFingerReport = Parameters<NonNullable<GestureOptions["onTwoFingerStart"]>>[0];
 
 /**
+ * Safari on macOS sends a trackpad pinch as these events instead of
+ * `Ctrl` + wheel (TOUCH_EXPERIENCE.md section 9, item 14). The DOM
+ * library has no type for them. `scale` is 1 when the pinch starts.
+ */
+interface SafariGestureEvent extends UIEvent
+{
+    readonly scale: number;
+    readonly clientX: number;
+    readonly clientY: number;
+}
+
+/**
  * Returns the GestureRecognizer factory, which the canvas reads its
  * pointer events through.
  *
@@ -357,6 +369,12 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     /** The two-finger gesture's scale and center at its last move. */
     private pinch: { scale: number; x: number; y: number } | null = null;
 
+    /** The scale of Safari's trackpad pinch at its last change, or null when none is in progress. */
+    private safariPinchScale: number | null = null;
+
+    /** The zoom in, zoom out and fit-to-view buttons, when `zoomControls` is set. */
+    private zoomControlsEl: HTMLElement | null = null;
+
     /** The tool that a middle-button or `Space` press switched from to pan. It comes back on the release. */
     private panFrom: string | null = null;
 
@@ -438,6 +456,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
         this.gestures = this.bindCanvasEvents(createGestures);
         this.observeThemeChanges();
         this.performInitialRender();
+
+        if (opts.zoomControls)
+        {
+            this.zoomControlsEl = this.buildZoomControls(container);
+        }
 
         logInfo("Created:", this.instanceId);
     }
@@ -3414,6 +3437,8 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             this.hoverAnchorId = null;
         }
 
+        this.zoomControlsEl?.remove();
+        this.zoomControlsEl = null;
         this.renderer.destroy();
         logInfo("Destroyed:", this.instanceId);
     }
@@ -3631,11 +3656,16 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
             this.onHoverMove(e);
         });
         svg.addEventListener("contextmenu", (e) => this.onContextMenuEvent(e));
+        // Not passive, only so that `Ctrl` + wheel does not zoom the page
+        // (TOUCH_EXPERIENCE.md section 9, item 13).
         svg.addEventListener("wheel", (e) =>
         {
-            logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY });
+            logTrace("wheel handler:", { dx: e.deltaX, dy: e.deltaY, ctrl: e.ctrlKey });
             this.onWheel(e);
         }, { passive: false });
+        svg.addEventListener("gesturestart", (e) => this.onSafariPinchStart(e as SafariGestureEvent));
+        svg.addEventListener("gesturechange", (e) => this.onSafariPinchChange(e as SafariGestureEvent));
+        svg.addEventListener("gestureend", () => { this.safariPinchScale = null; });
         svg.addEventListener("keydown", (e) =>
         {
             logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
@@ -4328,7 +4358,11 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
     }
 
     /**
-     * Handles scroll wheel for zoom. Prevents default scroll behaviour.
+     * The wheel pans the view, and `Shift` + wheel pans it sideways. A
+     * trackpad's two-finger scroll pans both ways. `Ctrl` + wheel, or
+     * `Cmd` + wheel, zooms around the pointer, and so does a trackpad
+     * pinch in Chrome, Edge and Firefox (TOUCH_EXPERIENCE.md sections 5
+     * and 6.2).
      */
     private onWheel(e: WheelEvent): void
     {
@@ -4340,16 +4374,141 @@ export class DiagramEngineImpl implements EngineForTools, DiagramEngineHandle
 
         e.preventDefault();
 
-        const factor = e.deltaY < 0
-            ? (1 + ZOOM_STEP)
-            : (1 - ZOOM_STEP);
+        const unit = this.wheelUnitPx(e.deltaMode);
+        let dx = e.deltaX * unit;
+        let dy = e.deltaY * unit;
 
-        const rect = this.renderer.getSvgElement().getBoundingClientRect();
-        const fx = e.clientX - rect.left;
-        const fy = e.clientY - rect.top;
+        if (e.ctrlKey || e.metaKey)
+        {
+            // Safari's own pinch is zooming already.
+            if (this.safariPinchScale === null)
+            {
+                this.zoomByWheel(dy, e.clientX, e.clientY);
+            }
 
-        this.renderer.zoomAt(factor, fx, fy);
+            return;
+        }
+
+        // Most browsers swap the axes for `Shift` + wheel. Some do not.
+        if (e.shiftKey && dx === 0)
+        {
+            dx = dy;
+            dy = 0;
+        }
+
+        if (dx === 0 && dy === 0)
+        {
+            return;
+        }
+
+        this.renderer.pan(-dx, -dy);
         this.emitViewportChange();
+    }
+
+    /** The pixels of one unit of a wheel delta. */
+    private wheelUnitPx(deltaMode: number): number
+    {
+        if (deltaMode === WheelEvent.DOM_DELTA_LINE)
+        {
+            return WHEEL_LINE_PX;
+        }
+
+        if (deltaMode === WheelEvent.DOM_DELTA_PAGE)
+        {
+            return this.renderer.getSvgElement().getBoundingClientRect().height;
+        }
+
+        return 1;
+    }
+
+    /**
+     * Zooms around a screen point by a wheel delta. A notch zooms one
+     * step. A trackpad pinch sends small deltas, which zoom by a part of
+     * a step, so the zoom follows the fingers.
+     */
+    private zoomByWheel(deltaY: number, clientX: number, clientY: number): void
+    {
+        const notches = Math.max(-1, Math.min(1, deltaY / WHEEL_NOTCH_PX));
+
+        this.zoomAtClient(Math.pow(1 + ZOOM_STEP, -notches), clientX, clientY);
+    }
+
+    /** Zooms by a factor around a point given in client coordinates. */
+    private zoomAtClient(factor: number, clientX: number, clientY: number): void
+    {
+        const rect = this.renderer.getSvgElement().getBoundingClientRect();
+
+        this.renderer.zoomAt(factor, clientX - rect.left, clientY - rect.top);
+        this.emitViewportChange();
+    }
+
+    /**
+     * A trackpad pinch starts in Safari on macOS. Safari on iOS sends
+     * the same events for two fingers, which the pointer events already
+     * pinch, so a pinch during a press is left to them.
+     */
+    private onSafariPinchStart(e: SafariGestureEvent): void
+    {
+        if (!this.active || this.pointerBusy)
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+    }
+
+    /** Zooms by the change in the pinch's scale, around the pointer. */
+    private onSafariPinchChange(e: SafariGestureEvent): void
+    {
+        const last = this.safariPinchScale;
+
+        if (last === null)
+        {
+            return;
+        }
+
+        e.preventDefault();
+        this.safariPinchScale = e.scale;
+        this.zoomAtClient(e.scale / last, e.clientX, e.clientY);
+    }
+
+    /**
+     * Draws the zoom in, zoom out and fit-to-view buttons in a corner of
+     * the canvas. They are the tap alternative to a pinch and to
+     * `Ctrl` + wheel (TOUCH_EXPERIENCE.md section 8). They sit beside the
+     * svg, not in it, so an export leaves them out and a press on them
+     * reaches no tool.
+     */
+    private buildZoomControls(container: HTMLElement): HTMLElement
+    {
+        const group = document.createElement("div");
+
+        group.className = "de-zoom-controls";
+        group.setAttribute("role", "group");
+        group.setAttribute("aria-label", "Zoom");
+
+        const buttons: [string, string, () => void][] = [
+            ["+", "Zoom in", () => this.zoomIn()],
+            ["\u2212", "Zoom out", () => this.zoomOut()],
+            ["\u2922", "Fit to view", () => this.zoomToFit()],
+        ];
+
+        for (const [text, label, action] of buttons)
+        {
+            const button = document.createElement("button");
+
+            button.type = "button";
+            button.className = "de-zoom-button";
+            button.textContent = text;
+            button.setAttribute("aria-label", label);
+            button.title = label;
+            button.addEventListener("click", action);
+            group.appendChild(button);
+        }
+
+        container.appendChild(group);
+        return group;
     }
 
     /**
@@ -5310,6 +5469,12 @@ const AUTO_SCROLL_MAX_FRAME_MS = 50;
 
 /** How long a cancelled move takes to go back to its start (section 10). */
 const RETURN_DURATION_MS = 150;
+
+/** The pixels of one line, for a wheel that reports its delta in lines. */
+const WHEEL_LINE_PX = 16;
+
+/** The delta of one mouse wheel notch. A notch zooms one `ZOOM_STEP`, and a larger delta no more. */
+const WHEEL_NOTCH_PX = 100;
 
 // ============================================================================
 // LAYOUT — CONSTANTS
