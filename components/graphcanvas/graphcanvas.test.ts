@@ -575,3 +575,186 @@ describe("GraphCanvas force layout keeps node boxes apart", () =>
         expect(c).not.toEqual(a);
     });
 });
+
+// ============================================================================
+// WHEEL AND TRACKPAD (#181)
+// ============================================================================
+
+describe("GraphCanvas wheel and trackpad pinch (#181)", () =>
+{
+    let canvas: GraphCanvas;
+
+    function make(overrides?: Partial<GraphCanvasOptions>): void
+    {
+        canvas = createGraphCanvas(makeOptions(overrides));
+        canvas.setZoomLevel(1);
+    }
+
+    afterEach(() =>
+    {
+        canvas.destroy();
+    });
+
+    function root(): HTMLElement
+    {
+        return container.querySelector(".gc-root") as HTMLElement;
+    }
+
+    /** The view's pan and zoom, read from the transform the canvas draws. */
+    function view(): { tx: number; ty: number; scale: number }
+    {
+        const t = container.querySelector(".gc-transform")!.getAttribute("transform")!;
+        const [tx, ty, scale] = (t.match(/-?[\d.]+(e-?\d+)?/g) ?? []).map(Number);
+
+        return { tx, ty, scale };
+    }
+
+    function wheel(init: WheelEventInit): WheelEvent
+    {
+        const e = new WheelEvent("wheel", { clientX: 100, clientY: 80,
+            bubbles: true, cancelable: true, ...init });
+
+        root().dispatchEvent(e);
+        return e;
+    }
+
+    function safari(type: string, scale: number): Event
+    {
+        const e = new Event(type, { bubbles: true, cancelable: true });
+
+        Object.assign(e, { scale, clientX: 100, clientY: 80 });
+        root().dispatchEvent(e);
+        return e;
+    }
+
+    /** How far the view is from a zoom by `factor` about (100, 80) from `from`. */
+    function offFromZoom(from: { tx: number; ty: number; scale: number }, factor: number): number
+    {
+        const now = view();
+
+        return Math.max(Math.abs(now.scale - (from.scale * factor)),
+            Math.abs(now.tx - (100 - ((100 - from.tx) * factor))),
+            Math.abs(now.ty - (80 - ((80 - from.ty) * factor))));
+    }
+
+    test("theWheel_PansVertically_AndKeepsTheZoom", () =>
+    {
+        make();
+        const before = view();
+        const e = wheel({ deltaY: 100 });
+
+        expect(e.defaultPrevented).toBe(true);
+        expect(view()).toEqual({ tx: before.tx, ty: before.ty - 100, scale: before.scale });
+    });
+
+    test("shiftAndTheWheel_PanHorizontally_EitherWayTheBrowserSendsIt", () =>
+    {
+        make();
+        const before = view();
+
+        wheel({ deltaY: 100, shiftKey: true });
+        wheel({ deltaX: 50, shiftKey: true });
+
+        expect(view()).toEqual({ tx: before.tx - 150, ty: before.ty, scale: before.scale });
+    });
+
+    test("aTrackpadScroll_PansBothWays_AndLinesAreSixteenPixels", () =>
+    {
+        make();
+        const before = view();
+
+        wheel({ deltaX: 30, deltaY: -20 });
+        wheel({ deltaY: 2, deltaMode: WheelEvent.DOM_DELTA_LINE });
+
+        expect(view()).toEqual({ tx: before.tx - 30, ty: before.ty + 20 - 32, scale: before.scale });
+    });
+
+    test("ctrlOrCmdAndTheWheel_ZoomOneStep_AroundThePointer", () =>
+    {
+        make();
+        const start = view();
+        const e = wheel({ deltaY: -100, ctrlKey: true });
+
+        expect(e.defaultPrevented).toBe(true);
+        expect(offFromZoom(start, 1.15)).toBeLessThan(1e-9);
+
+        const zoomed = view();
+
+        wheel({ deltaY: 1000, metaKey: true });
+
+        expect(offFromZoom(zoomed, 1 / 1.15)).toBeLessThan(1e-9);
+    });
+
+    test("aPinchOnATrackpad_InChrome_ZoomsByAPartOfAStep", () =>
+    {
+        make();
+        const start = view();
+
+        wheel({ deltaY: -10, ctrlKey: true });
+
+        expect(offFromZoom(start, Math.pow(1.15, 0.1))).toBeLessThan(1e-9);
+    });
+
+    test("aPinchOnATrackpad_InSafari_ZoomsAroundThePointer", () =>
+    {
+        make();
+        const start = view();
+
+        expect(safari("gesturestart", 1).defaultPrevented).toBe(true);
+        expect(safari("gesturechange", 1.5).defaultPrevented).toBe(true);
+        safari("gesturechange", 2);
+
+        // Ctrl + wheel during Safari's pinch does not zoom a second time.
+        expect(wheel({ deltaY: -100, ctrlKey: true }).defaultPrevented).toBe(true);
+        expect(offFromZoom(start, 2)).toBeLessThan(1e-9);
+
+        safari("gestureend", 2);
+        const ended = view();
+
+        wheel({ deltaY: -100, ctrlKey: true });
+
+        expect(offFromZoom(ended, 1.15)).toBeLessThan(1e-9);
+    });
+
+    test("safarisPinch_DuringAPress_IsNotAZoom", () =>
+    {
+        make();
+        const start = view();
+
+        root().dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0,
+            clientX: 5, clientY: 5, pointerId: 1 }));
+        safari("gesturestart", 1);
+        safari("gesturechange", 2);
+        safari("gestureend", 2);
+
+        expect(view().scale).toBe(start.scale);
+    });
+
+    test("withoutPan_TheWheelScrollsThePage_AndCtrlStillZooms", () =>
+    {
+        make({ panEnabled: false });
+        const start = view();
+
+        expect(wheel({ deltaY: 100 }).defaultPrevented).toBe(false);
+        expect(view()).toEqual(start);
+
+        wheel({ deltaY: -100, ctrlKey: true });
+
+        expect(offFromZoom(start, 1.15)).toBeLessThan(1e-9);
+    });
+
+    test("withoutZoom_CtrlAndAPinchAreLeftToThePage_AndTheWheelStillPans", () =>
+    {
+        make({ zoomEnabled: false });
+        const start = view();
+
+        expect(wheel({ deltaY: -100, ctrlKey: true }).defaultPrevented).toBe(false);
+        expect(safari("gesturestart", 1).defaultPrevented).toBe(false);
+        expect(safari("gesturechange", 2).defaultPrevented).toBe(false);
+        expect(view()).toEqual(start);
+
+        wheel({ deltaY: 100 });
+
+        expect(view().ty).toBe(start.ty - 100);
+    });
+});
