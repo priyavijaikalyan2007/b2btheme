@@ -53,6 +53,8 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
             onFacetAdd: "Fires per added filter; the two-way value already carries the query.",
             onFacetRemove: "Fires per removed filter; the two-way value already carries the query.",
             onClear: "Fires when the user clears the query; the two-way value already carries it.",
+            syntax: "\"query\" needs a host that calls the apps' Parse and passes it to setParsed; a surface has "
+                + "no such host, so it keeps the default syntax.",
         },
     },
 

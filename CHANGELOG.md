@@ -26,6 +26,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **FacetSearch reads and writes the apps' query language** (#204, knobbyio/apps#379), with `syntax: "query"`. The default stays today's `key:value` syntax, so no page changes.
+  - **The API decides what a query means.** The bar never parses typed text in this mode. The host passes the API's Parse answer to the new `setParsed({ text, tree })`. Each top-level filter on a known facet becomes a chip, one for each value. Everything else stays in the input as the exact text it came from.
+  - **Several values on one key mean "either".** Two chips on `type` write `type in ("a", "b")`. Today's syntax writes `type:a type:b`, which in the new language means "both".
+  - **The API's standard spelling becomes chips.** After a search, `setValue` with the API's text, then `setParsed` with its parse.
+  - **`addFacet(key, value)` and `removeFacet(key, value)` work as before,** for buttons outside the bar.
+  - **A parse of older text is dropped,** so the newer input wins. `setParsed` fires no `onChange`.
 - **DiagramEngine takes pointer events, and follows `TOUCH_EXPERIENCE.md`** (#176, step 2, and #184). The canvas reads pointer events through GestureRecognizer instead of mouse events, so every tool works with a finger or a pen as it does with a mouse.
   - **Load `gesturerecognizer.js` before `diagramengine.js`.** `createDiagramEngine` throws and names the file when it is missing. The manifest declares the dependency, so the A2UI adapter loads it. No app uses DiagramEngine yet.
   - The canvas captures the pointer, so a drag released outside the canvas now ends. Before, the drag stayed open, and moving back over the canvas kept dragging with no button held.

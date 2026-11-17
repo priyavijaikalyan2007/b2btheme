@@ -21,6 +21,7 @@ import type
     FacetSearchOptions,
     FacetDefinition,
     FacetSearchQuery,
+    QueryValue,
 } from "./facetsearch";
 
 // ============================================================================
@@ -653,6 +654,310 @@ describe("quotes in a value, removing one chip, and labels learned later", () =>
         expect(() => fs.learnLabels("nope", [{ value: "open", label: "Open" }])).not.toThrow();
         expect(chipTexts()).toEqual(["status:open"]);
         warn.mockRestore();
+        fs.destroy();
+    });
+});
+
+// ============================================================================
+// THE QUERY LANGUAGE (#204, knobbyio/apps#379)
+// ============================================================================
+
+describe("syntax: \"query\", the apps' query language (#204)", () =>
+{
+    /** The keys of the apps' search page. `type` takes several values, as `multiple: true` does there. */
+    function queryFacets(): FacetDefinition[]
+    {
+        return [
+            { key: "type", label: "Type", valueType: "enum", multiple: true,
+                values: [{ value: "note", label: "Note" }, "task", "thinker.session"] },
+            { key: "created_at", label: "Created", valueType: "date" },
+            { key: "within", label: "Folder", valueType: "text" },
+            { key: "amount", label: "Amount", valueType: "number" },
+        ];
+    }
+
+    function make(overrides?: Partial<FacetSearchOptions>): ReturnType<typeof createFacetSearch>
+    {
+        return createFacetSearch("test-facetsearch", { facets: queryFacets(), syntax: "query", ...overrides });
+    }
+
+    function input(): HTMLInputElement
+    {
+        return container.querySelector("input")!;
+    }
+
+    function chipTexts(): string[]
+    {
+        return Array.from(container.querySelectorAll(".facetsearch-chip-text")).map((c) => c.textContent ?? "");
+    }
+
+    /** The answer of the apps' Parse call for `type:note created_at on 2026-11-15`, from their note. */
+    const APPS_TEXT = "type:note created_at on 2026-11-15";
+    const APPS_TREE = {
+        root: {
+            kind: "and",
+            children: [
+                { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 9 } },
+                { kind: "filter", key: "created_at", op: "On", value: { date: "2026-11-15", zone: "Asia/Kolkata" },
+                    span: { start: 10, end: 34 } },
+            ],
+            span: { start: 0, end: 34 },
+        },
+        return: [],
+    };
+
+    test("theDefault_IsTodaysSyntax_SoNoPageChanges", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", { facets: queryFacets(), value: "type:a type:b" });
+
+        expect(fs.getValue()).toBe("type:a type:b");
+        expect(() => fs.setParsed({ text: "type:a", tree: { root: { kind: "filter" } } }))
+            .toThrow(/syntax: "query"/);
+        fs.destroy();
+    });
+
+    test("typedText_StaysText_UntilTheHostPassesParsesTree", () =>
+    {
+        const fs = make({ value: APPS_TEXT });
+
+        expect(input().value).toBe(APPS_TEXT);
+        expect(chipTexts()).toEqual([]);
+        expect(fs.getValue()).toBe(APPS_TEXT);
+        fs.destroy();
+    });
+
+    test("parsesTree_DrawsChips_AndTheBarWritesTheAppsStandardSpelling", () =>
+    {
+        const fs = make({ value: APPS_TEXT });
+
+        expect(fs.setParsed({ text: APPS_TEXT, tree: APPS_TREE })).toBe(true);
+
+        expect(chipTexts()).toEqual(["type:Note", "created_at on 2026-11-15@Asia/Kolkata"]);
+        expect(input().value).toBe("");
+        // Byte for byte the `text` of the apps' answer.
+        expect(fs.getValue()).toBe("type equals \"note\" and created_at on 2026-11-15@Asia/Kolkata");
+        expect(fs.getQuery()).toMatchObject({ text: "",
+            facets: [{ key: "type", operator: "equals", value: "note", label: "Note" },
+                { key: "created_at", operator: "on", value: "2026-11-15@Asia/Kolkata" }] });
+        fs.destroy();
+    });
+
+    test("whatIsNotAChip_StaysInTheInput_AsTheTextItCameFrom", () =>
+    {
+        const text = "type:task budget (a or b) -within:x note:urgent";
+        const fs = make({ value: text });
+        const applied = fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "task" }, span: { start: 0, end: 9 } },
+            { kind: "text", phrase: "budget", span: { start: 10, end: 16 } },
+            // A group's span leaves out its brackets, as the apps' parser does.
+            { kind: "or", children: [], span: { start: 18, end: 24 } },
+            { kind: "not", child: { kind: "filter", key: "within", op: "DescendantOf", value: { text: "x" },
+                span: { start: 27, end: 35 } }, span: { start: 26, end: 35 } },
+            // A key the bar has no facet for stays text.
+            { kind: "filter", key: "note", op: "Equals", value: { text: "urgent" }, span: { start: 36, end: 47 } },
+        ] } } });
+
+        expect(applied).toBe(true);
+        expect(chipTexts()).toEqual(["type:task", "-within descendant-of x"]);
+        expect(input().value).toBe("budget (a or b) note:urgent");
+        expect(fs.getValue()).toBe(
+            "type equals \"task\" and not within descendant-of \"x\" and budget (a or b) note:urgent");
+        fs.destroy();
+    });
+
+    test("severalValuesOnAKey_AreOneChipEach_AndWriteIn", () =>
+    {
+        const fs = make();
+
+        fs.addFacet("type", "note");
+        fs.addFacet("type", "task");
+
+        expect(chipTexts()).toEqual(["type:Note", "type:task"]);
+        expect(fs.getValue()).toBe("type in (\"note\", \"task\")");
+
+        fs.removeFacet("type", "note");
+
+        expect(fs.getValue()).toBe("type:\"task\"");
+        fs.destroy();
+    });
+
+    test("parsesIn_DrawsOneChipPerValue_AndRemovingOneKeepsTheOther", () =>
+    {
+        const text = "type in (note, task)";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, tree: { root: { kind: "filter", key: "type", op: "In",
+            values: [{ text: "note" }, { text: "task" }], span: { start: 0, end: 20 } } } });
+
+        expect(chipTexts()).toEqual(["type:Note", "type:task"]);
+        expect(fs.getValue()).toBe("type in (\"note\", \"task\")");
+
+        fs.removeFacet("type", "task");
+
+        expect(fs.getValue()).toBe("type in (\"note\")");
+        fs.destroy();
+    });
+
+    test("theBarsOwnChips_WriteTheKeysDefaultOperator_AndValuesByType", () =>
+    {
+        const fs = make();
+
+        fs.addFacet("within", "my folder");
+        fs.addFacet("created_at", "2026-11-01");
+        fs.addFacet("amount", "5");
+
+        // `:` is left for the API, because `within:` means descendant-of. A date or a number is not quoted.
+        expect(fs.getValue()).toBe("within:\"my folder\" and created_at:2026-11-01 and amount:5");
+        fs.destroy();
+    });
+
+    test("typedTextWithOr_NextToChips_IsBracketed_SoItKeepsItsMeaning", () =>
+    {
+        const fs = make();
+
+        fs.addFacet("type", "note");
+        input().value = "budget or \"x or y\" (a or b)";
+
+        expect(fs.getValue()).toBe("type:\"note\" and (budget or \"x or y\" (a or b))");
+
+        // `or` inside quotes, inside brackets or inside a word such as `favor` is not the keyword.
+        input().value = "budget \"x or y\" (a or b) favor order";
+
+        expect(fs.getValue()).toBe("type:\"note\" and budget \"x or y\" (a or b) favor order");
+        fs.destroy();
+    });
+
+    test.each([
+        [{ text: "a \"b\" c\\" }, "\"a \\\"b\\\" c\\\\\""],
+        [{ number: -2.5 }, "-2.5"],
+        [{ boolean: true }, "true"],
+        [{ date: "2026-11-15", time: "09:30", zone: "Asia/Kolkata" }, "2026-11-15T09:30@Asia/Kolkata"],
+        [{ instant: "2026-11-01T03:30:00Z" }, "2026-11-01T03:30:00Z"],
+        [{ relative: { anchor: "now", duration: "-P30D" }, zone: "Asia/Kolkata" }, "-30d@Asia/Kolkata"],
+        [{ relative: { anchor: "now", duration: "P2M" } }, "+2mo"],
+        [{ relative: { anchor: "now", duration: "PT6H" } }, "+6h"],
+        [{ relative: { anchor: "now", duration: "PT0H" } }, "now"],
+        [{ relative: { anchor: "today", duration: "P0D" }, zone: "UTC" }, "today@UTC"],
+        [{ var: "p" }, "?p"],
+        [{ param: "who" }, "$who"],
+        [{ resource: "1f0c" }, "\"1f0c\""],
+    ] as [QueryValue, string][])("eachValueForm_IsWrittenAsTheAppsPrinterWritesIt %#", (value, written) =>
+    {
+        const fs = make({ value: "x" });
+
+        fs.setParsed({ text: "x", tree: { root: { kind: "filter", key: "amount", op: "GreaterOrEqual", value,
+            span: { start: 0, end: 1 } } } });
+
+        expect(fs.getValue()).toBe("amount greater-or-equal " + written);
+        fs.destroy();
+    });
+
+    test("setParsed_ChangesNothingTheHostHears", () =>
+    {
+        const onChange = vi.fn();
+        const onFacetAdd = vi.fn();
+        const fs = make({ value: APPS_TEXT, onChange, onFacetAdd });
+
+        fs.setParsed({ text: APPS_TEXT, tree: APPS_TREE });
+
+        expect(onChange).not.toHaveBeenCalled();
+        expect(onFacetAdd).not.toHaveBeenCalled();
+        fs.destroy();
+    });
+
+    test("aStaleParse_IsDropped_BecauseTheNewerInputWins", () =>
+    {
+        const fs = make({ value: APPS_TEXT });
+
+        input().value = APPS_TEXT + " budget";
+
+        expect(fs.setParsed({ text: APPS_TEXT, tree: APPS_TREE })).toBe(false);
+        expect(chipTexts()).toEqual([]);
+        expect(input().value).toBe(APPS_TEXT + " budget");
+        fs.destroy();
+    });
+
+    test("aTreeThatCannotBeCarved_LeavesTheTextAlone", () =>
+    {
+        const withReturn = "type:note return ?p";
+        const fs = make({ value: withReturn });
+
+        expect(fs.setParsed({ text: withReturn, tree: { root: APPS_TREE.root.children[0], return: ["p"] } }))
+            .toBe(false);
+        expect(input().value).toBe(withReturn);
+
+        const noSpan = "budget type:note";
+
+        fs.setValue(noSpan);
+
+        expect(fs.setParsed({ text: noSpan, tree: { root: { kind: "and", children: [
+            { kind: "text", phrase: "budget" },
+            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 7, end: 16 } },
+        ] } } })).toBe(false);
+        expect(input().value).toBe(noSpan);
+        expect(chipTexts()).toEqual([]);
+        fs.destroy();
+    });
+
+    test("aKeyWithOneValue_KeepsASecondFilterOnItAsText", () =>
+    {
+        const text = "within:a within:b";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "within", op: "DescendantOf", value: { text: "a" }, span: { start: 0, end: 8 } },
+            { kind: "filter", key: "within", op: "DescendantOf", value: { text: "b" }, span: { start: 9, end: 17 } },
+        ] } } });
+
+        expect(chipTexts()).toEqual(["within descendant-of a"]);
+        expect(input().value).toBe("within:b");
+        fs.destroy();
+    });
+
+    test("aLinkAnUnknownValueOrAnUnknownOperator_StaysText_AndNotEqualsIsAChip", () =>
+    {
+        const text = "a b c type!:x";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "a" },
+                link: { kind: "text", phrase: "x" }, span: { start: 0, end: 1 } },
+            { kind: "filter", key: "type", op: "Equals", value: { shape: "new" } as QueryValue,
+                span: { start: 2, end: 3 } },
+            { kind: "filter", key: "type", op: "Matches", value: { text: "c" }, span: { start: 4, end: 5 } },
+            { kind: "filter", key: "type", op: "NotEquals", value: { text: "x" }, span: { start: 6, end: 13 } },
+        ] } } });
+
+        expect(chipTexts()).toEqual(["type not-equals x"]);
+        expect(input().value).toBe("a b c");
+        expect(fs.getValue()).toBe("type not-equals \"x\" and a b c");
+        fs.destroy();
+    });
+
+    test("severalValuesWithAnOperatorThatTakesOne_StayText", () =>
+    {
+        const text = "type:x";
+        const fs = make({ value: text });
+
+        expect(fs.setParsed({ text, tree: { root: { kind: "filter", key: "type", op: "Equals",
+            values: [{ text: "a" }, { text: "b" }], span: { start: 0, end: 6 } } } })).toBe(true);
+        expect(chipTexts()).toEqual([]);
+        expect(input().value).toBe("type:x");
+        fs.destroy();
+    });
+
+    test("enterAndARecentSearch_NeverRunTodaysParser", () =>
+    {
+        const onSearch = vi.fn();
+        const fs = make({ onSearch, showHistory: true });
+
+        input().value = "type:a type:b";
+        input().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+
+        // Today's parser would make two chips and write `type in (a, b)`, which means "either".
+        expect(chipTexts()).toEqual([]);
+        expect(onSearch.mock.calls[0][0]).toMatchObject({ raw: "type:a type:b", text: "type:a type:b", facets: [] });
+        expect(fs.getQuery()).toMatchObject({ raw: "type:a type:b", facets: [] });
         fs.destroy();
     });
 });
