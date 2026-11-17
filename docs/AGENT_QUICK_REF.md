@@ -863,7 +863,7 @@ $ontology-category-slots=(structural: 1, lifecycle: 2, dependency: 3, custom: 4,
 - CSS: `components/facetsearch/facetsearch.css`
 - JS: `components/facetsearch/facetsearch.js`
 - Globals: `createFacetSearch()`, `parseFacetQuery()`
-- Exports: `type FacetValueType`, `type FacetSearchSize`, `type FacetValue`, `interface FacetDefinition`, `interface ParsedFacet`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `interface FacetSearchHandle`, `class FacetSearch`, `function createFacetSearch`
+- Exports: `type FacetValueType`, `type FacetSearchSize`, `type FacetValue`, `interface FacetDefinition`, `interface ParsedFacet`, `type FacetSearchSyntax`, `interface QueryValue`, `interface QueryNode`, `interface QueryTree`, `interface FacetSearchQuery`, `interface FacetSearchOptions`, `function parseFacetQuery`, `interface FacetSearchHandle`, `class FacetSearch`, `function createFacetSearch`
 
 ### feedback
 
