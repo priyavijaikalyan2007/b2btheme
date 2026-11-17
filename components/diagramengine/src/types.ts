@@ -952,6 +952,27 @@ export type DiagramHoverRenderResult =
  */
 export type DiagramInteractionMode = "view" | "comment" | "edit";
 
+/**
+ * A request to open the app's context menu (TOUCH_EXPERIENCE.md rule 3). A
+ * finger's long press makes it on the lift, unless a drag followed. A
+ * right-click makes it at once. The object or connector under the point
+ * is selected first, unless it was selected already.
+ */
+export interface DiagramContextMenuRequest
+{
+    /** What the menu is for. */
+    target: "object" | "connector" | "canvas";
+    /** The object, when the target is an object. */
+    object?: DiagramObject;
+    /** The connector, when the target is a connector. */
+    connector?: DiagramConnector;
+    /** Where to open the menu, in client pixels. */
+    clientX: number;
+    clientY: number;
+    /** The same point on the canvas, for an action such as "Paste here". */
+    canvasPoint: Point;
+}
+
 /** Mode selector for the DiagramEngine hover card. */
 export type DiagramHoverCardMode = "builtin" | "custom" | "off";
 
@@ -1072,4 +1093,11 @@ export interface DiagramEngineOptions
     onTextEditRequest?: (obj: DiagramObject, region: TextRegion) => void;
     onChange?: (ops: Operation[]) => void;
     onViewportChange?: (viewport: ViewportState) => void;
+    /**
+     * Opens the app's context menu for an object, a connector or the
+     * canvas. The engine has no menu of its own. When this is set, the
+     * engine stops the browser's menu on the canvas. Without it, a
+     * right-click shows the browser's menu, as before.
+     */
+    onContextMenu?: (request: DiagramContextMenuRequest) => void;
 }

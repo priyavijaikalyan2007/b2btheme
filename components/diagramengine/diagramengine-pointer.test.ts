@@ -1229,3 +1229,250 @@ describe("DiagramEngine mouse targets and the cursor (#191, #192)", () =>
         expect(hover(100, 80)).toBe("move");
     });
 });
+
+describe("DiagramEngine context menu and pressed state (#184)", () =>
+{
+    let menu: ReturnType<typeof vi.fn>;
+
+    /** Replaces the canvas with one that has a menu, and the same box. */
+    function remake(opts: Parameters<typeof createDiagramEngine>[1] = {}): void
+    {
+        engine.destroy();
+        host.replaceChildren();
+        menu = vi.fn();
+        engine = createDiagramEngine(host.id, { onContextMenu: menu, ...opts });
+        engine.addObject({ id: "box", presentation: { shape: "rectangle",
+            bounds: { x: 50, y: 50, width: 100, height: 60 } } });
+        svg = host.querySelector("svg")!;
+        svg.setPointerCapture = vi.fn();
+    }
+
+    beforeEach(() =>
+    {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        remake();
+    });
+
+    afterEach(() =>
+    {
+        vi.useRealTimers();
+    });
+
+    function pressedOutline(): Element | null
+    {
+        return svg.querySelector(".de-pressed-outline");
+    }
+
+    function lifted(): boolean
+    {
+        return svg.querySelector('[data-id="box"]')!.classList.contains("de-lifted");
+    }
+
+    function longPress(x: number, y: number): void
+    {
+        pointer("pointerdown", x, y);
+        vi.advanceTimersByTime(500);
+    }
+
+    /** A contextmenu event, as a right-click sends, and whether it was stopped. */
+    function rightClick(x: number, y: number): boolean
+    {
+        const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 2 });
+
+        svg.dispatchEvent(e);
+
+        return e.defaultPrevented;
+    }
+
+    test("aFingersPress_OnTheBox_ShowsItsOutlineDimmed_AtOnce_UntilTheLift", () =>
+    {
+        pointer("pointerdown", 100, 80);
+
+        expect(pressedOutline()).not.toBeNull();
+        expect(["x", "y", "width", "height"].map((a) => pressedOutline()!.getAttribute(a)))
+            .toEqual(["50", "50", "100", "60"]);
+        expect(selected()).toEqual([]);
+
+        pointer("pointerup", 100, 80);
+
+        expect(pressedOutline()).toBeNull();
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("aPressedOutline_Shows_OnlyForAFingerOnAnObject_WithTheSelectTool", () =>
+    {
+        pointer("pointerdown", 300, 200);
+
+        expect(pressedOutline()).toBeNull();
+
+        pointer("pointerup", 300, 200);
+        pointer("pointerdown", 100, 80, MOUSE);
+
+        expect(pressedOutline()).toBeNull();
+
+        pointer("pointerup", 100, 80, MOUSE);
+        engine.setActiveTool("draw");
+        pointer("pointerdown", 100, 80);
+
+        expect(pressedOutline()).toBeNull();
+    });
+
+    test("aDrag_EndsThePressedState", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+
+        expect(pressedOutline()).toBeNull();
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+    });
+
+    test("aCancel_OrAViewModePan_EndsThePressedState", () =>
+    {
+        pointer("pointerdown", 100, 80);
+        pointer("pointercancel", 100, 80);
+
+        expect(pressedOutline()).toBeNull();
+
+        // In view mode a finger's drag on the box pans, and selects nothing.
+        remake({ interactionMode: "view" });
+        pointer("pointerdown", 100, 80);
+        pointer("pointermove", 140, 100);
+
+        expect(pressedOutline()).toBeNull();
+        expect(engine.getViewport()).toMatchObject({ x: 40, y: 20 });
+    });
+
+    test("aLongPress_OnTheBox_LiftsIt_AndTheLiftOpensTheMenuForIt", () =>
+    {
+        longPress(100, 80);
+
+        expect(lifted()).toBe(true);
+        expect(pressedOutline()).toBeNull();
+        expect(menu).not.toHaveBeenCalled();
+
+        pointer("pointerup", 100, 80);
+
+        expect(menu).toHaveBeenCalledTimes(1);
+        expect(menu.mock.calls[0][0]).toMatchObject({ target: "object", clientX: 100, clientY: 80,
+            canvasPoint: { x: 100, y: 80 }, object: expect.objectContaining({ id: "box" }) });
+        expect(selected()).toEqual(["box"]);
+        expect(lifted()).toBe(false);
+    });
+
+    test("aLongPress_ThenADrag_MovesTheLiftedBox_AndOpensNoMenu", () =>
+    {
+        longPress(100, 80);
+        pointer("pointermove", 140, 100);
+
+        expect(box()).toMatchObject({ x: 90, y: 70 });
+        // The box was drawn again where it moved, and is still lifted.
+        expect(lifted()).toBe(true);
+
+        pointer("pointerup", 140, 100);
+
+        expect(menu).not.toHaveBeenCalled();
+        expect(lifted()).toBe(false);
+    });
+
+    test("aLongPress_OnTheBackground_OpensTheCanvasMenu_AndKeepsTheSelection", () =>
+    {
+        engine.select(["box"]);
+        longPress(300, 200);
+        pointer("pointerup", 300, 200);
+
+        expect(menu).toHaveBeenCalledTimes(1);
+        expect(menu.mock.calls[0][0]).toMatchObject({ target: "canvas", canvasPoint: { x: 300, y: 200 } });
+        expect(menu.mock.calls[0][0].object).toBeUndefined();
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("aLongPress_EndedByASecondFingerOrACancel_OpensNoMenu", () =>
+    {
+        longPress(100, 80);
+        pointer("pointerdown", 200, 200, SECOND);
+
+        expect(lifted()).toBe(false);
+
+        pointer("pointerup", 200, 200, SECOND);
+        pointer("pointerup", 100, 80);
+        longPress(100, 80);
+        pointer("pointercancel", 100, 80);
+
+        expect(menu).not.toHaveBeenCalled();
+    });
+
+    test("aRightClick_OnTheBox_SelectsIt_AndOpensTheAppsMenu_NotTheBrowsers", () =>
+    {
+        expect(rightClick(100, 80)).toBe(true);
+        expect(menu).toHaveBeenCalledTimes(1);
+        expect(menu.mock.calls[0][0]).toMatchObject({ target: "object", clientX: 100, clientY: 80 });
+        expect(selected()).toEqual(["box"]);
+    });
+
+    test("aRightClick_OnASelectedObject_KeepsTheWholeSelection", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        engine.select(["box", "b2"]);
+        rightClick(100, 80);
+
+        expect(selected()).toEqual(["box", "b2"]);
+    });
+
+    test("aRightClick_OnAConnector_SelectsIt_AndOpensItsMenu", () =>
+    {
+        engine.addObject({ id: "b2", presentation: { shape: "rectangle",
+            bounds: { x: 250, y: 50, width: 100, height: 60 } } });
+        const conn = engine.addConnector({ presentation: { sourceId: "box", targetId: "b2",
+            sourcePort: "port-e", targetPort: "port-w", waypoints: [], routing: "straight",
+            style: { color: "#000", width: 2 }, labels: [] } } as Parameters<Engine["addConnector"]>[0]);
+
+        rightClick(200, 80);
+
+        expect(menu.mock.calls[0][0]).toMatchObject({ target: "connector", connector: expect.objectContaining({ id: conn.id }) });
+        expect(selected()).toEqual([]);
+    });
+
+    test("withoutOnContextMenu_ARightClick_ShowsTheBrowsersMenu_AndSelectsNothing", () =>
+    {
+        remake({ onContextMenu: undefined });
+
+        expect(rightClick(100, 80)).toBe(false);
+        expect(selected()).toEqual([]);
+    });
+
+    test("theBrowsersContextMenu_DuringAFingersPress_IsDropped", () =>
+    {
+        pointer("pointerdown", 100, 80);
+
+        expect(rightClick(100, 80)).toBe(true);
+        expect(menu).not.toHaveBeenCalled();
+    });
+
+    test("anInactiveEmbeddedCanvas_IgnoresALongPress_AndARightClickActivatesIt", () =>
+    {
+        remake({ embedded: true });
+        longPress(100, 80);
+        pointer("pointerup", 100, 80);
+
+        expect(lifted()).toBe(false);
+        expect(menu).not.toHaveBeenCalled();
+
+        rightClick(100, 80);
+
+        expect(svg.classList.contains("de-canvas-inactive")).toBe(false);
+        expect(menu).toHaveBeenCalledTimes(1);
+    });
+
+    test("inView_ALongPressLiftsNothing_ButTheMenuOpens", () =>
+    {
+        remake({ interactionMode: "view" });
+        longPress(100, 80);
+
+        expect(lifted()).toBe(false);
+
+        pointer("pointerup", 100, 80);
+
+        expect(menu).toHaveBeenCalledTimes(1);
+    });
+});

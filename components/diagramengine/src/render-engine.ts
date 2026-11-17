@@ -161,6 +161,9 @@ export class RenderEngine
     /** Current viewport state. */
     private vp: ViewportState = { x: 0, y: 0, zoom: DEFAULT_ZOOM };
 
+    /** The object a finger's long press lifted, or null. */
+    private liftedId: string | null = null;
+
     /** Active inline text edit, or null if not editing. */
     private inlineEdit: InlineEditState | null = null;
 
@@ -428,6 +431,11 @@ export class RenderEngine
 
         svgSetAttr(g, { "data-id": obj.id });
 
+        if (obj.id === this.liftedId)
+        {
+            g.classList.add(`${CLS}-lifted`);
+        }
+
         this.applyObjectTransform(g, pres);
         this.applyObjectOpacity(g, pres.style.opacity);
 
@@ -519,6 +527,52 @@ export class RenderEngine
         for (const obj of objects)
         {
             this.renderSingleSelection(obj, withHandles);
+        }
+    }
+
+    /**
+     * Draw the outline a finger's tap would select, dimmed, while the
+     * finger is down (TOUCH_EXPERIENCE.md section 10). The stylesheet
+     * gives it its look.
+     *
+     * @param bounds - The pressed object's bounds, or null to remove it.
+     */
+    public renderPressedOutline(bounds: Rect | null): void
+    {
+        this.overlayLayer.querySelector(`.${CLS}-pressed-outline`)?.remove();
+
+        if (!bounds)
+        {
+            return;
+        }
+
+        this.overlayLayer.appendChild(svgCreate("rect", {
+            class: `${CLS}-pressed-outline`,
+            x: String(bounds.x),
+            y: String(bounds.y),
+            width: String(bounds.width),
+            height: String(bounds.height)
+        }));
+    }
+
+    /**
+     * Mark the object a finger's long press lifted, so the stylesheet
+     * shows it raised. It stays marked when the object is drawn again.
+     *
+     * @param id - The lifted object's ID, or null for none.
+     */
+    public setLiftedObject(id: string | null): void
+    {
+        if (this.liftedId)
+        {
+            this.svg.querySelector(`[data-id="${this.liftedId}"]`)?.classList.remove(`${CLS}-lifted`);
+        }
+
+        this.liftedId = id;
+
+        if (id)
+        {
+            this.svg.querySelector(`[data-id="${id}"]`)?.classList.add(`${CLS}-lifted`);
         }
     }
 
