@@ -54,6 +54,12 @@ export interface TimezonePickerOptions
     /** Size variant. Default: "default". */
     size?: "mini" | "sm" | "default" | "lg";
 
+    /**
+     * Shows one button, with the zone's city and its UTC offset, that opens the same dropdown. It fits beside
+     * a search bar (#208). It has no format hint and no help icon. Default: false.
+     */
+    compact?: boolean;
+
     /** Placeholder text. Default: "Select a timezone...". */
     placeholder?: string;
 
@@ -447,7 +453,8 @@ export class TimezonePicker implements TimezonePickerHandle
 
     // DOM references
     private wrapperEl: HTMLElement | null = null;
-    private inputEl: HTMLInputElement | null = null;
+    /** The field that opens the dropdown, or with `compact` the button that does. */
+    private inputEl: HTMLInputElement | HTMLButtonElement | null = null;
     private dropdownEl: HTMLElement | null = null;
     private searchEl: HTMLInputElement | null = null;
     private listEl: HTMLElement | null = null;
@@ -664,12 +671,19 @@ export class TimezonePicker implements TimezonePickerHandle
             this.wrapperEl.setAttribute("aria-disabled", "true");
         }
 
-        // Input group
-        const inputGroup = this.buildInputGroup();
-        this.wrapperEl.appendChild(inputGroup);
+        // Input group, or with `compact` one button
+        if (this.options.compact)
+        {
+            this.wrapperEl.classList.add("timezonepicker-compact");
+            this.wrapperEl.appendChild(this.buildCompactButton());
+        }
+        else
+        {
+            this.wrapperEl.appendChild(this.buildInputGroup());
+        }
 
         // Format hint
-        if (this.options.showFormatHint)
+        if (this.options.showFormatHint && !this.options.compact)
         {
             this.hintEl = this.buildFormatHint();
             this.wrapperEl.appendChild(this.hintEl);
@@ -761,6 +775,30 @@ export class TimezonePicker implements TimezonePickerHandle
 
         group.appendChild(toggleBtn);
         return group;
+    }
+
+    /**
+     * Builds the compact form (#208): one button that shows the zone's city and offset and opens the
+     * dropdown. A click, Enter, Space and ArrowDown open it, as for the field.
+     */
+    private buildCompactButton(): HTMLElement
+    {
+        const button = createElement("button", ["btn", "btn-outline-secondary", "timezonepicker-compact-button"]);
+        setAttr(button, "type", "button");
+        setAttr(button, "aria-haspopup", "listbox");
+        setAttr(button, "aria-expanded", "false");
+        setAttr(button, "aria-controls", `${this.instanceId}-listbox`);
+        if (this.options.disabled) { (button as HTMLButtonElement).disabled = true; }
+
+        this.inputEl = button as HTMLButtonElement;
+        this.updateInput();
+
+        button.addEventListener("keydown", this.boundOnInputKeydown);
+        button.addEventListener("click", () =>
+        {
+            if (!this.options.disabled) { this.toggleDropdown(); }
+        });
+        return button;
     }
 
     // ========================================================================
@@ -1271,9 +1309,35 @@ export class TimezonePicker implements TimezonePickerHandle
         }
         const offset = this.timezoneOffsets.get(this.timezone)
             ?? getTimezoneOffset(this.timezone);
+        if (this.inputEl instanceof HTMLButtonElement)
+        {
+            this.updateCompactButton(this.inputEl, offset);
+            return;
+        }
         this.inputEl.value = offset
             ? `${this.timezone} (${offset})`
             : this.timezone;
+    }
+
+    /**
+     * Writes the compact button: a globe, the zone's city by its current name, such as Kolkata for
+     * Asia/Calcutta (#213), and the offset. Its accessible name says the whole zone.
+     */
+    private updateCompactButton(button: HTMLButtonElement, offset: string): void
+    {
+        const name = CURRENT_ZONE_NAMES[this.timezone] ?? this.timezone;
+        const city = name.slice(name.lastIndexOf("/") + 1).replace(/_/g, " ");
+        while (button.firstChild) { button.removeChild(button.firstChild); }
+
+        const icon = createElement("i", ["bi", "bi-globe2"]);
+        setAttr(icon, "aria-hidden", "true");
+        button.appendChild(icon);
+        button.appendChild(createElement("span", ["timezonepicker-compact-city"], city));
+        if (offset) { button.appendChild(createElement("span", ["timezonepicker-compact-offset"], offset)); }
+
+        const label = `Time zone: ${name}${offset ? ", " + offset : ""}`;
+        setAttr(button, "aria-label", label);
+        setAttr(button, "title", label);
     }
 
     /**
@@ -1486,6 +1550,11 @@ export class TimezonePicker implements TimezonePickerHandle
             if (this.isOpen && this.highlightedIndex >= 0)
             {
                 this.selectHighlighted();
+            }
+            else if (!this.isOpen && this.options.compact)
+            {
+                // A button opens on Enter. The default is prevented above, so it would not click.
+                this.showDropdown();
             }
         }
         else if (this.matchesKeyCombo(e, "inputEscape"))
