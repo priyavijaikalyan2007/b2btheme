@@ -646,6 +646,14 @@ declare global
         /** Published by the PropertyInspector component. */
         createPropertyInspector?: typeof createPropertyInspector;
 
+        /**
+         * Published by the QueryLanguage component (#205). Written out rather than imported: that component
+         * imports generated code and the antlr4 runtime, which tsconfig.json leaves out. Its own typecheck
+         * (tsconfig.querylanguage.json) holds this shape to the function it assigns.
+         */
+        colorQuery?: (text: string) => Array<{ start: number; end: number;
+            kind: "keyword" | "key" | "operator" | "value" | "variable" }>;
+
         /** Published by the ReasoningAccordion component. */
         createReasoningAccordion?: typeof createReasoningAccordion;
 

@@ -1,0 +1,29 @@
+{
+    "//": [
+        "Typecheck config for the QueryLanguage component (#205). tsconfig.json",
+        "excludes it, because it imports the lexer and parser ANTLR generated,",
+        "and they import the antlr4 runtime, which tsc's one-file output cannot",
+        "serve. scripts/bundle-querylanguage.mjs builds it with esbuild instead.",
+        "",
+        "The unused-code flags are off here only because the generated code",
+        "imports names it does not use, and it is never edited by hand. Its",
+        "stamp test fails on any hand edit."
+    ],
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ES2020",
+        "moduleResolution": "node",
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "strict": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false
+    },
+    "files": [
+        "components/querylanguage/querylanguage.ts",
+        "components/globals.d.ts"
+    ]
+}

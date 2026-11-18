@@ -316,6 +316,7 @@ read.
 | `katex-css` | 0.19.1 | KaTeX's stylesheet and fonts at `/lib/katex-css-0.19.1/`; the stylesheet is hashed, the fonts cannot be |
 | `bootstrap-icons` | 1.13.1 | The stylesheet, hashed, with its fonts beside it, at `/lib/bootstrap-icons-1.13.1/`. The same release as `/icons/bootstrap-icons.css`, served with CORS so a page loaded with `crossorigin` can read its rules. See below |
 | `bootstrap` | 5.3.8 | Bootstrap's JS bundle (`window.bootstrap`), the same file as `/js/bootstrap.bundle.min.js`, with an SRI hash. Marked `shared`: the A2UI adapter loads it for Toolbar and the dialogs only when the page has no `window.bootstrap`, because a second copy doubles Bootstrap's document-wide listeners (ADR-245) |
+| `antlr4` | 4.13.1 | The ANTLR JavaScript runtime (`window.antlr4`) for QueryLanguage's generated parser, which colors FacetSearch's query syntax (#205). 4.13.1 is the version the apps generate their C# with, and generated code must match its runtime. ESM and CommonJS on npm, bundled to one file |
 
 `font-awesome` is CSS plus webfonts rather than a script, so it is served as a
 versioned **directory**:

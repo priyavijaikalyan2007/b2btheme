@@ -108,6 +108,11 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
         + "reads the pointer events of an element that another component "
         + "owns. It renders nothing, so there is nothing for a canvas to mount.",
 
+    querylanguage:
+        "Syntax-color service (#205). colorQuery(text) returns the colored "
+        + "ranges of query text for FacetSearch to draw. It renders nothing, "
+        + "so there is nothing for a canvas to mount.",
+
     typebadge:
         "Element builder. createTypeBadge(options) returns an HTMLElement for "
         + "the caller to place; there is no handle and nothing to destroy.",

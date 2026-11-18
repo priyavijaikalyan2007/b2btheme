@@ -178,3 +178,6 @@ mcp/demo/.out/
 # The C# MCP example's build output
 mcp/examples/csharp/bin/
 mcp/examples/csharp/obj/
+
+# The ANTLR tool jar that scripts/generate-querylanguage.sh downloads (#205)
+.tools/

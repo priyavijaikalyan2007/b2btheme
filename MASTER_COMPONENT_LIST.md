@@ -949,6 +949,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: Global search, inline list filtering, command input, toolbar search, content discovery.
 
+## 13.6✅Query Language Syntax Colors
+
+**Description**: The syntax colors of the apps' query language. A lexer and parser generated with ANTLR 4.13.1 from the apps' own grammar read the text, so a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. It never reports an error. It renders nothing, and FacetSearch colors its `syntax: "query"` text with it. See `components/querylanguage/` (#205).
+
+**References**: VS Code TextMate and semantic highlighting, GitHub and Jira query bars, Kusto and Datadog query editors.
+
+**Use Cases**: The search bar's query text, and any later editor of the same language.
+
 # 14\. File & Content Management
 
 ## 14.1✅File Upload / Download Manager
@@ -3825,6 +3833,7 @@ convention (ADR-146, D5).
 | 13.3 | Freeform & Taxonomy Tagger | Filtering | DONE |
 | 13.4 | Saved Views / Saved Filters | Filtering | NEW |
 | 13.5 | Search Box | Filtering | DONE |
+| 13.6 | Query Language Syntax Colors | Filtering | DONE |
 | 14.1 | File Upload / Download Manager | Content | DONE |
 | 14.2 | Screenshot & Video Capture | Content | NEW |
 | 14.3 | File Explorer / Asset Browser | Content | DONE |

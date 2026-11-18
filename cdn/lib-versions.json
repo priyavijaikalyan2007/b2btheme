@@ -589,6 +589,12 @@
         "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff": "sha384-IYfD9pNP/nesQsPyYtTdGCb4uhEWUmNF8GxaCvqcJFH+Of3c1b0VbH6hdHUonDSC",
         "/lib/bootstrap-icons-1.13.1/fonts/bootstrap-icons.woff2": "sha384-xEoI56EFpIZiDZZKBZxsn3gO3u/FvXtOpHbtkMWmSdfzDw3x9XdVc3i70O9hm4SC"
       }
+    },
+    "antlr4": {
+      "version": "4.13.1",
+      "files": {
+        "/lib/antlr4-4.13.1.js": "sha384-sjwAsKajwyLSsMXfBQL37gbVWSirPDfpidJvW0cp0DwACSyx2M5VK98dp0HPPzmr"
+      }
     }
   },
   "deprecated": [

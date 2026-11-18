@@ -22,6 +22,7 @@
         "dist",
         "**/*.test.ts",
         "components/diagramengine/src/**",
+        "components/querylanguage/**",
         "components/**/*.manifest.ts",
         "components/**/*.conformance.ts"
     ]

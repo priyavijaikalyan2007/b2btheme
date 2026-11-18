@@ -411,6 +411,19 @@ const ASSETS = [
         ],
         note: "the same release as /icons/bootstrap-icons.css, hashed and served with CORS",
     },
+    {
+        // The ANTLR runtime the QueryLanguage component's generated parser
+        // runs on (#205). Pinned to 4.13.1, the version the apps generate
+        // their C# with, because generated code must match its runtime.
+        // The package ships ESM and CommonJS only, so esbuild makes it one
+        // file that publishes window.antlr4.
+        name: "antlr4",
+        kind: "bundle",
+        pkg: "antlr4",
+        entry: 'export * from "antlr4";',
+        global: "antlr4",
+        note: "the ANTLR runtime for the query language's syntax colors (#205)",
+    },
 ];
 
 function versionOf(pkg)
