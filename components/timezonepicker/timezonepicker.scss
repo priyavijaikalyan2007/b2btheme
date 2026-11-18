@@ -227,6 +227,45 @@
 }
 
 // ============================================================================
+// COMPACT (#208): one button with the city and offset, beside a search bar
+// ============================================================================
+
+.timezonepicker-compact {
+    width: auto;
+}
+
+.timezonepicker-compact-button {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-4;
+    border-color: var(--theme-input-border);
+    color: var(--theme-text-primary);
+    font-size: $font-size-sm;
+    white-space: nowrap;
+}
+
+.timezonepicker-compact-offset {
+    color: var(--theme-text-secondary);
+    font-size: $font-size-xs;
+}
+
+.timezonepicker-compact.timezonepicker-sm .timezonepicker-compact-button {
+    padding: $sp-2 $sp-6;
+    font-size: $font-size-xs;
+}
+
+.timezonepicker-compact.timezonepicker-lg .timezonepicker-compact-button {
+    font-size: $font-size-base;
+}
+
+// A finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
+@media (any-pointer: coarse) {
+    .timezonepicker-compact-button {
+        min-height: 44px;
+    }
+}
+
+// ============================================================================
 // STATES
 // ============================================================================
 

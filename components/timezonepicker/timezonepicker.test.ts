@@ -438,3 +438,94 @@ describe("zone search", () =>
         picker.destroy();
     });
 });
+
+// ============================================================================
+// COMPACT FORM (#208)
+// ============================================================================
+
+describe("compact", () =>
+{
+    const button = (): HTMLButtonElement => container.querySelector(".timezonepicker-compact-button")!;
+    const open = (): boolean => button().getAttribute("aria-expanded") === "true";
+
+    test("is one button with the city and offset, and no field, hint or help", () =>
+    {
+        const picker = new TimezonePicker("test-timezonepicker-container",
+            { compact: true, timezone: "America/Los_Angeles" });
+
+        expect(container.querySelector(".timezonepicker-input")).toBeNull();
+        expect(container.querySelector(".timezonepicker-hint")).toBeNull();
+        expect(button().querySelector(".timezonepicker-compact-city")!.textContent).toBe("Los Angeles");
+        expect(button().querySelector(".timezonepicker-compact-offset")!.textContent).toBe(picker.getOffset());
+        expect(button().getAttribute("aria-label")).toBe("Time zone: America/Los_Angeles, " + picker.getOffset());
+        expect(button().getAttribute("aria-haspopup")).toBe("listbox");
+        picker.destroy();
+    });
+
+    test("names a zone the browser lists by an old name by its current one, and keeps the value", () =>
+    {
+        const picker = new TimezonePicker("test-timezonepicker-container",
+            { compact: true, timezone: "Asia/Calcutta" });
+
+        expect(button().querySelector(".timezonepicker-compact-city")!.textContent).toBe("Kolkata");
+        expect(picker.getValue()).toBe("Asia/Calcutta");
+        picker.destroy();
+    });
+
+    test.each([
+        ["a click", () => button().click()],
+        ["Enter", () => button().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))],
+        ["ArrowDown", () => button().dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }))],
+    ])("%s opens the dropdown, and Escape closes it", (_name, press) =>
+    {
+        const onOpen = vi.fn();
+        const picker = new TimezonePicker("test-timezonepicker-container", { compact: true, onOpen });
+
+        press();
+        expect(open()).toBe(true);
+        expect(onOpen).toHaveBeenCalledTimes(1);
+
+        button().dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(open()).toBe(false);
+        picker.destroy();
+    });
+
+    test("a choice rewrites the button and fires onChange", () =>
+    {
+        const onChange = vi.fn();
+        const picker = new TimezonePicker("test-timezonepicker-container", { compact: true, onChange });
+
+        button().click();
+        // An option chooses on mousedown, so the input keeps focus.
+        container.querySelector("[data-tz='Asia/Tokyo']")!
+            .dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+
+        expect(onChange).toHaveBeenCalledWith("Asia/Tokyo");
+        expect(button().querySelector(".timezonepicker-compact-city")!.textContent).toBe("Tokyo");
+        expect(open()).toBe(false);
+        picker.setValue("Europe/Paris");
+        expect(button().querySelector(".timezonepicker-compact-city")!.textContent).toBe("Paris");
+        picker.destroy();
+    });
+
+    test("disable and enable reach the button", () =>
+    {
+        const picker = new TimezonePicker("test-timezonepicker-container", { compact: true, disabled: true });
+
+        expect(button().disabled).toBe(true);
+        picker.enable();
+        expect(button().disabled).toBe(false);
+        picker.disable();
+        expect(button().disabled).toBe(true);
+        picker.destroy();
+    });
+
+    test("the default form is unchanged", () =>
+    {
+        const picker = new TimezonePicker("test-timezonepicker-container");
+
+        expect(container.querySelector(".timezonepicker-compact-button")).toBeNull();
+        expect(container.querySelector(".timezonepicker-input")).not.toBeNull();
+        picker.destroy();
+    });
+});

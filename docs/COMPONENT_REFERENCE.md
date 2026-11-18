@@ -6903,6 +6903,8 @@ A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean
 
 `getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
 
+**The time zone.** A date in a query depends on the zone, so a page sends a zone with each search. Put a compact [TimezonePicker](../timezonepicker/README.md#compact-form) beside the bar, with `compact: true`, and send its `getValue()` with each Parse and each search (#208).
+
 **Syntax colors.** The typed text takes the colors of the apps' grammar, which [QueryLanguage](../querylanguage/README.md) reads it with (#205). So a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors never say a query is wrong. That is the job of Parse's errors, above.
 
 | Part | Token |
@@ -20771,6 +20773,7 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 | `disabled` | `boolean` | `false` | Disable the component |
 | `readonly` | `boolean` | `false` | Read-only mode |
 | `size` | `"mini" \| "sm" \| "default" \| "lg"` | `"default"` | Size variant |
+| `compact` | `boolean` | `false` | One button with the zone's city and offset, which opens the same dropdown. It fits beside a search bar. No format hint or help icon. See below |
 | `placeholder` | `string` | `"Select a timezone..."` | Input placeholder |
 | `onSelect` | `(tz: string) => void` | — | Selection callback |
 | `onChange` | `(tz: string) => void` | — | Change callback |
@@ -20798,6 +20801,25 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 - **UTC offset display** — Each timezone shows its current GMT offset
 - **Keyboard navigation** — Arrow keys, Enter to select, Escape to close
 - **Accessible** — WAI-ARIA combobox/listbox pattern
+
+## Compact form
+
+`compact: true` shows one button instead of the field, such as **🌐 Kolkata GMT+5:30**. It opens the same dropdown, with the search and the list. A click, `Enter`, `Space` and `ArrowDown` open it, and `Escape` closes it. Its accessible name says the whole zone, such as "Time zone: Asia/Kolkata, GMT+5:30". A zone the browser lists by an old name shows its current city, so Asia/Calcutta shows Kolkata, and `getValue()` still returns Asia/Calcutta.
+
+It fits **beside** a search bar, for the zone a page sends with each search (#208):
+
+```html
+<div class="d-flex flex-wrap align-items-start gap-2">
+    <div id="search" class="flex-grow-1"></div>
+    <div id="zone"></div>
+</div>
+<script>
+    var zone = createTimezonePicker("zone", { compact: true, timezone: "local" });
+    // Send zone.getValue() with each search.
+</script>
+```
+
+Beside the bar, not inside it: the bar's input, chips and clear button keep their own focus order, and on a narrow screen the button wraps below the bar.
 
 ## Zone search for other components
 

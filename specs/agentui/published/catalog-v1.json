@@ -25034,6 +25034,20 @@
                 }
               ]
             },
+            "compact": {
+              "description": "Shows one button, with the zone's city and its UTC offset, that opens the same dropdown. It fits beside\na search bar (#208). It has no format hint and no help icon. Default: false.",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/DataBinding"
+                },
+                {
+                  "$ref": "https://a2ui.org/specification/v0_9/common_types.json#/$defs/FunctionCall"
+                }
+              ]
+            },
             "placeholder": {
               "description": "Placeholder text. Default: \"Select a timezone...\".",
               "anyOf": [
