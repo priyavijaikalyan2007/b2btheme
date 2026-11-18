@@ -959,6 +959,61 @@ describe("surface contract (B7)", () =>
         rm.destroy();
     });
 
+    // #225. A newer query always wins (UI_EXPERIENCE.md section 2.8).
+    function deferredTargets(): { fn: (r: { query: string }) => Promise<typeof TARGET[]>;
+        answer: (q: string, results: typeof TARGET[]) => void; }
+    {
+        const pending = new Map<string, (results: typeof TARGET[]) => void>();
+        return {
+            fn: (r) => new Promise((resolve) => { pending.set(r.query, resolve); }),
+            answer: (q, results) => { pending.get(q)!(results); },
+        };
+    }
+
+    const shownTargets = (): string[] => Array.from(container.querySelectorAll(".rm-search-item"))
+        .map((el) => el.textContent ?? "");
+
+    test("an older search answer that arrives last does not replace the newer one", async () =>
+    {
+        vi.useFakeTimers();
+        const targets = deferredTargets();
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(), showAddButton: true,
+            onSearchTargets: targets.fn }));
+
+        await searchFor("Depends On", "ta");
+        const input = container.querySelector<HTMLInputElement>(".rm-search-input")!;
+        input.value = "tar";
+        input.dispatchEvent(new Event("input"));
+        await vi.advanceTimersByTimeAsync(300);
+
+        targets.answer("tar", [{ id: "res-new", displayName: "Tarn", typeKey: "service" }]);
+        await vi.advanceTimersByTimeAsync(0);
+        targets.answer("ta", [TARGET, { id: "res-old", displayName: "Tally", typeKey: "service" }]);
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(shownTargets()).toHaveLength(1);
+        expect(shownTargets()[0]).toContain("Tarn");
+        rm.destroy();
+    });
+
+    test("an answer after the query is cut below two characters draws nothing", async () =>
+    {
+        vi.useFakeTimers();
+        const targets = deferredTargets();
+        const rm = createRelationshipManager(makeOptions({ relationships: surfaceRows(), showAddButton: true,
+            onSearchTargets: targets.fn }));
+
+        await searchFor("Depends On", "ta");
+        const input = container.querySelector<HTMLInputElement>(".rm-search-input")!;
+        input.value = "t";
+        input.dispatchEvent(new Event("input"));
+        targets.answer("ta", [TARGET]);
+        await vi.advanceTimersByTimeAsync(300);
+
+        expect(shownTargets()).toEqual([]);
+        rm.destroy();
+    });
+
     test("onSearchTargets gets { query, typeKeys }; an empty targetTypeKeys asks with []", async () =>
     {
         vi.useFakeTimers();
