@@ -83,6 +83,8 @@ components/errordialog/errordialog.css — errordialog component CSS
 components/errordialog/errordialog.js  — errordialog component JS
 components/explorerpicker/explorerpicker.css — explorerpicker component CSS
 components/explorerpicker/explorerpicker.js  — explorerpicker component JS
+components/expressionbuilder/expressionbuilder.css — expressionbuilder component CSS
+components/expressionbuilder/expressionbuilder.js  — expressionbuilder component JS
 components/facetsearch/facetsearch.css — facetsearch component CSS
 components/facetsearch/facetsearch.js  — facetsearch component JS
 components/feedback/feedback.css — feedback component CSS
@@ -859,6 +861,13 @@ $ontology-category-slots=(structural: 1, lifecycle: 2, dependency: 3, custom: 4,
 - JS: `components/explorerpicker/explorerpicker.js`
 - Globals: `createExplorerPicker()`
 - Exports: `type ExplorerNodeType`, `interface ExplorerNode`, `interface ExplorerChildrenRequest`, `interface ExplorerSearchRequest`, `interface ExplorerSearchPage`, `interface ExplorerPickerSelection`, `interface OntologyTypeEntry`, `interface ExplorerPickerState`, `interface ExplorerPickerOptions`, `interface ExplorerPickerHandle`, `class ExplorerPickerImpl`, `function createExplorerPicker`
+
+### expressionbuilder
+
+- CSS: `components/expressionbuilder/expressionbuilder.css`
+- JS: `components/expressionbuilder/expressionbuilder.js`
+- Globals: `createExpressionBuilder()`
+- Exports: `interface QueryValue`, `interface QueryNode`, `interface QueryTree`, `interface QueryDiagnostic`, `interface ExpressionBuilderFacet`, `interface ExpressionBuilderOptions`, `interface ExpressionBuilderHandle`, `function opName`, `function opWord`, `function facetOps`, `interface Span`, `interface GroupRow`, `interface FilterRow`, `interface TextRow`, `interface KeptRow`, `type Row`, `function rowOf`, `function rootOf`, `function isComplete`, `function nodeOf`, `function treeOf`, `function meaning`, `function rowAt`, `function moveRow`, `function wrapRow`, `function unwrapRow`, `function removeRow`, `function pathOfRow`, `function moveRowTo`, `function setOp`, `class ExpressionBuilder`, `function createExpressionBuilder`
 
 ### facetsearch
 
