@@ -287,6 +287,83 @@ function resolveTimezone(tz: string): string
     return "UTC";
 }
 
+// ============================================================================
+// ZONE SEARCH -- shared with FacetSearch (#206)
+// ============================================================================
+
+/** Each zone's UTC offset, read once, the first time a search meets the zone. */
+const searchOffsets = new Map<string, string>();
+
+/**
+ * The current IANA name of each zone that Chrome and Node list by an old one (#213). ICU keeps CLDR's first
+ * name for a zone, so `Intl.supportedValuesOf` gives Asia/Calcutta where IANA now says Asia/Kolkata. A browser
+ * that lists the current name never meets these. America/Coral_Harbour is left out: its old zone, Atikokan, is
+ * itself only a link now, so no one current name is its own.
+ */
+const CURRENT_ZONE_NAMES: Record<string, string> = {
+    "Africa/Asmera": "Africa/Asmara",
+    "America/Buenos_Aires": "America/Argentina/Buenos_Aires",
+    "America/Catamarca": "America/Argentina/Catamarca",
+    "America/Cordoba": "America/Argentina/Cordoba",
+    "America/Godthab": "America/Nuuk",
+    "America/Indianapolis": "America/Indiana/Indianapolis",
+    "America/Jujuy": "America/Argentina/Jujuy",
+    "America/Louisville": "America/Kentucky/Louisville",
+    "America/Mendoza": "America/Argentina/Mendoza",
+    "Asia/Calcutta": "Asia/Kolkata",
+    "Asia/Katmandu": "Asia/Kathmandu",
+    "Asia/Rangoon": "Asia/Yangon",
+    "Asia/Saigon": "Asia/Ho_Chi_Minh",
+    "Atlantic/Faeroe": "Atlantic/Faroe",
+    "Europe/Kiev": "Europe/Kyiv",
+    "Pacific/Enderbury": "Pacific/Kanton",
+    "Pacific/Ponape": "Pacific/Pohnpei",
+    "Pacific/Truk": "Pacific/Chuuk",
+};
+
+/**
+ * Whether a zone matches what a person typed, ignoring case: its name or its offset holds the query, as the
+ * picker always matched, or its name holds the query with spaces and hyphens read as `_`. So `los angeles`
+ * and `los-angeles` find America/Los_Angeles. A zone the browser lists by an old name matches by its current
+ * name too, so `kolkata` finds Asia/Calcutta.
+ */
+export function timezoneMatches(tz: string, offset: string, query: string): boolean
+{
+    const q = query.trim().toLowerCase();
+    const joined = q.replace(/[\s-]+/g, "_");
+
+    return [tz, CURRENT_ZONE_NAMES[tz] ?? tz].some((name) =>
+        `${name.toLowerCase()} ${offset.toLowerCase()}`.includes(q) || name.toLowerCase().includes(joined));
+}
+
+/**
+ * The zones that match `query`, by their current IANA names, each with its UTC offset now: the zones whose
+ * city starts with it first, then the rest, each in the browser's order. FacetSearch suggests zones from
+ * this, so the bar and the picker match a zone the same way.
+ */
+export function searchTimezones(query: string): Array<{ zone: string; offset: string }>
+{
+    const city = query.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    const first: Array<{ zone: string; offset: string }> = [];
+    const rest: Array<{ zone: string; offset: string }> = [];
+
+    for (const tz of getIANATimezones())
+    {
+        let offset = searchOffsets.get(tz);
+
+        if (offset === undefined)
+        {
+            offset = getTimezoneOffset(tz);
+            searchOffsets.set(tz, offset);
+        }
+        if (!timezoneMatches(tz, offset, query)) { continue; }
+
+        const zone = CURRENT_ZONE_NAMES[tz] ?? tz;
+        (zone.slice(zone.lastIndexOf("/") + 1).toLowerCase().startsWith(city) ? first : rest).push({ zone, offset });
+    }
+    return [...first, ...rest];
+}
+
 /**
  * Formats the current time in a given timezone as HH:MM:SS.
  */
@@ -943,8 +1020,7 @@ export class TimezonePicker implements TimezonePickerHandle
         {
             const tz = optionEl.getAttribute("data-tz") ?? "";
             const offset = this.timezoneOffsets.get(tz) ?? "";
-            const searchText = `${tz} ${offset}`.toLowerCase();
-            const isMatch = searchText.includes(query);
+            const isMatch = timezoneMatches(tz, offset, query);
             (optionEl as HTMLElement).style.display = isMatch ? "" : "none";
             if (isMatch)
             {
@@ -1471,4 +1547,5 @@ export function createTimezonePicker(
 if (typeof window !== "undefined")
 {
     window["createTimezonePicker"] = createTimezonePicker;
+    window["searchTimezones"] = searchTimezones;
 }

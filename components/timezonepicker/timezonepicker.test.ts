@@ -19,6 +19,8 @@ import { destroyProbe } from "../../tests/destroy-probe";
 import {
     TimezonePicker,
     createTimezonePicker,
+    searchTimezones,
+    timezoneMatches,
 } from "./timezonepicker";
 import type { TimezonePickerOptions } from "./timezonepicker";
 
@@ -377,5 +379,62 @@ describe("destroy", () =>
         expect(first).toBeGreaterThan(0);
         expect(probe.total()).toBe(first);
         probe.restore();
+    });
+});
+
+// ============================================================================
+// ZONE SEARCH -- shared with FacetSearch (#206), current names (#213)
+// ============================================================================
+
+describe("zone search", () =>
+{
+    /** The name this runtime lists India's zone by: the old one in Chrome and Node, the current one elsewhere. */
+    const INDIA = Intl.supportedValuesOf("timeZone").find((z) => z === "Asia/Calcutta" || z === "Asia/Kolkata")!;
+
+    test.each([
+        ["the name, in any case", "America/Los_Angeles", "AMERICA/LOS"],
+        ["the city with a space", "America/Los_Angeles", "los angeles"],
+        ["the city with a hyphen", "America/Los_Angeles", "los-angeles"],
+        ["the offset, as before", "America/Los_Angeles", "gmt-8"],
+        ["the current name of an old one", "Asia/Calcutta", "kolkata"],
+        ["the old name itself, as before", "Asia/Calcutta", "calcutta"],
+        ["a hyphen in the name itself", "America/Port-au-Prince", "port-au"],
+    ])("timezoneMatches finds a zone by %s", (_name, tz, query) =>
+    {
+        expect(timezoneMatches(tz, "GMT-8", query)).toBe(true);
+    });
+
+    test("timezoneMatches leaves a zone that does not hold the query", () =>
+    {
+        expect(timezoneMatches("Asia/Calcutta", "GMT+5:30", "tokyo")).toBe(false);
+    });
+
+    test("searchTimezones gives current names, the cities that start with the query first, with offsets", () =>
+    {
+        const found = searchTimezones("kol");
+
+        // Asia/Srednekolymsk holds `kol` too, but its city does not start with it.
+        expect(found.map((z) => z.zone).slice(0, 2)).toEqual(["Asia/Kolkata", "Asia/Srednekolymsk"]);
+        expect(found[0].offset).toBe(new Intl.DateTimeFormat("en-US", { timeZone: INDIA, timeZoneName: "shortOffset" })
+            .formatToParts(new Date()).find((p) => p.type === "timeZoneName")!.value);
+        expect(searchTimezones("kyiv").map((z) => z.zone)).toEqual(["Europe/Kyiv"]);
+        // The browser lists America/Guadeloupe first, but the cities that start with `ade` come first.
+        expect(searchTimezones("ade").map((z) => z.zone)).toEqual(["Asia/Aden", "Australia/Adelaide",
+            "America/Guadeloupe", "Atlantic/Madeira", "Europe/Belgrade"]);
+    });
+
+    test("the picker's own search finds an old name by its current one, and keeps the name it lists", () =>
+    {
+        const picker = new TimezonePicker("test-timezonepicker-container");
+        picker.open();
+        const search = container.querySelector<HTMLInputElement>(".timezonepicker-search input")!;
+
+        search.value = "Kolkata";
+        search.dispatchEvent(new Event("input", { bubbles: true }));
+
+        const shown = Array.from(container.querySelectorAll<HTMLElement>("[data-tz]"))
+            .filter((el) => el.style.display !== "none").map((el) => el.getAttribute("data-tz"));
+        expect(new Set(shown)).toEqual(new Set([INDIA]));
+        picker.destroy();
     });
 });

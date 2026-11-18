@@ -213,7 +213,7 @@ import type { TenantSwitcher, createTenantSwitcher } from "./tenantswitcher/tena
 import type { createThemeToggle } from "./themetoggle/themetoggle";
 import type { Timeline, createTimeline } from "./timeline/timeline";
 import type { TimePicker, createTimePicker } from "./timepicker/timepicker";
-import type { TimezonePicker, createTimezonePicker } from "./timezonepicker/timezonepicker";
+import type { TimezonePicker, createTimezonePicker, searchTimezones } from "./timezonepicker/timezonepicker";
 import type
 {
     clearAllToasts,
@@ -772,6 +772,7 @@ declare global
 
         /** Published by the TimezonePicker component. */
         createTimezonePicker?: typeof createTimezonePicker;
+        searchTimezones?: typeof searchTimezones;
 
         /** Published by the Toast component. */
         clearAllToasts?: typeof clearAllToasts;
