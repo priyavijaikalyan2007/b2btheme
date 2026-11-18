@@ -223,6 +223,26 @@
     --theme-code-type:          #7e22ce;
     --theme-code-operator:      #be185d;
     --theme-code-active-line:   #{rgba($gray-900, 0.04)};
+
+    // QUERY LANGUAGE COLORS (#206), for FacetSearch's `syntax: "query"`:
+    // the parts of a query, and the marks for the API's errors and
+    // warnings. The apps never add colors of their own. Each is the code
+    // color or the text color named beside it, measured again where a
+    // query sits: on the search bar (--theme-surface-bg) and on a chip
+    // (--theme-fill-strong). The first figure is the bar, the second the
+    // chip. Worst 4.91.
+    //
+    // They are values, not `var()` aliases of those colors. The minifier
+    // drops a dark block's alias that reads the same as the light one, and
+    // an alias set on :root resolves there, so a dark panel inside a light
+    // page would get the light color.
+    --theme-query-keyword:      #6d28d9;         // code keyword,   7.10, 5.78
+    --theme-query-key:          #1d4ed8;         // code function,  6.70, 5.45
+    --theme-query-operator:     #be185d;         // code operator,  6.04, 4.91
+    --theme-query-value:        #115e59;         // code string,    7.58, 6.17
+    --theme-query-variable:     #92400e;         // code number,    7.09, 5.77
+    --theme-query-error:        #{$red-700};     // danger text,    6.47, 5.26
+    --theme-query-warning:      #{$yellow-800};  // warning text,   7.09, 5.77
     --theme-group-bg-1:         #dbeafe;   --theme-group-fg-1: #1e3a8a;   // 8.49
     --theme-group-bg-2:         #dcfce7;   --theme-group-fg-2: #14532d;   // 8.30
     --theme-group-bg-3:         #fef3c7;   --theme-group-fg-3: #713f12;   // 7.79
@@ -409,6 +429,15 @@
     --theme-code-type:          #e9d5ff;
     --theme-code-operator:      #f9a8d4;
     --theme-code-active-line:   rgba(255, 255, 255, 0.05);
+
+    // Query language colors, dark. See the light block. Worst 5.15.
+    --theme-query-keyword:      #c4b5fd;         // code keyword,    8.96, 7.71
+    --theme-query-key:          #93c5fd;         // code function,   9.17, 7.90
+    --theme-query-operator:     #f9a8d4;         // code operator,   9.12, 7.85
+    --theme-query-value:        #5eead4;         // code string,    11.18, 9.63
+    --theme-query-variable:     #fcd34d;         // code number,    11.47, 9.88
+    --theme-query-error:        #{$red-400};     // danger text,     5.98, 5.15
+    --theme-query-warning:      #{$yellow-500};  // warning text,    7.70, 6.63
     --theme-group-bg-1:         #17314d;   --theme-group-fg-1: #bfdbfe;   //  9.34
     --theme-group-bg-2:         #14301f;   --theme-group-fg-2: #bbf7d0;   // 11.77
     --theme-group-bg-3:         #33280d;   --theme-group-fg-3: #fde68a;   // 11.63

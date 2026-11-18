@@ -159,6 +159,123 @@
 }
 
 // ============================================================================
+// THE QUERY LANGUAGE: PROBLEMS FROM PARSE (#206)
+// ============================================================================
+//
+// An input cannot style a range of its text. So in `syntax: "query"` the
+// input sits in a field over a layer that holds the same text, clear, with
+// each problem's range in a mark. The layer has the input's font and box,
+// and scrolls with it.
+
+.facetsearch-field {
+    position: relative;
+    display: flex;
+    flex: 1 1 120px;
+    min-width: 120px;
+
+    .facetsearch-input {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
+// The layer reaches below the input, so the underline, which sits under the
+// text, is not clipped with it.
+.facetsearch-marks {
+    position: absolute;
+    inset: 0 0 -8px 0;
+    overflow: hidden;
+    white-space: pre;
+    color: transparent;
+    pointer-events: none;
+    font-size: $font-size-base;
+    line-height: $line-height-base;
+}
+
+// An error is a wavy line and a warning a dotted one, so the two differ in
+// shape as well as in color (UI_EXPERIENCE.md section 3.6).
+.facetsearch-mark {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+    text-decoration-color: var(--facetsearch-mark-color);
+    text-underline-offset: 3px;
+}
+
+.facetsearch-mark-error {
+    --facetsearch-mark-color: var(--theme-query-error);
+    text-decoration-style: wavy;
+}
+
+.facetsearch-mark-warning {
+    --facetsearch-mark-color: var(--theme-query-warning);
+    text-decoration-style: dotted;
+}
+
+// A problem at a place, such as the end of the text, has no characters to
+// underline, so a short line marks the place.
+.facetsearch-mark-empty {
+    position: relative;
+    display: inline-block;
+
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -3px;
+        width: 0.6em;
+        border-bottom: 2px solid var(--facetsearch-mark-color);
+    }
+}
+
+// The outline sits outside the chip, so it holds on a chip with its own
+// color, whose border is set inline.
+.facetsearch-chip-error {
+    outline: 2px solid var(--theme-query-error);
+    outline-offset: 1px;
+}
+
+.facetsearch-chip-warning {
+    outline: 2px dashed var(--theme-query-warning);
+    outline-offset: 1px;
+}
+
+// The line under the bar says the problem, so it never hides in a hover
+// tooltip (TOUCH_EXPERIENCE.md, help text).
+.facetsearch-message {
+    display: flex;
+    align-items: baseline;
+    gap: $sp-6;
+    margin-top: $sp-4;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    color: var(--theme-text-primary);
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.facetsearch-message-icon {
+    flex: none;
+}
+
+.facetsearch-message-error .facetsearch-message-icon {
+    color: var(--theme-query-error);
+}
+
+.facetsearch-message-warning .facetsearch-message-icon {
+    color: var(--theme-query-warning);
+}
+
+.facetsearch-message-count {
+    margin-left: auto;
+    color: var(--theme-text-muted);
+    white-space: nowrap;
+}
+
+// ============================================================================
 // CLEAR BUTTON
 // ============================================================================
 
@@ -337,7 +454,8 @@
         font-size: $font-size-xs;
     }
 
-    .facetsearch-input {
+    .facetsearch-input,
+    .facetsearch-marks {
         font-size: $font-size-sm;
     }
 
@@ -372,7 +490,8 @@
         font-size: $font-size-base;
     }
 
-    .facetsearch-input {
+    .facetsearch-input,
+    .facetsearch-marks {
         font-size: $font-size-lg;
     }
 

@@ -23,6 +23,8 @@ import type
     FacetSearchQuery,
     QueryValue,
 } from "./facetsearch";
+// The query syntax suggests zones with the picker's search, which this publishes as window.searchTimezones.
+import "../timezonepicker/timezonepicker";
 
 // ============================================================================
 // HELPERS
@@ -958,6 +960,375 @@ describe("syntax: \"query\", the apps' query language (#204)", () =>
         expect(chipTexts()).toEqual([]);
         expect(onSearch.mock.calls[0][0]).toMatchObject({ raw: "type:a type:b", text: "type:a type:b", facets: [] });
         expect(fs.getQuery()).toMatchObject({ raw: "type:a type:b", facets: [] });
+        fs.destroy();
+    });
+});
+
+// ============================================================================
+// THE QUERY LANGUAGE: PROBLEMS FROM PARSE, AND SUGGESTIONS (#206)
+// ============================================================================
+
+describe("syntax: \"query\", Parse's problems and the suggestions (#206)", () =>
+{
+    const FACETS: FacetDefinition[] = [
+        { key: "type", label: "Type", valueType: "enum", multiple: true,
+            values: [{ value: "note", label: "Note" }, "task"] },
+        { key: "created_at", label: "Created", valueType: "date" },
+        { key: "amount", label: "Amount", valueType: "number", values: ["5", "10"] },
+    ];
+
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    function make(overrides?: Partial<FacetSearchOptions>): ReturnType<typeof createFacetSearch>
+    {
+        return createFacetSearch("test-facetsearch", { facets: FACETS, syntax: "query", ...overrides });
+    }
+
+    const input = (): HTMLInputElement => container.querySelector("input")!;
+    const message = (): HTMLElement => container.querySelector(".facetsearch-message")!;
+    const said = (): string => message().querySelector(".facetsearch-message-text")?.textContent ?? "";
+    const live = (): HTMLElement => container.querySelector("[role=status][aria-live]")!;
+    /** Each mark behind the input: its severity and the text it underlines. */
+    const marks = (): string[][] => Array.from(container.querySelectorAll(".facetsearch-mark")).map((m) =>
+        [m.classList.contains("facetsearch-mark-error") ? "error" : "warning", m.textContent ?? ""]);
+    const chipMarks = (): string[] => Array.from(container.querySelectorAll(".facetsearch-chip")).map((c) =>
+        c.classList.contains("facetsearch-chip-error") ? "error"
+            : c.classList.contains("facetsearch-chip-warning") ? "warning" : "");
+
+    /** A problem on the bar's value at the first `find`, after `from`. */
+    function at(code: string, text: string, find: string, from = 0): { code: string; title: string; detail: string;
+        start: number; end: number }
+    {
+        const start = text.indexOf(find, from);
+        return { code, title: code + " title", detail: code + " detail.", start, end: start + find.length };
+    }
+
+    async function typeIn(text: string, caret = text.length): Promise<void>
+    {
+        input().value = text;
+        input().setSelectionRange(caret, caret);
+        input().dispatchEvent(new Event("input", { bubbles: true }));
+        await vi.advanceTimersByTimeAsync(300);
+    }
+
+    const items = (): string[][] => Array.from(container.querySelectorAll(".facetsearch-dropdown-item")).map((el) =>
+        [el.querySelector(".facetsearch-dropdown-item-label")?.textContent ?? "",
+            el.querySelector(".facetsearch-dropdown-item-hint")?.textContent ?? ""]);
+
+    async function pick(label: string): Promise<void>
+    {
+        const item = Array.from(container.querySelectorAll(".facetsearch-dropdown-item")).find((el) =>
+            el.querySelector(".facetsearch-dropdown-item-label")?.textContent === label)!;
+        item.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+        await vi.advanceTimersByTimeAsync(300);
+    }
+
+    test("needsTheTimezonePicker_ForItsZones_AndSaysSo", () =>
+    {
+        const search = window.searchTimezones;
+        delete window.searchTimezones;
+        try
+        {
+            expect(() => make()).toThrow(/timezonepicker\.js/);
+            // Today's syntax suggests no zones, so it needs no picker.
+            expect(() => createFacetSearch("test-facetsearch", { facets: FACETS }).destroy()).not.toThrow();
+        }
+        finally
+        {
+            window.searchTimezones = search;
+        }
+    });
+
+    test("anErrorInTheText_IsUnderlined_SaidUnderTheBar_AndAnnounced", async () =>
+    {
+        const text = "budget (type:";
+        const fs = make({ value: text });
+
+        expect(fs.setParsed({ text, errors: [{ code: "QL_UNCLOSED_BRACKET", title: "A bracket is not closed",
+            detail: "The `(` at column 8 is never closed.", suggestion: "Add a `)` to close it.",
+            start: 7, end: 8 }], warnings: [] })).toBe(false);
+        await vi.advanceTimersByTimeAsync(20);
+
+        expect(marks()).toEqual([["error", "("]]);
+        expect(container.querySelector(".facetsearch-marks")!.textContent).toBe(text);
+        expect(message().hidden).toBe(false);
+        expect(message().textContent).toContain("Error: ");
+        expect(said()).toBe("A bracket is not closed. The `(` at column 8 is never closed. Add a `)` to close it.");
+        expect(input().getAttribute("aria-invalid")).toBe("true");
+        expect(input().getAttribute("aria-describedby")).toBe(message().id);
+        expect(live().textContent).toBe("1 error in the query. " + said());
+        // The text stays as typed.
+        expect(input().value).toBe(text);
+        fs.destroy();
+    });
+
+    test("aRangeInAChip_MarksTheChip_AndARangeAfterTheChips_MapsIntoTheInput", () =>
+    {
+        const fs = make();
+        fs.addFacet("type", "note");
+        input().value = "  budget x";
+        const text = fs.getValue();
+
+        expect(text).toBe("type:\"note\" and budget x");
+        fs.setParsed({ text, errors: [at("QL_A", text, "type")], warnings: [at("QL_B", text, "x")] });
+
+        expect(chipMarks()).toEqual(["error"]);
+        expect(container.querySelector(".facetsearch-chip")!.textContent).toContain("(has an error)");
+        // The input's two leading spaces are not in the bar's value, and the mark allows for them.
+        expect(marks()).toEqual([["warning", "x"]]);
+        fs.destroy();
+    });
+
+    test("typedTextWithOr_IsBracketedBesideChips_AndAMarkStillLandsOnItsCharacters", () =>
+    {
+        const fs = make();
+        fs.addFacet("type", "note");
+        input().value = "a or bee";
+        const text = fs.getValue();
+
+        expect(text).toBe("type:\"note\" and (a or bee)");
+        fs.setParsed({ text, errors: [at("QL_A", text, "bee"), at("QL_B", text, "(a")] });
+
+        // A range on the `(` the bar added marks from the start of the typed text.
+        expect(marks()).toEqual([["error", "a"], ["error", "bee"]]);
+        fs.destroy();
+    });
+
+    test("inAList_ARangeOnOneValue_MarksItsChip_AndOneOnTheKey_MarksThemAll", () =>
+    {
+        const fs = make();
+        fs.addFacet("type", "note");
+        fs.addFacet("type", "task");
+        const text = fs.getValue();
+
+        expect(text).toBe("type in (\"note\", \"task\")");
+        fs.setParsed({ text, errors: [at("QL_A", text, "\"task\"")] });
+        expect(chipMarks()).toEqual(["", "error"]);
+
+        fs.setParsed({ text, warnings: [at("QL_B", text, "type")] });
+        expect(chipMarks()).toEqual(["warning", "warning"]);
+        fs.destroy();
+    });
+
+    test("withATree_EachProblemFollowsItsTextToTheChipOrToWhereTheTextNowIs", () =>
+    {
+        const text = "type:note typ:x (a or b)";
+        const fs = make({ value: text });
+
+        expect(fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 9 } },
+            { kind: "text", phrase: "typ:x", span: { start: 10, end: 15 } },
+            { kind: "or", children: [], span: { start: 17, end: 23 } },
+        ] } }, warnings: [at("QL_SEARCHED_AS_TEXT", text, "typ:"), at("QL_A", text, "b"),
+            at("QL_B", text, "note")] })).toBe(true);
+
+        expect(input().value).toBe("typ:x (a or b)");
+        expect(fs.getValue()).toBe("type equals \"note\" and typ:x (a or b)");
+        expect(marks()).toEqual([["warning", "typ:"], ["warning", "b"]]);
+        expect(chipMarks()).toEqual(["warning"]);
+        fs.destroy();
+    });
+
+    test("aRangeOverTwoPartsOfText_CoversBoth_AndARangeOnAGroupsBracket_MarksTheGroup", () =>
+    {
+        const text = "type:note alpha beta (c or d)";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 9 } },
+            { kind: "text", phrase: "alpha", span: { start: 10, end: 15 } },
+            { kind: "text", phrase: "beta", span: { start: 16, end: 20 } },
+            { kind: "or", children: [], span: { start: 22, end: 28 } },
+        ] } }, warnings: [{ code: "QL_A", title: "A", detail: "A.", start: 12, end: 18 },
+            { code: "QL_B", title: "B", detail: "B.", start: 21, end: 22 }] });
+
+        expect(input().value).toBe("alpha beta (c or d)");
+        expect(marks()).toEqual([["warning", "pha be"], ["warning", "("]]);
+        fs.destroy();
+    });
+
+    test("anEmptyRange_IsAMarkOfNoWidth_AndNoPlace_IsSaidOnly", () =>
+    {
+        const text = "type:";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, errors: [{ code: "QL_A", title: "A value is missing", detail: "Add one.",
+            start: 5, end: 5 }, { code: "QL_B", title: "B", detail: "B." }] });
+
+        const empty = container.querySelector(".facetsearch-mark-empty")!;
+        expect(empty.textContent).toBe("");
+        expect(empty.previousSibling!.textContent).toBe("type:");
+        expect(marks()).toEqual([["error", ""]]);
+        expect(said()).toBe("A value is missing. Add one.");
+        fs.destroy();
+    });
+
+    test("anErrorOutranksAWarning_TheCaretAndThePointerChooseTheLine_AndItCounts", () =>
+    {
+        const text = "budget (type:";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, warnings: [at("QL_W", text, "budget (")], errors: [at("QL_E", text, "(")] });
+
+        // The overlap takes the error, and the line starts on the error.
+        expect(marks()).toEqual([["warning", "budget "], ["error", "("]]);
+        expect(said()).toBe("QL_E title. QL_E detail.");
+        expect(message().querySelector(".facetsearch-message-count")!.textContent).toBe("1 of 2");
+
+        // The caret chooses only while the person is in the input.
+        input().setSelectionRange(2, 2);
+        input().dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowLeft" }));
+        expect(said()).toBe("QL_E title. QL_E detail.");
+        input().focus();
+        input().dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowLeft" }));
+        expect(said()).toBe("QL_W title. QL_W detail.");
+        expect(message().classList.contains("facetsearch-message-warning")).toBe(true);
+        expect(message().textContent).toContain("Warning: ");
+        expect(message().querySelector(".facetsearch-message-count")!.textContent).toBe("2 of 2");
+
+        input().setSelectionRange(8, 8);
+        input().dispatchEvent(new KeyboardEvent("keyup", { key: "End" }));
+        expect(said()).toBe("QL_E title. QL_E detail.");
+
+        // jsdom gives each mark an empty box at 0, 0, so the pointer there is on the first mark, the warning.
+        // The pointer comes before the caret, and while it rests, a caret move does not take the line.
+        input().dispatchEvent(new MouseEvent("pointermove", { clientX: 0, clientY: 0 }));
+        expect(said()).toBe("QL_W title. QL_W detail.");
+        input().dispatchEvent(new KeyboardEvent("keyup", { key: "End" }));
+        expect(said()).toBe("QL_W title. QL_W detail.");
+        input().dispatchEvent(new MouseEvent("pointerleave"));
+        expect(said()).toBe("QL_E title. QL_E detail.");
+        fs.destroy();
+    });
+
+    test("typingDropsTheMarks_AndTheSameProblemsAreAnnouncedOnce", async () =>
+    {
+        const text = "budget (";
+        const fs = make({ value: text });
+        const parse = { text, errors: [at("QL_E", text, "(")] };
+
+        fs.setParsed(parse);
+        await vi.advanceTimersByTimeAsync(20);
+        expect(live().textContent).toContain("1 error in the query.");
+
+        input().dispatchEvent(new Event("input", { bubbles: true }));
+        expect(marks()).toEqual([]);
+        expect(message().hidden).toBe(true);
+        expect(input().hasAttribute("aria-invalid")).toBe(false);
+        expect(input().hasAttribute("aria-describedby")).toBe(false);
+
+        live().textContent = "";
+        fs.setParsed(parse);
+        await vi.advanceTimersByTimeAsync(20);
+        expect(marks()).toEqual([["error", "("]]);
+        expect(live().textContent).toBe("");
+
+        fs.setParsed({ text, warnings: [at("QL_W", text, "budget")] });
+        await vi.advanceTimersByTimeAsync(20);
+        expect(live().textContent).toBe("1 warning in the query. QL_W title. QL_W detail.");
+        expect(input().hasAttribute("aria-invalid")).toBe(false);
+        fs.destroy();
+    });
+
+    test.each([
+        ["setValue", (fs: FacetSearch) => fs.setValue("x")],
+        ["clear", (fs: FacetSearch) => fs.clear()],
+        ["addFacet", (fs: FacetSearch) => fs.addFacet("type", "task")],
+        ["removeFacet", (fs: FacetSearch) => fs.removeFacet("type")],
+    ])("%s drops the problems, whose places no longer hold", (_name, change) =>
+    {
+        const fs = make() as FacetSearch;
+        fs.addFacet("type", "note");
+        const text = fs.getValue();
+        fs.setParsed({ text, errors: [at("QL_E", text, "type")] });
+
+        change(fs);
+
+        expect(chipMarks().filter(Boolean)).toEqual([]);
+        expect(message().hidden).toBe(true);
+        fs.destroy();
+    });
+
+    test("aParseOfOlderText_ShowsNoProblems", () =>
+    {
+        const fs = make({ value: "budget" });
+
+        expect(fs.setParsed({ text: "budge", errors: [at("QL_E", "budge", "b")] })).toBe(false);
+        expect(marks()).toEqual([]);
+        expect(message().hidden).toBe(true);
+        fs.destroy();
+    });
+
+    test("todaysSyntax_HasNoMarkLayerAndNoMessageLine", () =>
+    {
+        const fs = createFacetSearch("test-facetsearch", { facets: FACETS });
+
+        expect(container.querySelector(".facetsearch-marks")).toBeNull();
+        expect(container.querySelector(".facetsearch-message")).toBeNull();
+        expect(input().parentElement!.classList.contains("facetsearch-bar")).toBe(true);
+        fs.destroy();
+    });
+
+    test.each([
+        ["a key", "typ", "keys"],
+        ["a value after `key:`", "-type:t", "values"],
+        ["a value after a word operator", "budget type equals ", "values"],
+        ["a value after a short form", "amount gte ", "values"],
+        ["a value after a symbol written apart", "amount >= ", "values"],
+        ["a value in a list", "type in (note, t", "values"],
+        ["a key after a value", "type equals note ty", "keys"],
+        ["a key after `exists`, which takes no value", "type exists ", "keys"],
+        ["a zone after a date", "created_at on 2026-11-15@kol", "zones"],
+        ["a zone after a relative date", "created_at after -7d@kol", "zones"],
+        ["a zone after `zone:`", "zone:kol", "zones"],
+        ["nothing inside quotes", "type:\"no", "none"],
+    ])("the caret in %s (%s) suggests %s", async (_name, text, expected) =>
+    {
+        const fs = make();
+        await typeIn(text);
+
+        const header = container.querySelector(".facetsearch-dropdown-header")?.textContent ?? "";
+        const shown = (container.querySelector(".facetsearch-dropdown") as HTMLElement).style.display !== "none";
+        const kind = !shown ? "none" : header === "Facets" ? "keys" : header === "Time zones" ? "zones"
+            : header.endsWith(" values") ? "values" : "other: " + header;
+        expect(kind).toBe(expected);
+        fs.destroy();
+    });
+
+    test("zones_ComeFromThePickersSearch_ByCity_AndAPickWritesTheIanaName", async () =>
+    {
+        const onChange = vi.fn();
+        make({ onChange });
+        await typeIn("created_at on 2026-11-15@kol and x", "created_at on 2026-11-15@kol".length);
+
+        expect(items()[0][0]).toBe("Asia/Kolkata");
+        expect(items()[0][1]).toBe(window.searchTimezones!("Asia/Kolkata")[0].offset);
+        await pick("Asia/Kolkata");
+
+        // The text after the caret is kept.
+        expect(input().value).toBe("created_at on 2026-11-15@Asia/Kolkata  and x");
+        expect(input().selectionStart).toBe("created_at on 2026-11-15@Asia/Kolkata ".length);
+        expect(onChange).toHaveBeenLastCalledWith("created_at on 2026-11-15@Asia/Kolkata  and x");
+    });
+
+    test.each([
+        ["after `key:`", "type:no", "Note", "type:\"note\" "],
+        ["after a word operator", "type equals ", "task", "type equals \"task\" "],
+        ["in a list", "type in (\"task\", n", "Note", "type in (\"task\", \"note\""],
+        ["after `in`, which opens a list for it", "type in ", "Note", "type in (\"note\") "],
+        ["for a number, unquoted", "amount gte 1", "10", "amount gte 10 "],
+        ["for a key", "-ty", "Type", "-type:"],
+    ])("a pick %s is written as text, and the host's parse makes the chip", async (_name, typed, label, written) =>
+    {
+        const onChange = vi.fn();
+        const fs = make({ onChange });
+        await typeIn(typed);
+        await pick(label);
+
+        expect(input().value).toBe(written);
+        expect(container.querySelectorAll(".facetsearch-chip")).toHaveLength(0);
+        expect(onChange).toHaveBeenLastCalledWith(written.trim());
         fs.destroy();
     });
 });

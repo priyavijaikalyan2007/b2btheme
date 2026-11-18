@@ -109,6 +109,55 @@ export interface QueryTree
     return?: string[];
 }
 
+/** An error or a warning from the API's Parse call. */
+export interface QueryDiagnostic
+{
+    code: string;
+    title: string;
+    detail: string;
+    suggestion?: string;
+    /** Where it is in the text Parse read, in UTF-16 units, up to but not including `end`. Absent with no place. */
+    start?: number;
+    end?: number;
+}
+
+/** The API's answer to Parse for `text`, the bar's value the host sent it. */
+export interface QueryParse
+{
+    text: string;
+    /** Absent when there are errors. */
+    tree?: QueryTree;
+    errors?: QueryDiagnostic[];
+    warnings?: QueryDiagnostic[];
+}
+
+/** A diagnostic, and where the bar shows it: on chips, by index, and on a range of the input. */
+interface Problem
+{
+    diagnostic: QueryDiagnostic;
+    severity: "error" | "warning";
+    chips: number[];
+    input?: { start: number; end: number };
+}
+
+/** Where each part of the bar's value comes from: chips, then the input, which `start` maps to `lead`. */
+interface QueryLayout
+{
+    text: string;
+    parts: Array<{ start: number; end: number; chips: number[]; values: Array<{ start: number; end: number }> }>;
+    input: { start: number; length: number; lead: number } | null;
+}
+
+/** A top-level node `setParsed` split out, by its span in the old text: its chips, or its place in the input. */
+interface SplitNode
+{
+    start: number;
+    end: number;
+    chips: number[];
+    /** Where its text begins in the new input, and how far its span sits inside that, past a `(`. */
+    rest?: { at: number; shift: number; length: number };
+}
+
 /** A chip, and with `syntax: "query"` the value as the standard spelling writes it, when it came from a tree. */
 interface Chip extends ParsedFacet
 {
@@ -231,6 +280,47 @@ const QUERY_OP_WORDS = new Set([
 
 /** Operators a chip on one key can join into `key in (…)`: today's default `:`, `equals` and `in`. */
 const JOINS_INTO_IN = new Set([":", "equals", "in"]);
+
+// What the dropdown offers in the query language. These only choose a suggestion. What the text means is
+// still the API's to say.
+
+/** What stands between a key and its value, written apart: the words, short forms and symbols (spec §6). */
+const QUERY_VALUE_OPS = new Set([...QUERY_OP_WORDS].filter((w) => w !== "exists" && w !== "missing")
+    .concat(["eq", "neq", "gt", "gte", "geq", "lt", "lte", "leq", "=", "!=", "!:", ">", ">=", "<", "<="]));
+
+/** A key with its operator joined on, and the value typed so far, such as `-type:no` or `amount>=5`. */
+const QUERY_JOINED_KEY = /^-?([^\s:!<>=@]+)(?:>=|<=|!=|!:|>|<|=|:)(.*)$/;
+
+/** A zone typed after a date, a time or a relative date, such as `2026-11-15@kol`, `-7d@` or `today@kol`. */
+const QUERY_DATE_ZONE = /(?:\d(?:mo|[hdwy])?|now|today|yesterday)@([^@]*)$/i;
+
+/** Whether the text before the caret ends inside a quote, and where its last unclosed bracket is, or -1. */
+function queryCaretScan(before: string): { inQuote: boolean; open: number }
+{
+    const open: number[] = [];
+    let inQuote = false;
+
+    for (let i = 0; i < before.length; i++)
+    {
+        const ch = before[i];
+
+        if (inQuote)
+        {
+            if (ch === "\\") { i++; }
+            else if (ch === '"') { inQuote = false; }
+        }
+        else if (ch === '"') { inQuote = true; }
+        else if (ch === "(") { open.push(i); }
+        else if (ch === ")") { open.pop(); }
+    }
+    return { inQuote, open: open.length > 0 ? open[open.length - 1] : -1 };
+}
+
+/** Whether [s, e) meets [a, b). An empty range meets a part it touches, so it can mark the end of a part. */
+function meets(s: number, e: number, a: number, b: number): boolean
+{
+    return (s === e) ? (s >= a && s <= b) : (s < b && e > a);
+}
 
 /** A relative date's ISO 8601 duration, such as -P30D or PT6H. */
 const QUERY_DURATION = /^(-?)P(T?)(\d+)([HDWMY])$/;
@@ -572,7 +662,7 @@ function stripQuotes(s: string): string
 
 interface Suggestion
 {
-    type: "facet-key" | "facet-value" | "recent";
+    type: "facet-key" | "facet-value" | "recent" | "zone";
     label: string;
     hint?: string;
     icon?: string;
@@ -614,13 +704,15 @@ export interface FacetSearchHandle
     learnLabels(key: string, values: FacetValue[]): void;
     getFacets(): ParsedFacet[];
     /**
-     * With `syntax: "query"`, draws chips from the API's parse of `text`: each top-level filter on a known
-     * facet becomes a chip, one for each value, and the rest stays in the input as the text it came from.
-     * Returns false and changes nothing when `text` is no longer the bar's value, because a newer input wins,
-     * or when the tree cannot be split. Fires no onChange or onFacetAdd, because the query means the same.
-     * Throws with any other syntax.
+     * With `syntax: "query"`, applies the API's answer to Parse for `text`. From the tree, each top-level
+     * filter on a known facet becomes a chip, one for each value, and the rest stays in the input as the text
+     * it came from. Each error and warning marks the chips and the typed text it falls on, and the message
+     * line under the bar says it. Returns true when it drew chips from the tree. Changes nothing and returns
+     * false when `text` is no longer the bar's value, because a newer input wins. With no tree, or a tree it
+     * cannot split, it keeps the text as typed, shows the errors and warnings, and returns false. Fires no
+     * onChange or onFacetAdd, because the query means the same. Throws with any other syntax.
      */
-    setParsed(parsed: { text: string; tree: QueryTree }): boolean;
+    setParsed(parsed: QueryParse): boolean;
     enable(): void;
     disable(): void;
 
@@ -660,9 +752,23 @@ export class FacetSearch implements FacetSearchHandle
     private dropdownOpen = false;
     private loadTimer: number | null = null;
     private parseTimer: number | null = null;
-    private activeContext: "keys" | "values" | "recent" | null = null;
+    private activeContext: "keys" | "values" | "recent" | "zones" | null = null;
     private activeFacetKey: string | null = null;
     private readonly searchHandlers = new Set<(payload: unknown) => void>();
+
+    // -- the query language (#206) --
+    /** The layer behind the input that underlines a problem's range, and the line under the bar that says it. */
+    private marks: HTMLElement | null = null;
+    private message: HTMLElement | null = null;
+    private problems: Problem[] = [];
+    /** The problem under the pointer, which the message line says before the one at the caret. */
+    private hoveredProblem: number | null = null;
+    /** The codes last announced, so a screen reader hears a set of problems once, not after each pause. */
+    private announcedProblems = "";
+    /** What the caret is in: the text a pick replaces, and how a value is written there. */
+    private queryPartial = "";
+    private queryValueAt: "list" | "in" | "value" = "value";
+    private readonly queryListeners: Array<[string, EventListener]> = [];
 
     // -- bound handlers for cleanup --
     private boundInputHandler: ((e: Event) => void) | null = null;
@@ -685,6 +791,13 @@ export class FacetSearch implements FacetSearchHandle
             size: "default" as FacetSearchSize,
             disabled: false
         }, options);
+
+        if (this.opts.syntax === "query" && typeof window.searchTimezones !== "function")
+        {
+            // The bar suggests zones with the picker's own search, so the two match a zone the same way.
+            throw new Error(`${LOG_PREFIX} syntax: "query" suggests time zones with window.searchTimezones, `
+                + "which the TimezonePicker component publishes. Load timezonepicker.js before this bar.");
+        }
 
         this.id = "facetsearch-" + (++instanceCounter);
         this.facetMap = new Map();
@@ -749,7 +862,10 @@ export class FacetSearch implements FacetSearchHandle
         this.clearBtn = null;
         this.dropdown = null;
         this.liveRegion = null;
+        this.marks = null;
+        this.message = null;
         this.chips = [];
+        this.problems = [];
         this.suggestions = [];
         this.searchHandlers.clear();
         if (this.loadTimer !== null) { clearTimeout(this.loadTimer); }
@@ -771,6 +887,7 @@ export class FacetSearch implements FacetSearchHandle
     setValue(value: string): void
     {
         if (this.destroyed) { return; }
+        this.dropProblems();
         this.chips = [];
         this.renderChips();
         this.parseAndChipify(value);
@@ -791,6 +908,7 @@ export class FacetSearch implements FacetSearchHandle
     clear(): void
     {
         if (this.destroyed) { return; }
+        this.dropProblems();
         this.chips = [];
         if (this.input) { this.input.value = ""; }
         this.renderChips();
@@ -894,7 +1012,7 @@ export class FacetSearch implements FacetSearchHandle
         return this.chips.map(({ literal: _literal, ...facet }) => facet);
     }
 
-    setParsed(parsed: { text: string; tree: QueryTree }): boolean
+    setParsed(parsed: QueryParse): boolean
     {
         if (this.opts.syntax !== "query")
         {
@@ -907,38 +1025,275 @@ export class FacetSearch implements FacetSearchHandle
             return false;
         }
 
-        const root = parsed.tree.root;
-        if (!root || (parsed.tree.return?.length ?? 0) > 0)
+        const found = [
+            ...(parsed.errors ?? []).map((diagnostic) => ({ diagnostic, severity: "error" as const })),
+            ...(parsed.warnings ?? []).map((diagnostic) => ({ diagnostic, severity: "warning" as const })),
+        ];
+        const split = parsed.tree ? this.splitTree(parsed.text, parsed.tree) : null;
+
+        if (!split)
         {
+            // The text stays as typed, so each problem is placed in the bar as it stands.
+            const layout = this.queryLayout();
+            this.showProblems(found.map((f) => this.placeInLayout(f.diagnostic, f.severity, layout)));
             return false;
         }
 
+        this.chips = split.chips;
+        this.input.value = split.rest;
+        this.updateClearBtnVisibility();
+        this.showProblems(found.map((f) => this.placeInSplit(f.diagnostic, f.severity, split.nodes)));
+        logDebug("Parse applied:", split.chips.length, "chips,", found.length, "problems");
+        return true;
+    }
+
+    /**
+     * The tree's top-level nodes as chips and the rest as the text each came from, or null when it cannot be
+     * split: a tree with no root or with `return`, or a node outside the chips with no span.
+     */
+    private splitTree(text: string, tree: QueryTree): { chips: Chip[]; rest: string; nodes: SplitNode[] } | null
+    {
+        const root = tree.root;
+        if (!root || (tree.return?.length ?? 0) > 0) { return null; }
+
         const chips: Chip[] = [];
-        const rest: string[] = [];
+        const nodes: SplitNode[] = [];
+        let rest = "";
         for (const node of (root.kind === "and") ? (root.children ?? []) : [root])
         {
             const made = this.chipsFromNode(node, chips);
             if (made)
             {
+                if (node.span)
+                {
+                    nodes.push({ ...node.span, chips: made.map((_c, i) => chips.length + i) });
+                }
                 chips.push(...made);
                 continue;
             }
             if (!node.span)
             {
                 logDebug("A node outside the chips has no span, so the text stays as typed.");
-                return false;
+                return null;
             }
             // A group's span leaves out its brackets, so they are written back.
-            const piece = parsed.text.slice(node.span.start, node.span.end);
-            rest.push((node.kind === "and" || node.kind === "or") ? "(" + piece + ")" : piece);
+            const group = node.kind === "and" || node.kind === "or";
+            const piece = text.slice(node.span.start, node.span.end);
+            const at = rest.length + (rest ? 1 : 0);
+            rest += (rest ? " " : "") + (group ? "(" + piece + ")" : piece);
+            nodes.push({ ...node.span, chips: [],
+                rest: { at, shift: group ? 1 : 0, length: piece.length + (group ? 2 : 0) } });
+        }
+        return { chips, rest, nodes };
+    }
+
+    /** Where a problem falls once the tree is split: on the chips and the input text its old range meets. */
+    private placeInSplit(diagnostic: QueryDiagnostic, severity: Problem["severity"], nodes: SplitNode[]): Problem
+    {
+        const problem: Problem = { diagnostic, severity, chips: [] };
+        const { start: s, end: e } = diagnostic;
+        if (s === undefined || e === undefined) { return problem; }
+
+        for (const node of nodes)
+        {
+            // A group's brackets lie just outside its span, so they belong to it too.
+            const shift = node.rest?.shift ?? 0;
+            if (!meets(s, e, node.start - shift, node.end + shift)) { continue; }
+            problem.chips.push(...node.chips);
+            if (node.rest)
+            {
+                const rest = node.rest;
+                const to = (i: number): number => rest.at + Math.min(Math.max(i - node.start + shift, 0), rest.length);
+                // A range over several parts of the text covers them all, and the spaces between.
+                problem.input = problem.input
+                    ? { start: problem.input.start, end: to(e) } : { start: to(s), end: to(e) };
+            }
+        }
+        return problem;
+    }
+
+    /** Where a problem falls in the bar as it stands, whose value is the text Parse read. */
+    private placeInLayout(diagnostic: QueryDiagnostic, severity: Problem["severity"], layout: QueryLayout): Problem
+    {
+        const problem: Problem = { diagnostic, severity, chips: [] };
+        const { start: s, end: e } = diagnostic;
+        if (s === undefined || e === undefined) { return problem; }
+
+        for (const part of layout.parts)
+        {
+            if (!meets(s, e, part.start, part.end)) { continue; }
+            // In `key in (a, b)` a range on one value marks that value's chip, and the rest marks them all.
+            const hit = part.chips.filter((_c, i) => meets(s, e, part.values[i].start, part.values[i].end));
+            problem.chips.push(...(hit.length > 0 ? hit : part.chips));
         }
 
-        this.chips = chips;
-        this.input.value = rest.join(" ");
+        const input = layout.input;
+        if (input && meets(s, e, input.start, input.start + input.length))
+        {
+            const to = (i: number): number => input.lead + Math.min(Math.max(i - input.start, 0), input.length);
+            problem.input = { start: to(s), end: to(e) };
+        }
+        return problem;
+    }
+
+    /** Shows a parse's problems, and announces them when their codes differ from the last set announced. */
+    private showProblems(problems: Problem[]): void
+    {
+        this.problems = problems;
+        this.hoveredProblem = null;
         this.renderChips();
-        this.updateClearBtnVisibility();
-        logDebug("Parse applied:", chips.length, "chips,", rest.length, "parts as text");
-        return true;
+        this.renderProblems();
+
+        const codes = problems.map((p) => p.severity + ":" + p.diagnostic.code).join(" ");
+        if (problems.length === 0 || codes === this.announcedProblems) { return; }
+        this.announcedProblems = codes;
+
+        const count = (n: number, word: string): string => n + " " + word + (n === 1 ? "" : "s");
+        const errors = problems.filter((p) => p.severity === "error").length;
+        const warnings = problems.length - errors;
+        const counts = [errors > 0 ? count(errors, "error") : "", warnings > 0 ? count(warnings, "warning") : ""];
+        this.announce(counts.filter(Boolean).join(" and ") + " in the query. " + this.problemSentence(problems[0]));
+        logDebug("Problems shown:", codes);
+    }
+
+    /** Drops the problems, whose places no longer hold once the bar's value changes. The next parse brings more. */
+    private dropProblems(): void
+    {
+        if (this.problems.length === 0) { return; }
+        this.problems = [];
+        this.hoveredProblem = null;
+        this.renderChips();
+        this.renderProblems();
+    }
+
+    /** Draws the underlines and the message line, and tells assistive technology whether the query has errors. */
+    private renderProblems(): void
+    {
+        this.renderMarks();
+        this.renderMessage();
+        if (!this.input) { return; }
+        if (this.problems.some((p) => p.severity === "error")) { setAttr(this.input, "aria-invalid", "true"); }
+        else { this.input.removeAttribute("aria-invalid"); }
+    }
+
+    /**
+     * Writes the input's text into the layer behind it, with each problem's range in a mark. A character takes
+     * the first problem on it, which is an error when one is there, because errors come first. An empty range
+     * is a mark of no width at its place.
+     */
+    private renderMarks(): void
+    {
+        if (!this.marks || !this.input) { return; }
+        while (this.marks.firstChild) { this.marks.removeChild(this.marks.firstChild); }
+
+        const value = this.input.value;
+        const owner = new Array<number>(value.length).fill(-1);
+        const points = new Map<number, number>();
+        this.problems.forEach((p, i) =>
+        {
+            if (!p.input) { return; }
+            if (p.input.start === p.input.end && !points.has(p.input.start)) { points.set(p.input.start, i); }
+            for (let k = p.input.start; k < p.input.end; k++)
+            {
+                if (owner[k] < 0) { owner[k] = i; }
+            }
+        });
+
+        const mark = (text: string, i: number): HTMLElement =>
+        {
+            const severity = this.problems[i].severity;
+            const el = createElement("span", ["facetsearch-mark", "facetsearch-mark-" + severity], text);
+            setAttr(el, "data-problem", String(i));
+            if (!text) { el.classList.add("facetsearch-mark-empty"); }
+            return el;
+        };
+        for (let k = 0; k <= value.length;)
+        {
+            if (points.has(k)) { this.marks.appendChild(mark("", points.get(k)!)); }
+            if (k === value.length) { break; }
+            let j = k + 1;
+            while (j < value.length && owner[j] === owner[k] && !points.has(j)) { j++; }
+            const text = value.slice(k, j);
+            this.marks.appendChild(owner[k] < 0 ? document.createTextNode(text) : mark(text, owner[k]));
+            k = j;
+        }
+        this.marks.scrollLeft = this.input.scrollLeft;
+    }
+
+    /** The problem the message line says: the one under the pointer, at the caret, else the first, an error if any. */
+    private shownProblem(): number
+    {
+        if (this.hoveredProblem !== null) { return this.hoveredProblem; }
+        // An input keeps a caret when it has no focus, but the person is not at it then.
+        const caret = (this.input && document.activeElement === this.input) ? this.input.selectionStart : null;
+        const at = (caret === null) ? -1
+            : this.problems.findIndex((p) => p.input && p.input.start <= caret && caret <= p.input.end);
+        // Errors come first, so the first problem is an error when there is one.
+        return Math.max(at, 0);
+    }
+
+    /** A problem as one sentence: its title, what is wrong, and what to do. */
+    private problemSentence(p: Problem): string
+    {
+        const { title, detail, suggestion } = p.diagnostic;
+        return [title + (/[.!?]$/.test(title) ? "" : "."), detail, suggestion ?? ""].filter(Boolean).join(" ");
+    }
+
+    /** Writes the message line under the bar, which the input names with aria-describedby. */
+    private renderMessage(): void
+    {
+        if (!this.message || !this.input) { return; }
+        while (this.message.firstChild) { this.message.removeChild(this.message.firstChild); }
+        this.message.classList.remove("facetsearch-message-error", "facetsearch-message-warning");
+
+        if (this.problems.length === 0)
+        {
+            this.message.hidden = true;
+            this.input.removeAttribute("aria-describedby");
+            return;
+        }
+
+        const shown = this.shownProblem();
+        const p = this.problems[shown];
+        const error = p.severity === "error";
+        this.message.hidden = false;
+        this.message.classList.add("facetsearch-message-" + p.severity);
+
+        // The color is on a span, because dark mode makes every icon inherit its color.
+        const icon = createElement("span", ["facetsearch-message-icon"]);
+        setAttr(icon, "aria-hidden", "true");
+        icon.appendChild(createElement("i",
+            ["bi", error ? "bi-exclamation-circle-fill" : "bi-exclamation-triangle-fill"]));
+        this.message.appendChild(icon);
+        this.message.appendChild(createElement("span", ["visually-hidden"], error ? "Error: " : "Warning: "));
+        this.message.appendChild(createElement("span", ["facetsearch-message-text"], this.problemSentence(p)));
+        if (this.problems.length > 1)
+        {
+            this.message.appendChild(createElement("span", ["facetsearch-message-count"],
+                (shown + 1) + " of " + this.problems.length));
+        }
+        setAttr(this.input, "aria-describedby", this.message.id);
+    }
+
+    /** Shows the problem under the pointer, found by the marks' boxes, since the marks lie behind the input. */
+    private hoverProblem(x: number, y: number): void
+    {
+        if (!this.marks || this.problems.length === 0) { return; }
+        let found: number | null = null;
+        for (const el of Array.from(this.marks.querySelectorAll<HTMLElement>(".facetsearch-mark")))
+        {
+            const r = el.getBoundingClientRect();
+            // An empty mark has no width, so its underline's width is what the pointer can rest on.
+            const right = Math.max(r.right, r.left + el.offsetHeight / 2);
+            if (x >= r.left && x <= right && y >= r.top && y <= r.bottom)
+            {
+                found = Number(el.getAttribute("data-problem"));
+                break;
+            }
+        }
+        if (found === this.hoveredProblem) { return; }
+        this.hoveredProblem = found;
+        this.renderMessage();
     }
 
     /**
@@ -1079,6 +1434,7 @@ export class FacetSearch implements FacetSearchHandle
         this.buildChipContainer();
         this.buildInput();
         this.buildClearButton();
+        this.buildMessage();
         this.buildDropdown();
         this.buildLiveRegion();
     }
@@ -1113,8 +1469,31 @@ export class FacetSearch implements FacetSearchHandle
         setAttr(input, "autocomplete", "off");
         input.placeholder = this.opts.placeholder || "Search...";
         if (this.opts.disabled) { input.disabled = true; }
-        this.bar!.appendChild(input);
         this.input = input;
+        if (this.opts.syntax !== "query")
+        {
+            this.bar!.appendChild(input);
+            return;
+        }
+
+        // An input cannot style a range of its text, so a layer behind it, with the same font, underlines each
+        // problem's range. Its text is clear, and it scrolls with the input.
+        const field = createElement("span", ["facetsearch-field"]);
+        this.marks = createElement("div", ["facetsearch-marks"]);
+        setAttr(this.marks, "aria-hidden", "true");
+        field.appendChild(this.marks);
+        field.appendChild(input);
+        this.bar!.appendChild(field);
+    }
+
+    /** The line under the bar that says a parse's error or warning. The input names it while it has one. */
+    private buildMessage(): void
+    {
+        if (this.opts.syntax !== "query") { return; }
+        this.message = createElement("div", ["facetsearch-message"]);
+        setAttr(this.message, "id", this.id + "-message");
+        this.message.hidden = true;
+        this.root!.appendChild(this.message);
     }
 
     private buildClearButton(): void
@@ -1168,6 +1547,7 @@ export class FacetSearch implements FacetSearchHandle
         }
 
         this.chips.push(facet);
+        this.dropProblems();
         this.renderChips();
         this.updateClearBtnVisibility();
 
@@ -1193,6 +1573,7 @@ export class FacetSearch implements FacetSearchHandle
             c => c.key.toLowerCase() !== key.toLowerCase() || (value !== undefined && c.value !== value));
         if (this.chips.length < before)
         {
+            this.dropProblems();
             this.renderChips();
             this.updateClearBtnVisibility();
             this.announce("Removed filter: " + key);
@@ -1212,6 +1593,7 @@ export class FacetSearch implements FacetSearchHandle
     {
         if (idx < 0 || idx >= this.chips.length) { return; }
         const removed = this.chips.splice(idx, 1)[0];
+        this.dropProblems();
         this.renderChips();
         this.updateClearBtnVisibility();
         this.announce("Removed filter: " + removed.key);
@@ -1273,6 +1655,16 @@ export class FacetSearch implements FacetSearchHandle
         setAttr(text, "title", facet.label !== undefined && facet.label !== facet.value
             ? display + " (" + facet.value + ")" : display);
         chip.appendChild(text);
+
+        // A problem on the chip marks it, an error before a warning. The message line says what it is.
+        const on = this.problems.filter((p) => p.chips.includes(idx));
+        const severity = on.some((p) => p.severity === "error") ? "error" : on.length > 0 ? "warning" : null;
+        if (severity)
+        {
+            chip.classList.add("facetsearch-chip-" + severity);
+            chip.appendChild(createElement("span", ["visually-hidden"], severity === "error"
+                ? " (has an error)" : " (has a warning)"));
+        }
 
         if (!this.opts.disabled)
         {
@@ -1371,46 +1763,85 @@ export class FacetSearch implements FacetSearchHandle
      */
     private buildQueryText(): string
     {
-        const groups = new Map<string, Chip[]>();
-        for (const c of this.chips)
+        return this.queryLayout().text;
+    }
+
+    /** The bar's value, and where each chip and the typed text sit in it, so Parse's ranges can be placed. */
+    private queryLayout(): QueryLayout
+    {
+        const groups = new Map<string, number[]>();
+        this.chips.forEach((c, i) =>
         {
             // A key is a word, so a space cannot be part of one.
             const id = c.key.toLowerCase() + (c.negated ? " not" : "");
-            groups.set(id, [...(groups.get(id) ?? []), c]);
-        }
+            groups.set(id, [...(groups.get(id) ?? []), i]);
+        });
 
-        const parts: string[] = [];
+        const layout: QueryLayout = { text: "", parts: [], input: null };
+        const add = (piece: string): number =>
+        {
+            layout.text += (layout.text ? " and " : "");
+            const start = layout.text.length;
+            layout.text += piece;
+            return start;
+        };
+
         for (const group of groups.values())
         {
-            const joinable = group.filter((c) => JOINS_INTO_IN.has(c.operator));
-            const joined = joinable.length > 1 || joinable.some((c) => c.operator === "in");
-            const not = group[0].negated ? "not " : "";
+            const first = this.chips[group[0]];
+            const joinable = group.filter((i) => JOINS_INTO_IN.has(this.chips[i].operator));
+            const joined = joinable.length > 1 || joinable.some((i) => this.chips[i].operator === "in");
+            const not = first.negated ? "not " : "";
             if (joined)
             {
-                parts.push(not + group[0].key + " in (" + joinable.map((c) => this.chipLiteral(c)).join(", ") + ")");
+                const head = not + first.key + " in (";
+                const values: Array<{ start: number; end: number }> = [];
+                let list = "";
+                for (const i of joinable)
+                {
+                    list += (list ? ", " : "");
+                    const literal = this.chipLiteral(this.chips[i]);
+                    values.push({ start: head.length + list.length, end: head.length + list.length + literal.length });
+                    list += literal;
+                }
+                const start = add(head + list + ")");
+                layout.parts.push({ start, end: layout.text.length, chips: joinable,
+                    values: values.map((v) => ({ start: start + v.start, end: start + v.end })) });
             }
-            for (const c of group)
+            for (const i of group)
             {
+                const c = this.chips[i];
                 if (joined && JOINS_INTO_IN.has(c.operator)) { continue; }
                 const word = /^[a-z]/.test(c.operator);
-                parts.push(not + c.key + (word ? " " + c.operator + " " : c.operator) + this.chipLiteral(c));
+                const start = add(not + c.key + (word ? " " + c.operator + " " : c.operator) + this.chipLiteral(c));
+                layout.parts.push({ start, end: layout.text.length, chips: [i],
+                    values: [{ start, end: layout.text.length }] });
             }
         }
 
-        const typed = this.input?.value.trim() ?? "";
+        const value = this.input?.value ?? "";
+        const typed = value.trim();
         if (typed)
         {
-            parts.push((parts.length > 0 && hasTopLevelOr(typed)) ? "(" + typed + ")" : typed);
+            const bracket = layout.parts.length > 0 && hasTopLevelOr(typed);
+            const start = add(bracket ? "(" + typed + ")" : typed) + (bracket ? 1 : 0);
+            layout.input = { start, length: typed.length, lead: value.length - value.trimStart().length };
         }
-        return parts.join(" and ");
+        return layout;
     }
 
     /** A chip's value as the language writes it: from the tree, else by its facet's value type. */
     private chipLiteral(c: Chip): string
     {
         if (c.literal !== undefined) { return c.literal; }
-        const type = this.facetMap.get(c.key.toLowerCase())?.valueType;
-        return (type === "number" || type === "date" || type === "boolean") ? c.value : quoteQueryText(c.value);
+        return this.valueLiteral(c.key, c.value);
+    }
+
+    /** A value as the language writes it for its facet: quoted, unless the facet holds numbers, dates or booleans. */
+    private valueLiteral(key: string, value: string): string
+    {
+        const type = this.facetMap.get(key.toLowerCase())?.valueType;
+        return (type === "number" || type === "date" || type === "boolean") ? value : quoteQueryText(value);
     }
 
     // ====================================================================
@@ -1421,6 +1852,11 @@ export class FacetSearch implements FacetSearchHandle
     private detectContext(): void
     {
         if (!this.input) { return; }
+        if (this.opts.syntax === "query")
+        {
+            this.detectQueryContext();
+            return;
+        }
         const text = this.input.value;
 
         if (text.length === 0)
@@ -1452,6 +1888,84 @@ export class FacetSearch implements FacetSearchHandle
 
         this.activeContext = "keys";
         this.activeFacetKey = null;
+    }
+
+    /**
+     * What the caret is in, in the query language: a zone after a date or `zone:`, a value after a known key
+     * and its operator, or else a key. This only chooses what to suggest. What the text means is the API's.
+     */
+    private detectQueryContext(): void
+    {
+        const input = this.input!;
+        const before = input.value.slice(0, input.selectionStart ?? input.value.length);
+        this.activeFacetKey = null;
+        this.queryPartial = "";
+        if (input.value.length === 0)
+        {
+            this.activeContext = this.opts.showHistory ? "recent" : "keys";
+            return;
+        }
+
+        const scan = queryCaretScan(before);
+        if (scan.inQuote)
+        {
+            this.activeContext = null;
+            return;
+        }
+
+        const token = /[^\s(,]*$/.exec(before)![0];
+        const zone = QUERY_DATE_ZONE.exec(token) ?? /^zone:(.*)$/i.exec(token);
+        if (zone)
+        {
+            this.activeContext = "zones";
+            this.queryPartial = zone[1];
+            return;
+        }
+
+        const joined = QUERY_JOINED_KEY.exec(token);
+        if (joined && this.facetMap.has(joined[1].toLowerCase()))
+        {
+            this.queryValuesOf(joined[1], joined[2], "value");
+            return;
+        }
+
+        // In `key in (a, b`, the next value of `key`.
+        const list = (scan.open < 0) ? null : /(?:^|[\s(])-?([^\s(]+)\s+in\s*$/i.exec(before.slice(0, scan.open));
+        if (list && this.facetMap.has(list[1].toLowerCase()))
+        {
+            this.queryValuesOf(list[1], token, "list");
+            return;
+        }
+
+        // In `key after 2026`, a value of `key`, whichever form its operator takes.
+        const words = before.slice(0, before.length - token.length).trim().split(/\s+/);
+        const op = (words[words.length - 1] ?? "").toLowerCase();
+        const key = (words[words.length - 2] ?? "").replace(/^[(-]+/, "");
+        if (QUERY_VALUE_OPS.has(op) && this.facetMap.has(key.toLowerCase()))
+        {
+            this.queryValuesOf(key, token, op === "in" ? "in" : "value");
+            return;
+        }
+
+        this.activeContext = "keys";
+        this.queryPartial = token.replace(/^-/, "");
+    }
+
+    /** Suggests values of `key`, for the `partial` typed so far, written as a value goes in at `at`. */
+    private queryValuesOf(key: string, partial: string, at: "list" | "in" | "value"): void
+    {
+        this.activeContext = "values";
+        this.activeFacetKey = key.toLowerCase();
+        this.queryPartial = partial;
+        this.queryValueAt = at;
+    }
+
+    /** Zones for the text after `@` or `zone:`, by the TimezonePicker's search. */
+    private showZoneSuggestions(): void
+    {
+        this.suggestions = window.searchTimezones!(this.queryPartial).map(({ zone, offset }) =>
+            ({ type: "zone" as const, label: zone, hint: offset, value: zone }));
+        this.renderDropdown();
     }
 
     // ====================================================================
@@ -1499,6 +2013,10 @@ export class FacetSearch implements FacetSearchHandle
         {
             this.showRecentSuggestions();
         }
+        else if (this.activeContext === "zones")
+        {
+            this.showZoneSuggestions();
+        }
         else
         {
             this.closeDropdown();
@@ -1511,8 +2029,8 @@ export class FacetSearch implements FacetSearchHandle
         const text = this.input.value.trim().toLowerCase();
         // Get the last partial token
         const lastSpace = text.lastIndexOf(" ");
-        const partial = lastSpace >= 0
-            ? text.substring(lastSpace + 1) : text;
+        const partial = (this.opts.syntax === "query") ? this.queryPartial.toLowerCase()
+            : lastSpace >= 0 ? text.substring(lastSpace + 1) : text;
 
         const filtered = this.opts.facets.filter(fd =>
         {
@@ -1539,7 +2057,7 @@ export class FacetSearch implements FacetSearchHandle
         if (!fd) { return; }
 
         const text = this.input.value;
-        const partial = this.extractPartialValue(text);
+        const partial = (this.opts.syntax === "query") ? this.queryPartial : this.extractPartialValue(text);
 
         if (fd.loadValues)
         {
@@ -1703,6 +2221,7 @@ export class FacetSearch implements FacetSearchHandle
             return fd ? fd.label + " values" : null;
         }
         if (type === "recent") { return "Recent"; }
+        if (type === "zone") { return "Time zones"; }
         return null;
     }
 
@@ -1790,6 +2309,11 @@ export class FacetSearch implements FacetSearchHandle
     private selectSuggestion(suggestion: Suggestion): void
     {
         if (!this.input) { return; }
+        if (this.opts.syntax === "query")
+        {
+            this.selectQuerySuggestion(suggestion);
+            return;
+        }
 
         if (suggestion.type === "facet-key" && suggestion.facetKey)
         {
@@ -1820,6 +2344,40 @@ export class FacetSearch implements FacetSearchHandle
             this.parseAndChipify(suggestion.label);
             this.closeDropdown();
         }
+    }
+
+    /**
+     * Writes a pick into the text at the caret, in place of what was typed of it. The host's next parse makes
+     * a chip of a value, so the API decides what it is. A value after `in` opens a list for it.
+     */
+    private selectQuerySuggestion(suggestion: Suggestion): void
+    {
+        const input = this.input!;
+        if (suggestion.type === "recent")
+        {
+            this.parseAndChipify(suggestion.label);
+            this.closeDropdown();
+            this.handleInput();
+            return;
+        }
+
+        let insert = "";
+        if (suggestion.type === "facet-key" && suggestion.facetKey) { insert = suggestion.facetKey + ":"; }
+        else if (suggestion.type === "zone" && suggestion.value) { insert = suggestion.value + " "; }
+        else if (suggestion.type === "facet-value" && suggestion.facetKey && suggestion.value !== undefined)
+        {
+            const literal = this.valueLiteral(suggestion.facetKey, suggestion.value);
+            insert = (this.queryValueAt === "list") ? literal
+                : (this.queryValueAt === "in") ? "(" + literal + ") " : literal + " ";
+        }
+
+        const caret = input.selectionStart ?? input.value.length;
+        const from = caret - this.queryPartial.length;
+        input.value = input.value.slice(0, from) + insert + input.value.slice(caret);
+        input.setSelectionRange(from + insert.length, from + insert.length);
+        this.closeDropdown();
+        input.focus();
+        this.handleInput();
     }
 
     /** Replace the last partial token in input with a new string. */
@@ -1875,6 +2433,30 @@ export class FacetSearch implements FacetSearchHandle
         this.input.addEventListener("blur", this.boundBlurHandler);
         document.addEventListener("pointerdown", this.boundClickOutside);
         this.dropdown.addEventListener("pointerdown", this.boundDropdownClick);
+        if (this.opts.syntax === "query") { this.attachQueryListeners(this.input); }
+    }
+
+    /**
+     * Keeps the underlines under the text as the input scrolls, and the message line on the problem under the
+     * pointer, else the one at the caret, which a tap, a click or a key moves.
+     */
+    private attachQueryListeners(input: HTMLInputElement): void
+    {
+        const caretMoved = (): void =>
+        {
+            if (this.problems.length > 0 && this.hoveredProblem === null) { this.renderMessage(); }
+        };
+        this.queryListeners.push(
+            ["scroll", () => { if (this.marks) { this.marks.scrollLeft = input.scrollLeft; } }],
+            ["pointermove", (e) => this.hoverProblem((e as PointerEvent).clientX, (e as PointerEvent).clientY)],
+            ["pointerleave", () =>
+            {
+                if (this.hoveredProblem === null) { return; }
+                this.hoveredProblem = null;
+                this.renderMessage();
+            }],
+            ["keyup", caretMoved], ["click", caretMoved], ["select", caretMoved]);
+        for (const [type, listener] of this.queryListeners) { input.addEventListener(type, listener); }
     }
 
     private detachListeners(): void
@@ -1904,6 +2486,8 @@ export class FacetSearch implements FacetSearchHandle
             this.dropdown.removeEventListener(
                 "pointerdown", this.boundDropdownClick);
         }
+        for (const [type, listener] of this.queryListeners) { this.input?.removeEventListener(type, listener); }
+        this.queryListeners.length = 0;
     }
 
     // ====================================================================
@@ -1940,6 +2524,7 @@ export class FacetSearch implements FacetSearchHandle
     private handleInput(): void
     {
         logTrace("input handler");
+        this.dropProblems();
         this.updateClearBtnVisibility();
 
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }
