@@ -56,6 +56,7 @@
             <h2>Timezone Picker</h2>
             <p>A searchable timezone selector with grouped regions, UTC offset display, and live time preview.
             Offsets are DST-aware — they reflect the current daylight saving time rules for each timezone via the <code>Intl.DateTimeFormat</code> API.</p>
+            <p class="text-muted">The search finds a city with a space or a hyphen, such as <code>los angeles</code>, and a zone the browser lists by an old name by its current one, so <code>kolkata</code> finds Asia/Calcutta (#213).</p>
 
             <div class="row g-4">
                 <div class="col-md-4">
@@ -73,6 +74,11 @@
             </div>
 
             <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">Compact, for beside a search bar (#208)</label>
+                    <div id="demo-tz-compact"></div>
+                    <small class="text-muted d-block mt-1">One button with the city and offset. It opens the same dropdown. Asia/Calcutta shows its current city, Kolkata.</small>
+                </div>
                 <div class="col-md-4">
                     <label class="form-label">Programmatic Control</label>
                     <div id="demo-tz-api"></div>
@@ -115,6 +121,12 @@
         timezone: "Europe/London",
         size: "sm",
         onSelect: function(tz) { console.log("[TimezonePicker sm]", tz); }
+    });
+
+    createTimezonePicker("demo-tz-compact", {
+        compact: true,
+        timezone: "Asia/Calcutta",
+        onSelect: function(tz) { console.log("[TimezonePicker compact]", tz); }
     });
 
     var tzApi = createTimezonePicker("demo-tz-api", {
