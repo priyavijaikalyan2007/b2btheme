@@ -1,0 +1,158 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-QueryLanguage
+  PURPOSE: Standalone demo page for the QueryLanguage component (#205). Type a
+           query and see the colors the apps' grammar gives it, and the
+           ranges colorQuery returns.
+  RELATES: [[QueryLanguage]], [[FacetSearch]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueryLanguage - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+    <style>
+    .ql-demo-out
+    {
+        padding: 8px 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.9375rem;
+        white-space: pre-wrap;
+        background: var(--theme-surface-bg);
+        border: 1px solid var(--theme-border-color);
+        border-radius: 2px;
+        min-height: 2.5rem;
+    }
+    .ql-keyword { color: var(--theme-query-keyword); }
+    .ql-key { color: var(--theme-query-key); }
+    .ql-operator { color: var(--theme-query-operator); }
+    .ql-value { color: var(--theme-query-value); }
+    .ql-variable { color: var(--theme-query-variable); }
+    </style>
+</head>
+<body class="demo-shell-body">
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            QueryLanguage
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+    <main class="demo-main">
+        <div class="demo-section">
+            <h2>Color a query</h2>
+            <p class="text-muted">
+                <code>colorQuery(text)</code> reads the text with a parser generated from the apps' grammar, and
+                says which ranges are keywords, keys, operators, values and variables. A word is colored as the
+                API reads it: <code>in</code> after a key is an operator, and the <code>in</code> of
+                <code>meeting in march</code> is plain text. It never reports an error. FacetSearch colors its
+                <code>syntax: "query"</code> text with it.
+            </p>
+            <label class="form-label" for="ql-demo-input">Query</label>
+            <input id="ql-demo-input" class="form-control" type="text" autocomplete="off" spellcheck="false"
+                value='type in (note, task) and created_at on-or-after 2026-11-01@kolkata not "draft" meeting in march'>
+            <div class="d-flex flex-wrap gap-2 mt-2" id="ql-demo-samples">
+                <button type="button" class="btn btn-sm btn-outline-secondary">(rel.parent_of:X and rel.child_of:Y) or rel.stakeholder_of:Z</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">-"draft" rel.signed_off_by where ( -rel.member_of:?org )</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">amount >= -5 and size:$max return ?p</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">budget (type:</button>
+            </div>
+            <h3 class="h6 mt-3">The colors</h3>
+            <div id="ql-demo-out" class="ql-demo-out" aria-live="polite"></div>
+            <h3 class="h6 mt-3">The ranges</h3>
+            <table class="table table-sm">
+                <thead><tr><th scope="col">Text</th><th scope="col">Kind</th><th scope="col">Start</th><th scope="col">End</th></tr></thead>
+                <tbody id="ql-demo-ranges"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/lib/antlr4-4.13.1.js"></script>
+    <script src="../../dist/components/querylanguage/querylanguage.js"></script>
+
+    <script>
+    (function()
+    {
+        var input = document.getElementById("ql-demo-input");
+        var out = document.getElementById("ql-demo-out");
+        var rows = document.getElementById("ql-demo-ranges");
+
+        function cell(text)
+        {
+            var td = document.createElement("td");
+            td.textContent = text;
+            return td;
+        }
+
+        function draw()
+        {
+            var text = input.value;
+            var ranges = colorQuery(text);
+            var at = 0;
+
+            out.textContent = "";
+            rows.textContent = "";
+            ranges.forEach(function(r)
+            {
+                out.appendChild(document.createTextNode(text.slice(at, r.start)));
+                var span = document.createElement("span");
+                span.className = "ql-" + r.kind;
+                span.textContent = text.slice(r.start, r.end);
+                out.appendChild(span);
+                at = r.end;
+
+                var tr = document.createElement("tr");
+                tr.appendChild(cell(text.slice(r.start, r.end)));
+                tr.appendChild(cell(r.kind));
+                tr.appendChild(cell(String(r.start)));
+                tr.appendChild(cell(String(r.end)));
+                rows.appendChild(tr);
+            });
+            out.appendChild(document.createTextNode(text.slice(at)));
+        }
+
+        input.addEventListener("input", draw);
+        document.getElementById("ql-demo-samples").addEventListener("click", function(e)
+        {
+            var b = e.target.closest("button");
+            if (!b) { return; }
+            input.value = b.textContent;
+            draw();
+        });
+        draw();
+    })();
+    </script>
+</body>
+</html>
