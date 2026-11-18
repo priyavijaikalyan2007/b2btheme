@@ -814,6 +814,13 @@ export class FacetSearch implements FacetSearchHandle
             throw new Error(`${LOG_PREFIX} syntax: "query" suggests time zones with window.searchTimezones, `
                 + "which the TimezonePicker component publishes. Load timezonepicker.js before this bar.");
         }
+        if (this.opts.syntax === "query" && typeof window.colorQuery !== "function")
+        {
+            // The colors come from the apps' own grammar, so the bar and the API read a query the same way.
+            throw new Error(`${LOG_PREFIX} syntax: "query" colors the query with window.colorQuery, which the `
+                + "QueryLanguage component publishes. Load /lib/antlr4-4.13.1.js and querylanguage.js before "
+                + "this bar.");
+        }
 
         this.id = "facetsearch-" + (++instanceCounter);
         this.facetMap = new Map();
@@ -927,6 +934,7 @@ export class FacetSearch implements FacetSearchHandle
         this.dropProblems();
         this.chips = [];
         if (this.input) { this.input.value = ""; }
+        this.renderLayer();
         this.renderChips();
         this.updateClearBtnVisibility();
         this.closeDropdown();
@@ -1185,7 +1193,7 @@ export class FacetSearch implements FacetSearchHandle
     /** Draws the underlines and the message line, and tells assistive technology whether the query has errors. */
     private renderProblems(): void
     {
-        this.renderMarks();
+        this.renderLayer();
         this.renderMessage();
         if (!this.input) { return; }
         if (this.problems.some((p) => p.severity === "error")) { setAttr(this.input, "aria-invalid", "true"); }
@@ -1193,16 +1201,23 @@ export class FacetSearch implements FacetSearchHandle
     }
 
     /**
-     * Writes the input's text into the layer behind it, with each problem's range in a mark. A character takes
-     * the first problem on it, which is an error when one is there, because errors come first. An empty range
-     * is a mark of no width at its place.
+     * Writes the input's text into the layer behind it, which draws the text the person sees. Each range
+     * QueryLanguage colors takes its token color (#205), and each problem's range is in a mark. A character
+     * takes the first problem on it, which is an error when one is there, because errors come first. An empty
+     * range is a mark of no width at its place.
      */
-    private renderMarks(): void
+    private renderLayer(): void
     {
         if (!this.marks || !this.input) { return; }
         while (this.marks.firstChild) { this.marks.removeChild(this.marks.firstChild); }
 
         const value = this.input.value;
+        const kind = new Array<string | null>(value.length).fill(null);
+        for (const r of window.colorQuery!(value))
+        {
+            for (let k = r.start; k < r.end; k++) { kind[k] = r.kind; }
+        }
+
         const owner = new Array<number>(value.length).fill(-1);
         const points = new Map<number, number>();
         this.problems.forEach((p, i) =>
@@ -1215,22 +1230,33 @@ export class FacetSearch implements FacetSearchHandle
             }
         });
 
-        const mark = (text: string, i: number): HTMLElement =>
+        const run = (text: string, at: number): Node =>
         {
-            const severity = this.problems[i].severity;
-            const el = createElement("span", ["facetsearch-mark", "facetsearch-mark-" + severity], text);
+            const i = owner[at] ?? -1;
+            const color = kind[at] ?? null;
+            if (i < 0 && !color) { return document.createTextNode(text); }
+            const el = createElement("span", color ? ["facetsearch-tok-" + color] : [], text);
+            if (i >= 0)
+            {
+                el.classList.add("facetsearch-mark", "facetsearch-mark-" + this.problems[i].severity);
+                setAttr(el, "data-problem", String(i));
+            }
+            return el;
+        };
+        const empty = (i: number): HTMLElement =>
+        {
+            const el = createElement("span",
+                ["facetsearch-mark", "facetsearch-mark-" + this.problems[i].severity, "facetsearch-mark-empty"]);
             setAttr(el, "data-problem", String(i));
-            if (!text) { el.classList.add("facetsearch-mark-empty"); }
             return el;
         };
         for (let k = 0; k <= value.length;)
         {
-            if (points.has(k)) { this.marks.appendChild(mark("", points.get(k)!)); }
+            if (points.has(k)) { this.marks.appendChild(empty(points.get(k)!)); }
             if (k === value.length) { break; }
             let j = k + 1;
-            while (j < value.length && owner[j] === owner[k] && !points.has(j)) { j++; }
-            const text = value.slice(k, j);
-            this.marks.appendChild(owner[k] < 0 ? document.createTextNode(text) : mark(text, owner[k]));
+            while (j < value.length && owner[j] === owner[k] && kind[j] === kind[k] && !points.has(j)) { j++; }
+            this.marks.appendChild(run(value.slice(k, j), k));
             k = j;
         }
         this.marks.scrollLeft = this.input.scrollLeft;
@@ -1721,6 +1747,7 @@ export class FacetSearch implements FacetSearchHandle
             this.chips = [];
             this.renderChips();
             if (this.input) { this.input.value = raw; }
+            this.renderLayer();
             this.updateClearBtnVisibility();
             return;
         }
@@ -2541,6 +2568,7 @@ export class FacetSearch implements FacetSearchHandle
     {
         logTrace("input handler");
         this.dropProblems();
+        this.renderLayer();
         this.updateClearBtnVisibility();
 
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }

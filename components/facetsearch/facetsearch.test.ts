@@ -25,6 +25,8 @@ import type
 } from "./facetsearch";
 // The query syntax suggests zones with the picker's search, which this publishes as window.searchTimezones.
 import "../timezonepicker/timezonepicker";
+// The query syntax colors its text with window.colorQuery, which this publishes (#205).
+import "../querylanguage/querylanguage";
 
 // ============================================================================
 // HELPERS
@@ -989,9 +991,27 @@ describe("syntax: \"query\", Parse's problems and the suggestions (#206)", () =>
     const message = (): HTMLElement => container.querySelector(".facetsearch-message")!;
     const said = (): string => message().querySelector(".facetsearch-message-text")?.textContent ?? "";
     const live = (): HTMLElement => container.querySelector("[role=status][aria-live]")!;
-    /** Each mark behind the input: its severity and the text it underlines. */
-    const marks = (): string[][] => Array.from(container.querySelectorAll(".facetsearch-mark")).map((m) =>
-        [m.classList.contains("facetsearch-mark-error") ? "error" : "warning", m.textContent ?? ""]);
+    /**
+     * Each mark behind the input: its severity and the text it underlines. A mark over text of two colors is
+     * drawn in two pieces, so pieces next to each other for one problem are read as one.
+     */
+    const marks = (): string[][] =>
+    {
+        const rows: string[][] = [];
+        let last: Element | null = null;
+        for (const m of Array.from(container.querySelectorAll(".facetsearch-mark")))
+        {
+            const joins = last !== null && m.previousSibling === last && !!m.textContent && !!last.textContent
+                && m.getAttribute("data-problem") === last.getAttribute("data-problem");
+            if (joins) { rows[rows.length - 1][1] += m.textContent; }
+            else
+            {
+                rows.push([m.classList.contains("facetsearch-mark-error") ? "error" : "warning", m.textContent ?? ""]);
+            }
+            last = m;
+        }
+        return rows;
+    };
     const chipMarks = (): string[] => Array.from(container.querySelectorAll(".facetsearch-chip")).map((c) =>
         c.classList.contains("facetsearch-chip-error") ? "error"
             : c.classList.contains("facetsearch-chip-warning") ? "warning" : "");
@@ -1158,7 +1178,10 @@ describe("syntax: \"query\", Parse's problems and the suggestions (#206)", () =>
 
         const empty = container.querySelector(".facetsearch-mark-empty")!;
         expect(empty.textContent).toBe("");
-        expect(empty.previousSibling!.textContent).toBe("type:");
+        // The text before it is drawn in its colors, a piece for each.
+        let before = "";
+        for (let n = empty.previousSibling; n; n = n.previousSibling) { before = n.textContent + before; }
+        expect(before).toBe("type:");
         expect(marks()).toEqual([["error", ""]]);
         expect(said()).toBe("A value is missing. Add one.");
         fs.destroy();
@@ -1330,6 +1353,97 @@ describe("syntax: \"query\", Parse's problems and the suggestions (#206)", () =>
         expect(input().value).toBe(written);
         expect(container.querySelectorAll(".facetsearch-chip")).toHaveLength(0);
         expect(onChange).toHaveBeenLastCalledWith(written.trim());
+        fs.destroy();
+    });
+});
+
+// ============================================================================
+// THE QUERY LANGUAGE: SYNTAX COLORS (#205)
+// ============================================================================
+
+describe("syntax: \"query\", the syntax colors (#205)", () =>
+{
+    const FACETS: FacetDefinition[] = [{ key: "type", label: "Type", valueType: "enum", multiple: true }];
+
+    const make = (overrides?: Partial<FacetSearchOptions>): ReturnType<typeof createFacetSearch> =>
+        createFacetSearch("test-facetsearch", { facets: FACETS, syntax: "query", ...overrides });
+    const input = (): HTMLInputElement => container.querySelector("input")!;
+    /** Each colored piece of the layer: its color and its text. */
+    const colored = (): string[] => Array.from(container.querySelectorAll(".facetsearch-marks span"))
+        .map((el) => Array.from(el.classList).find((c) => c.startsWith("facetsearch-tok-"))?.slice(16) + ":"
+            + el.textContent)
+        .filter((c) => !c.startsWith("undefined:"));
+
+    test("needsQueryLanguage_ForItsColors_AndSaysSo", () =>
+    {
+        const color = window.colorQuery;
+        delete window.colorQuery;
+        try
+        {
+            expect(() => make()).toThrow(/querylanguage\.js/);
+            expect(() => make()).toThrow(/\/lib\/antlr4-4\.13\.1\.js/);
+            expect(() => createFacetSearch("test-facetsearch", { facets: FACETS }).destroy()).not.toThrow();
+        }
+        finally
+        {
+            window.colorQuery = color;
+        }
+    });
+
+    test("theLayer_DrawsTheTypedText_InTheColorsTheGrammarGives", () =>
+    {
+        const fs = make({ value: "type in (note) meeting in march" });
+
+        expect(colored()).toEqual(["key:type", "operator:in", "value:note"]);
+        expect(container.querySelector(".facetsearch-marks")!.textContent).toBe("type in (note) meeting in march");
+        fs.destroy();
+    });
+
+    test.each([
+        ["typing", (fs: FacetSearch) =>
+        {
+            input().value = "not type:x";
+            input().dispatchEvent(new Event("input", { bubbles: true }));
+            return fs;
+        }],
+        ["setValue", (fs: FacetSearch) => { fs.setValue("not type:x"); return fs; }],
+    ])("%s redraws the colors", (_name, change) =>
+    {
+        const fs = make() as FacetSearch;
+
+        change(fs);
+
+        expect(colored()).toEqual(["keyword:not", "key:type", "operator::", "value:x"]);
+        fs.destroy();
+    });
+
+    test("clear_EmptiesTheLayer_AndSetParsed_ColorsTheTextLeftInTheInput", () =>
+    {
+        const text = "type:note a or b";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, tree: { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 9 } },
+            { kind: "or", children: [], span: { start: 10, end: 16 } },
+        ] } } });
+        expect(input().value).toBe("(a or b)");
+        expect(colored()).toEqual(["keyword:or"]);
+
+        fs.clear();
+        expect(container.querySelector(".facetsearch-marks")!.textContent).toBe("");
+        fs.destroy();
+    });
+
+    test("aMarkOnColoredText_KeepsTheColor", () =>
+    {
+        const text = "type:x";
+        const fs = make({ value: text });
+
+        fs.setParsed({ text, errors: [{ code: "QL_A", title: "A", detail: "A.", start: 0, end: 4 }] });
+
+        const key = container.querySelector(".facetsearch-marks .facetsearch-tok-key")!;
+        expect(key.classList.contains("facetsearch-mark-error")).toBe(true);
+        expect(key.textContent).toBe("type");
         fs.destroy();
     });
 });

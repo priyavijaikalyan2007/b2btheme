@@ -80,11 +80,28 @@
             </div>
         </div>
 
+        <div class="demo-section" id="facetsearch-query-section">
+            <h2><i class="bi bi-braces"></i> The query language</h2>
+            <p class="text-muted">With <code>syntax: "query"</code>, the text takes the colors the apps' grammar gives it (#205). Type <code>created_at on 2026-11-15@kol</code> for time zones. The API decides what a query means, so this page shows one sample error from its Parse call (#206).</p>
+
+            <div class="row g-4">
+                <div class="col-12">
+                    <div id="fs-demo-query"></div>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-sm btn-outline-secondary" id="fs-demo-query-error">Show a sample error</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script src="../../dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../dist/components/themetoggle/themetoggle.js"></script>
     <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/lib/antlr4-4.13.1.js"></script>
+    <script src="../../dist/components/querylanguage/querylanguage.js"></script>
+    <script src="../../dist/components/timezonepicker/timezonepicker.js"></script>
     <script src="../../dist/components/facetsearch/facetsearch.js"></script>
 
     <script>
@@ -150,6 +167,29 @@
         document.getElementById("fs-demo-clear").addEventListener("click", function() {
             fullSearch.clear();
             document.getElementById("fs-demo-output").textContent = "Cleared.";
+        });
+    })();
+
+    // The query language (#205, #206)
+    (function() {
+        var querySearch = createFacetSearch("fs-demo-query", {
+            facets: [
+                { key: "type", label: "Type", valueType: "enum", multiple: true,
+                  values: ["note", "task", "checklists.instance"], icon: "bi bi-tag" },
+                { key: "created_at", label: "Created", valueType: "date", icon: "bi bi-calendar" }
+            ],
+            syntax: "query",
+            value: "type in (note, task) and created_at on-or-after 2026-11-01@Asia/Kolkata not ?owner",
+            placeholder: "Search with the query language..."
+        });
+
+        // The apps' Parse call answers `budget (type:` with this error.
+        document.getElementById("fs-demo-query-error").addEventListener("click", function() {
+            var text = "budget (type:";
+            querySearch.setValue(text);
+            querySearch.setParsed({ text: text, errors: [{ code: "QL_UNCLOSED_BRACKET",
+                title: "A bracket is not closed", detail: "The `(` at column 8 is never closed.",
+                suggestion: "Add a `)` to close it.", start: 7, end: 8 }] });
         });
     })();
 

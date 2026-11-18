@@ -41,7 +41,7 @@ describe("manifest coverage (ADR-243)", () =>
 
     test("every reason is a sentence", () =>
     {
-        expect(NO_MANIFEST.size).toBe(15);
+        expect(NO_MANIFEST.size).toBe(16);
         expect([...NO_MANIFEST].filter(([, reason]) => !/^[A-Z].{10,}\.$/.test(reason))).toEqual([]);
     });
 });

@@ -183,6 +183,8 @@ components/prompttemplatemanager/prompttemplatemanager.css — prompttemplateman
 components/prompttemplatemanager/prompttemplatemanager.js  — prompttemplatemanager component JS
 components/propertyinspector/propertyinspector.css — propertyinspector component CSS
 components/propertyinspector/propertyinspector.js  — propertyinspector component JS
+components/querylanguage/querylanguage.css — querylanguage component CSS
+components/querylanguage/querylanguage.js  — querylanguage component JS
 components/reasoningaccordion/reasoningaccordion.css — reasoningaccordion component CSS
 components/reasoningaccordion/reasoningaccordion.js  — reasoningaccordion component JS
 components/relationshipmanager/relationshipmanager.css — relationshipmanager component CSS
@@ -1207,6 +1209,13 @@ $ontology-category-slots=(structural: 1, lifecycle: 2, dependency: 3, custom: 4,
 - JS: `components/propertyinspector/propertyinspector.js`
 - Globals: `createPropertyInspector()`
 - Exports: `interface InspectorTab`, `interface InspectorAction`, `interface InspectorOpenOptions`, `interface PropertyInspectorOptions`, `interface PropertyInspectorState`, `interface PropertyInspectorHandle`, `function createPropertyInspector`
+
+### querylanguage
+
+- CSS: `components/querylanguage/querylanguage.css`
+- JS: `components/querylanguage/querylanguage.js`
+- Globals: `colorQuery()`
+- Exports: `type QueryColorKind`, `interface QueryColorRange`, `function colorQuery`
 
 ### reasoningaccordion
 

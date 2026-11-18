@@ -90,6 +90,11 @@ import { BELOW_REQUIRED, PENDING_CLASSIFICATION } from "./agentui/migration.mjs"
  * SHIPPED code, and a mock is not shipped: nothing bundles it, the
  * `dist/` and `tests/` exclusions below are the same judgement, and
  * the suffix is narrow enough to read in a file listing.
+ *
+ * `components/querylanguage/generated/` JOINED `dist/` ON 2026-11-17 (#205).
+ * ANTLR writes it from the apps' grammar, and nobody edits it: its stamp
+ * test fails on any hand edit. These ratchets keep hand-written code
+ * honest, so a file no hand writes is outside them, as `dist/` is.
  */
 export function sourceFiles()
 {
@@ -99,7 +104,8 @@ export function sourceFiles()
         .filter((f) => !/\.(test|spec|mock)\.ts$/.test(f))
         .filter((f) => !/\.d\.ts$/.test(f))
         .filter((f) => !f.startsWith("tests/"))
-        .filter((f) => !f.startsWith("dist/"));
+        .filter((f) => !f.startsWith("dist/"))
+        .filter((f) => !f.startsWith("components/querylanguage/generated/"));
 }
 
 /** Component sources only, used for the logging-pattern counts. */

@@ -216,6 +216,13 @@
       "LICENSE": "sha384-LuA/O5Wq5fr3WuqoS5CvPTOKDAaHZrp6ZauNoM9pJo0A5CGHEXeI2B1tVV+npmO4"
     }
   },
+  "antlr4@4.13.1": {
+    "license": "BSD-3-Clause",
+    "files": {
+      "LICENSE.txt": "sha384-B+MZ14NEmQz7J4pWbyjvTOLCA+qCoCiwFD4Q4pqpOFMOPSJBXqW5RSbfdysJ5MaH"
+    },
+    "source": "https://raw.githubusercontent.com/antlr/antlr4/4.13.1/LICENSE.txt"
+  },
   "bootstrap-icons@1.13.1": {
     "license": "MIT",
     "files": {

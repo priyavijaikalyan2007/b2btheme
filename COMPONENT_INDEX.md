@@ -2,7 +2,7 @@
 
 # Component Index
 
-127 implemented components. Use this file for quick lookup; see each component's README for full API details.
+128 implemented components. Use this file for quick lookup; see each component's README for full API details.
 
 Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REFERENCE.md)
 
@@ -195,6 +195,7 @@ Full reference (all READMEs in one file): [COMPONENT_REFERENCE.md](COMPONENT_REF
 | pill | A reusable inline pill element for mentions, issues, documents, tags, and other entity references. | `createPill()` | [README](components/pill/README.md) |
 | presenceindicator | A compact overlapping avatar stack showing who is actively viewing or editing a shared resource. | `createPresenceIndicator()` | [README](components/presenceindicator/README.md) |
 | propertyinspector | Non-modal right-side panel for viewing and editing entity details without navigating away from the parent list. | `createPropertyInspector()` | [README](components/propertyinspector/README.md) |
+| querylanguage | The syntax colors of the apps' query language (#205). | — | [README](components/querylanguage/README.md) |
 | relationshipmanager | Component for creating, viewing, and managing typed relationships between entities. | `createRelationshipManager()` | [README](components/relationshipmanager/README.md) |
 | ribbon | A Microsoft Office-style tabbed toolbar for organizing commands and controls into logical groups. | `createRibbon()` | [README](components/ribbon/README.md) |
 | ribbonbuilder | Visual WYSIWYG editor for composing Ribbon toolbar layouts via drag-and-drop. | `createRibbonBuilder()` | [README](components/ribbonbuilder/README.md) |

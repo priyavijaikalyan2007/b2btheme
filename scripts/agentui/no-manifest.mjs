@@ -31,6 +31,7 @@ export const NO_MANIFEST = new Map([
     ["magnifier", "It magnifies a host page element under the pointer; an agent has no page element."],
     ["markdownrenderer", "A library with no element of its own; an agent renders markdown with DocViewer, which "
         + "is in the catalog and renders through it."],
+    ["querylanguage", "Not UI: it colors query text for FacetSearch, which is in the catalog."],
     ["smarttextinput", "Behaviour, not UI: it attaches to an input the host owns, and the host renders the "
         + "popover."],
     ["themeinit", "Not UI: theme start-up."],

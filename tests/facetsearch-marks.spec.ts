@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: MIT
  */
 /**
- * ⚓ TESTS: FacetSearch's underlines for Parse's problems in a real browser (#206).
- * The underlines are drawn by a layer behind the input, which jsdom cannot lay out, so these show:
+ * ⚓ TESTS: FacetSearch's syntax colors (#205) and underlines for Parse's problems (#206) in a real browser.
+ * Both are drawn by a layer behind the input, which jsdom cannot lay out, so these show:
+ *   - the layer draws the text in the grammar's colors, from the runtime /lib/ serves, and the input's own
+ *     text is clear, so a person sees the text once;
  *   - a mark sits under the characters of its range, inside the input's box;
  *   - the mark moves with the input when the input scrolls its text;
  *   - the pointer over a mark puts its problem in the message line.
@@ -23,6 +25,8 @@ const HTML = `<!doctype html>
 </head><body>
 <div id="host"></div>
 <script>window.__ebt_debug_logging = false;</script>
+<script src="/lib/antlr4-4.13.1.js"></script>
+<script src="/components/querylanguage/querylanguage.js"></script>
 <script src="/components/timezonepicker/timezonepicker.js"></script>
 <script src="/components/facetsearch/facetsearch.js"></script>
 </body></html>`;
@@ -89,6 +93,9 @@ test("the mark moves with the input when the input scrolls", async ({ page }) =>
     await page.keyboard.press("End");
     await expect.poll(async () => (await measure(page, 0, "")).scroll).toBeGreaterThan(0);
 
+    // The browser sends `scroll` with the next frame, before it paints, so the layer follows by then.
+    await expect.poll(async () => { const s = await measure(page, 0, ""); return s.layer - s.scroll; }).toBe(0);
+
     const m = await measure(page, 0, text.slice(0, start));
 
     expect(m.layer).toBe(m.scroll);
@@ -109,4 +116,28 @@ test("the pointer over a mark puts its problem in the message line", async ({ pa
 
     await page.mouse.move(m.input.right + 100, m.input.bottom + 100);
     await expect(line).toHaveText("First. D.");
+});
+
+test("the layer draws the text in the grammar's colors, and the input's own text is clear", async ({ page }) =>
+{
+    await open(page, "type in (note) meeting in march", []);
+
+    const seen = await page.evaluate(() =>
+    {
+        const color = (sel: string): string => getComputedStyle(document.querySelector(sel)!).color;
+        const probe = document.createElement("span");
+        probe.style.color = "var(--theme-query-key)";
+        document.body.appendChild(probe);
+
+        return {
+            key: color(".facetsearch-tok-key"),
+            want: getComputedStyle(probe).color,
+            operator: document.querySelector(".facetsearch-tok-operator")!.textContent,
+            input: color(".facetsearch-input"),
+        };
+    });
+
+    expect(seen.key).toBe(seen.want);
+    expect(seen.operator).toBe("in");
+    expect(seen.input).toBe("rgba(0, 0, 0, 0)");
 });
