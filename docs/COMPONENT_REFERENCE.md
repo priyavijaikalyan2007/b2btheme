@@ -94,6 +94,7 @@ Complete reference for all custom components shipped with the enterprise theme.
 | [progressmodal](#progressmodal) | `components/progressmodal/progressmodal.css` | `components/progressmodal/progressmodal.js` |
 | [prompttemplatemanager](#prompttemplatemanager) | `components/prompttemplatemanager/prompttemplatemanager.css` | `components/prompttemplatemanager/prompttemplatemanager.js` |
 | [propertyinspector](#propertyinspector) | `components/propertyinspector/propertyinspector.css` | `components/propertyinspector/propertyinspector.js` |
+| [querylanguage](#querylanguage) | `components/querylanguage/querylanguage.css` | `components/querylanguage/querylanguage.js` |
 | [reasoningaccordion](#reasoningaccordion) | `components/reasoningaccordion/reasoningaccordion.css` | `components/reasoningaccordion/reasoningaccordion.js` |
 | [relationshipmanager](#relationshipmanager) | `components/relationshipmanager/relationshipmanager.css` | `components/relationshipmanager/relationshipmanager.js` |
 | [ribbon](#ribbon) | `components/ribbon/ribbon.css` | `components/ribbon/ribbon.js` |
@@ -6734,7 +6735,13 @@ Facet-aware search bar that combines free-text search with structured `key:value
 | JS    | `components/facetsearch/facetsearch.js` |
 | Types | `components/facetsearch/facetsearch.d.ts` |
 
-**Requires:** Bootstrap CSS, Bootstrap Icons CSS. With `syntax: "query"`, also `components/timezonepicker/timezonepicker.js`, loaded before the bar is made. The bar suggests time zones with the picker's search, so both find a zone the same way. Without it, the bar throws.
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS. With `syntax: "query"`, also these three scripts, loaded before the bar is made. Without them, the bar throws and names what is missing.
+
+| Script | Why |
+|--------|-----|
+| `/lib/antlr4-4.13.1.js` | The ANTLR runtime that QueryLanguage's parser runs on |
+| `components/querylanguage/querylanguage.js` | The syntax colors, from the apps' own grammar (#205) |
+| `components/timezonepicker/timezonepicker.js` | The time-zone search, so the bar and the picker find a zone the same way |
 
 ## Facet Definition (`FacetDefinition`)
 
@@ -6896,7 +6903,18 @@ A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean
 
 `getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
 
-**Syntax colors.** The theme has a token for each part of a query, in light and dark mode: `--theme-query-keyword`, `--theme-query-key`, `--theme-query-operator`, `--theme-query-value`, `--theme-query-variable`, `--theme-query-error` and `--theme-query-warning`. The bar uses the last two for its marks today. The others are for coloring the typed text (#205). Each passes 4.5 to 1 on the bar and on a chip.
+**Syntax colors.** The typed text takes the colors of the apps' grammar, which [QueryLanguage](../querylanguage/README.md) reads it with (#205). So a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors never say a query is wrong. That is the job of Parse's errors, above.
+
+| Part | Token |
+|------|-------|
+| `and`, `or`, `not`, `-` before a term, `where`, `link`, `return` | `--theme-query-keyword` |
+| A filter's key | `--theme-query-key` |
+| `:`, `>=`, `on-or-after`, and `in`, `is` or `exists` after a key | `--theme-query-operator` |
+| A filter's value | `--theme-query-value` |
+| `?variable` and `$parameter` | `--theme-query-variable` |
+| An error's and a warning's marks | `--theme-query-error`, `--theme-query-warning` |
+
+Each token has a light and a dark value, and passes 4.5 to 1 on the bar and on a chip. The colored text is drawn by the layer behind the input, which also draws the marks. The input itself draws only the caret, the placeholder and the selection.
 
 ## Keyboard Interaction
 
@@ -15059,6 +15077,77 @@ PropertyInspector is in the A2UI catalog (ADR-242). The agent sets `openWith`: t
 - Drawer: `role="complementary"`, `aria-label="Property Inspector"`
 - Tab bar: `role="tablist"`, `role="tab"`, `aria-selected`
 - Close/action buttons: `aria-label`
+
+
+---
+
+<a id="querylanguage"></a>
+
+# QueryLanguage
+
+The syntax colors of the apps' query language (#205). It reads text with a lexer and parser that ANTLR generated from the apps' own grammar, and says which ranges are keywords, keys, operators, values and variables. So the bar colors a query exactly as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text.
+
+It renders nothing. FacetSearch uses it to color its text with `syntax: "query"`. It never reports an error. Errors come from the API's Parse call, which FacetSearch shows (#206).
+
+## Quick Start
+
+Load the ANTLR runtime from `/lib/` first, then this component:
+
+```html
+<script src="https://static.knobby.io/lib/antlr4-4.13.1.js"
+        integrity="sha384-sjwAsKajwyLSsMXfBQL37gbVWSirPDfpidJvW0cp0DwACSyx2M5VK98dp0HPPzmr" crossorigin="anonymous"></script>
+<script src="https://static.knobby.io/components/querylanguage/querylanguage.js"></script>
+```
+
+```js
+colorQuery("type in (note, task) meeting in march");
+// [{ start: 0, end: 4, kind: "key" }, { start: 5, end: 7, kind: "operator" },
+//  { start: 9, end: 13, kind: "value" }, { start: 15, end: 19, kind: "value" }]
+```
+
+Without the runtime, `querylanguage.js` throws as it loads, and names the file to load.
+
+## Assets
+
+| Asset | Path |
+|-------|------|
+| JS    | `components/querylanguage/querylanguage.js` |
+| ANTLR runtime | `/lib/antlr4-4.13.1.js`, with its SRI hash in `/lib-manifest.json` |
+
+## API
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `colorQuery` | `(text: string) => QueryColorRange[]` | The colored ranges of `text`, in order. Plain text has no range. It never throws for text a person has not finished: the parser recovers, and a token it could not place has no color |
+
+A `QueryColorRange` is `{ start, end, kind }`. `start` and `end` count UTF-16 units, as a JavaScript string does, up to but not including `end`. `kind` is one of these, each with its theme token:
+
+| `kind` | What it is | Token |
+|--------|------------|-------|
+| `keyword` | `and`, `or`, `not`, `-` and `!` before a term, `where`, `link`, `return` | `--theme-query-keyword` |
+| `key` | The key of a filter, such as `type` or `rel.parent_of` | `--theme-query-key` |
+| `operator` | `:`, a symbol such as `>=`, a word such as `on-or-after` or `contains`, and `in`, `is`, `exists` and `missing` after a key | `--theme-query-operator` |
+| `value` | A filter's value: text, a number, a date with its zone, a relative date or a boolean | `--theme-query-value` |
+| `variable` | A variable such as `?org`, or a parameter such as `$max` | `--theme-query-variable` |
+
+## The grammar
+
+The grammar is the apps' (`querylanguage/Grammar/` in knobbyio/apps). It is copied into `grammar/` here, and the lexer and parser in `generated/` are made from it with ANTLR 4.13.1, the version the apps use. Generated code must match its runtime, so `/lib/antlr4-4.13.1.js` is the same version.
+
+**A grammar change reaches this repo as a request** in the apps' bugreports folder. It names the knobbyio/apps commit to copy the two `.g4` files from. Then:
+
+1. Copy `QlLexer.g4` and `QlParser.g4` from that commit into `components/querylanguage/grammar/`.
+2. Run `npm run generate:querylanguage`. It needs Java. It downloads the ANTLR 4.13.1 jar once, checks its checksum, and writes `generated/`.
+3. Commit the grammar and `generated/` together.
+
+`generated/grammar.stamp` holds a hash of the grammar and the ANTLR version, and a hash of the generated code. A unit test fails when the grammar changed without step 2, and when someone edited the generated code by hand. So CI needs no Java.
+
+The grammar here was copied from knobbyio/apps commit `37b357a5` (16 November 2026).
+
+## Dependencies
+
+- The ANTLR 4.13.1 JavaScript runtime, from `/lib/antlr4-4.13.1.js` (BSD-3-Clause).
+- Nothing else. It does not need Bootstrap.
 
 
 ---
