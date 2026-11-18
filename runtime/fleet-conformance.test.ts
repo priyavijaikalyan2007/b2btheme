@@ -108,6 +108,11 @@ const NOT_MOUNTABLE: Readonly<Record<string, string>> =
         + "reads the pointer events of an element that another component "
         + "owns. It renders nothing, so there is nothing for a canvas to mount.",
 
+    expressionbuilder:
+        "Query-tree editor (#207). It edits the tree that the host's Parse "
+        + "and Print calls make and take, and a canvas cannot call them, as "
+        + "FacetSearch keeps its query syntax host-only.",
+
     querylanguage:
         "Syntax-color service (#205). colorQuery(text) returns the colored "
         + "ranges of query text for FacetSearch to draw. It renders nothing, "

@@ -949,6 +949,14 @@ Each view is a rendering strategy over the same underlying tree.
 
 **Use Cases**: Global search, inline list filtering, command input, toolbar search, content discovery.
 
+## 13.7✅Query Expression Builder
+
+**Description**: A visual editor for a query in the apps' query language, beside the search bar. It edits the tree the API's Parse call returns: groups joined by all or any, not, conditions on a key with an operator that fits its type, and words. A row a person has not finished is a draft, left out of the tree, so the tree always prints. What it cannot edit yet, such as a nested search, it keeps exactly. Every move is a button and a shortcut, and a drag is an accelerator. See `components/expressionbuilder/` (#207).
+
+**References**: Jira's basic and JQL search, react-querybuilder, Azure DevOps query editor, Notion filters.
+
+**Use Cases**: Search for people who would rather not type a query, saved searches, legal hold scopes.
+
 ## 13.6✅Query Language Syntax Colors
 
 **Description**: The syntax colors of the apps' query language. A lexer and parser generated with ANTLR 4.13.1 from the apps' own grammar read the text, so a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. It never reports an error. It renders nothing, and FacetSearch colors its `syntax: "query"` text with it. See `components/querylanguage/` (#205).
@@ -3834,6 +3842,7 @@ convention (ADR-146, D5).
 | 13.4 | Saved Views / Saved Filters | Filtering | NEW |
 | 13.5 | Search Box | Filtering | DONE |
 | 13.6 | Query Language Syntax Colors | Filtering | DONE |
+| 13.7 | Query Expression Builder | Filtering | DONE |
 | 14.1 | File Upload / Download Manager | Content | DONE |
 | 14.2 | Screenshot & Video Capture | Content | NEW |
 | 14.3 | File Explorer / Asset Browser | Content | DONE |

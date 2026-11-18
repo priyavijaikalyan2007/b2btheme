@@ -23,6 +23,8 @@ export const NO_MANIFEST = new Map([
     ["contextmenu", "Anchored to a host page element and positioned over the page; an agent has no page element."],
     ["dynamiccanvas", "The Dynamic UI runtime's own canvas, which hosts components itself: a peer of an A2UI "
         + "surface, not something inside one."],
+    ["expressionbuilder", "It edits a tree that only the host's Parse and Print calls make and take, which a "
+        + "surface cannot call. An agent writes the query as text in FacetSearch instead."],
     ["gesturerecognizer", "Not UI: it reads the pointer events of an element that another component owns."],
     ["guidedtour", "It walks through host page elements by selector."],
     ["helptooltip", "Anchored to a host page element and positioned over the page; an agent has no page element."],

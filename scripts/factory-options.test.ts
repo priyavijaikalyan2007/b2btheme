@@ -100,8 +100,10 @@ const SILENT_DEFAULT_FOR_REQUIRED_OPTION = 0;
  * Three: createFeedback's targetId. It refuses a missing targetId (unit
  * tests), but its control call throws first on the missing
  * window.createFormDialog that its Report button needs, by the same rule.
+ * Four: createExpressionBuilder's facets. Its control call throws first on
+ * the missing window.createGestureRecognizer its drags need, by the same rule.
  */
-const VERDICT_UNREACHABLE = 4;
+const VERDICT_UNREACHABLE = 5;
 
 /** Every required option the probe can supply a value for. */
 function requiredFields(r: Row): Field[]

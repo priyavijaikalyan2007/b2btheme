@@ -71,8 +71,12 @@ type Row = {
  */
 const SILENT_ON_MISSING_CONTAINER = 0;
 
-/** Factories whose container verdict a call cannot reach. See the header. */
-const VERDICT_UNREACHABLE = 2;
+/**
+ * Factories whose container verdict a call cannot reach. See the header. Three since 2026-11-17:
+ * createExpressionBuilder refuses a missing window.createGestureRecognizer before it reads its container, by
+ * the same dependency rule. Its unit tests prove it refuses a missing container.
+ */
+const VERDICT_UNREACHABLE = 3;
 
 const rows: Row[] = (factoryInventory() as Row[])
     .filter((r) => r.published && (r.containerIndex >= 0 || r.containerField !== null));

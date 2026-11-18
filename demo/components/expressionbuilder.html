@@ -1,0 +1,120 @@
+<!--
+  SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+  SPDX-License-Identifier: MIT
+-->
+<!--
+  COMPONENT: DemoPage-ExpressionBuilder
+  PURPOSE: Standalone demo page for the ExpressionBuilder component (#207). A
+           query built by groups and conditions, with the tree it makes and
+           a sample warning placed on a row.
+  RELATES: [[ExpressionBuilder]], [[GestureRecognizer]], [[DemoShell]]
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpressionBuilder - Enterprise Theme Demo</title>
+
+    <!-- FOUC prevention -->
+    <script>
+    (function()
+    {
+        var mode = sessionStorage.getItem("theme-mode") || "auto";
+        var dark = mode === "dark" ||
+                   (mode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) { document.documentElement.setAttribute("data-bs-theme", "dark"); }
+    })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../dist/css/custom.css">
+    <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+    <link rel="stylesheet" href="../../dist/components/expressionbuilder/expressionbuilder.css">
+    <link rel="stylesheet" href="../shared/demo-shell.css">
+</head>
+<body class="demo-shell-body">
+    <header class="demo-header">
+        <h1 class="demo-header-title">
+            <a href="../index.html"><i class="bi bi-arrow-left"></i></a>
+            ExpressionBuilder
+        </h1>
+        <div class="demo-header-actions">
+            <a href="../index.html" class="demo-back-link">
+                <i class="bi bi-grid-3x3-gap"></i> All Components
+            </a>
+            <div id="demo-theme-toggle"></div>
+        </div>
+    </header>
+    <main class="demo-main">
+        <div class="demo-section">
+            <h2>Build a query</h2>
+            <p class="text-muted">
+                Add conditions, words and groups, and join a group by all or any. Drag a row by its grip,
+                or use its buttons, or <kbd>Alt</kbd> with an arrow key. The nested search below is kept
+                as it came, because this version cannot edit it. The API decides what a query means, so this
+                page has no Parse or Print call. It shows the tree the builder reports.
+            </p>
+            <div id="eb-demo"></div>
+            <div class="d-flex gap-2 mt-2">
+                <button type="button" id="eb-demo-warning" class="btn btn-sm btn-outline-secondary">
+                    Show a sample warning
+                </button>
+            </div>
+            <h3 class="h6 mt-3">The tree it reports</h3>
+            <pre id="eb-demo-tree" class="p-2 demo-output" style="font-size: 12px;"></pre>
+        </div>
+    </main>
+
+    <script src="../../dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../dist/components/themetoggle/themetoggle.js"></script>
+    <script src="../shared/demo-shell.js"></script>
+    <script src="../../dist/components/gesturerecognizer/gesturerecognizer.js"></script>
+    <script src="../../dist/components/expressionbuilder/expressionbuilder.js"></script>
+
+    <script>
+    (function()
+    {
+        var out = document.getElementById("eb-demo-tree");
+        var tree = { root: { kind: "and", children: [
+            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 18 } },
+            { kind: "or", span: { start: 24, end: 98 }, children: [
+                { kind: "filter", key: "created_at", op: "OnOrAfter",
+                  value: { date: "2026-11-01", zone: "Asia/Kolkata" }, span: { start: 24, end: 67 } },
+                { kind: "not", span: { start: 71, end: 98 }, child:
+                    { kind: "filter", key: "title", op: "Contains", value: { text: "draft" },
+                      span: { start: 75, end: 98 } } }
+            ] },
+            { kind: "nested", key: "rel.parent_of", span: { start: 104, end: 140 },
+              where: { kind: "filter", key: "type", op: "Equals", value: { text: "project" } } }
+        ] } };
+
+        var builder = createExpressionBuilder("eb-demo", {
+            facets: [
+                { key: "type", label: "Type", valueType: "enum",
+                  values: [{ value: "note", label: "Note" }, "task", "project"] },
+                { key: "created_at", label: "Created", valueType: "date" },
+                { key: "title", label: "Title", valueType: "text" },
+                { key: "amount", label: "Amount", valueType: "number" },
+                { key: "starred", label: "Starred", valueType: "boolean" }
+            ],
+            tree: tree,
+            onChange: function(t) { out.textContent = JSON.stringify(t, null, 2); }
+        });
+        out.textContent = JSON.stringify(builder.getTree(), null, 2);
+
+        // A warning from Parse, placed by its span on the row whose text holds it.
+        document.getElementById("eb-demo-warning").addEventListener("click", function()
+        {
+            builder.setParsed({ tree: tree, warnings: [{ code: "QL_SAMPLE", title: "A sample warning",
+                detail: "This warning's place is in the title condition.", start: 80, end: 90 }] });
+        });
+    })();
+    </script>
+</body>
+</html>
