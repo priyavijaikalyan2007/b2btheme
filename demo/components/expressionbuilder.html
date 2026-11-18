@@ -54,10 +54,11 @@
         <div class="demo-section">
             <h2>Build a query</h2>
             <p class="text-muted">
-                Add conditions, words and groups, and join a group by all or any. Drag a row by its grip,
-                or use its buttons, or <kbd>Alt</kbd> with an arrow key. The nested search below is kept
-                as it came, because this version cannot edit it. The API decides what a query means, so this
-                page has no Parse or Print call. It shows the tree the builder reports.
+                Add conditions, words and groups, and join a group by all or any. On a relationship key,
+                choose "the same item as" another condition, "has one where" for a search inside, or
+                <strong>Link</strong> for conditions on the link. Drag a row by its grip, or use its buttons,
+                or <kbd>Alt</kbd> with an arrow key. The API decides what a query means, so this page has no
+                Parse or Print call. It shows the tree the builder reports.
             </p>
             <div id="eb-demo"></div>
             <div class="d-flex gap-2 mt-2">
@@ -80,27 +81,37 @@
     (function()
     {
         var out = document.getElementById("eb-demo-tree");
+        // spec section 9: a checklist signed off, by hand, after 1 November, by someone outside its org unit,
+        // and created by the same person who completed it.
         var tree = { root: { kind: "and", children: [
-            { kind: "filter", key: "type", op: "Equals", value: { text: "note" }, span: { start: 0, end: 18 } },
-            { kind: "or", span: { start: 24, end: 98 }, children: [
-                { kind: "filter", key: "created_at", op: "OnOrAfter",
-                  value: { date: "2026-11-01", zone: "Asia/Kolkata" }, span: { start: 24, end: 67 } },
-                { kind: "not", span: { start: 71, end: 98 }, child:
-                    { kind: "filter", key: "title", op: "Contains", value: { text: "draft" },
-                      span: { start: 75, end: 98 } } }
-            ] },
-            { kind: "nested", key: "rel.parent_of", span: { start: 104, end: 140 },
-              where: { kind: "filter", key: "type", op: "Equals", value: { text: "project" } } }
+            { kind: "filter", key: "type", op: "Equals", value: { text: "checklists.instance" } },
+            { kind: "filter", key: "rel.belongs_to_org_unit", op: "Equals", value: { var: "org" } },
+            { kind: "nested", key: "rel.signed_off_by",
+              link: { kind: "and", children: [
+                  { kind: "filter", key: "provenance", op: "Equals", value: { text: "manual" } },
+                  { kind: "filter", key: "at", op: "After", value: { date: "2026-11-01", zone: "Asia/Kolkata" },
+                    span: { start: 80, end: 104 } }] },
+              where: { kind: "not", child: { kind: "filter", key: "rel.member_of", op: "Equals",
+                  value: { var: "org" } } } },
+            { kind: "filter", key: "rel.created_by", op: "Equals", value: { var: "p" } },
+            { kind: "filter", key: "rel.completed_by", op: "Equals", value: { var: "p" } }
         ] } };
 
         var builder = createExpressionBuilder("eb-demo", {
             facets: [
                 { key: "type", label: "Type", valueType: "enum",
-                  values: [{ value: "note", label: "Note" }, "task", "project"] },
+                  values: [{ value: "note", label: "Note" }, "task", "checklists.instance"] },
                 { key: "created_at", label: "Created", valueType: "date" },
                 { key: "title", label: "Title", valueType: "text" },
-                { key: "amount", label: "Amount", valueType: "number" },
-                { key: "starred", label: "Starred", valueType: "boolean" }
+                { key: "rel.created_by", label: "Created by", valueType: "text", relationship: true },
+                { key: "rel.completed_by", label: "Completed by", valueType: "text", relationship: true },
+                { key: "rel.belongs_to_org_unit", label: "Org unit", valueType: "text", relationship: true },
+                { key: "rel.member_of", label: "Member of", valueType: "text", relationship: true },
+                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true,
+                  link: [
+                      { key: "provenance", label: "Provenance", valueType: "enum", values: ["manual", "ai"] },
+                      { key: "at", label: "Made", valueType: "date" }
+                  ] }
             ],
             tree: tree,
             onChange: function(t) { out.textContent = JSON.stringify(t, null, 2); }
@@ -111,7 +122,7 @@
         document.getElementById("eb-demo-warning").addEventListener("click", function()
         {
             builder.setParsed({ tree: tree, warnings: [{ code: "QL_SAMPLE", title: "A sample warning",
-                detail: "This warning's place is in the title condition.", start: 80, end: 90 }] });
+                detail: "This warning's place is in the link's date condition.", start: 85, end: 95 }] });
         });
     })();
     </script>

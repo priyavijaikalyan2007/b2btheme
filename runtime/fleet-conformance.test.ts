@@ -563,6 +563,15 @@ describe("fleet gate — conformance", () =>
     });
 
     /**
+     * This test imports the fleet's glue, manifests and components. Alone it
+     * takes under 200 ms, but in the full parallel unit run, whichever test
+     * here first loads the fleet transforms it cold, which passed vitest's 5 s
+     * default (#223). It is not a performance check, so it gets the room the
+     * factory censuses give theirs. A hang still fails.
+     */
+    const FLEET_LOAD_TIMEOUT_MS = 60_000;
+
+    /**
      * The `data-changes-render` check (ADR-167) only runs when a target
      * carries fixture options, so it goes silent if the glue stops reaching
      * the target. This asserts the wiring it depends on, because a check
@@ -608,7 +617,7 @@ describe("fleet gate — conformance", () =>
         // loader silently matching nothing, which would leave
         // data-changes-render running on no component at all.
         expect(withFixtures.length).toBeGreaterThanOrEqual(13);
-    });
+    }, FLEET_LOAD_TIMEOUT_MS);
 
     test.runIf(migrated.length > 0).each(migrated)(
         "%s conforms to its declared level",

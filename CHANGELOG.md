@@ -28,6 +28,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **ExpressionBuilder edits searches inside, link conditions and variables** (#207, part 2 of 2). A facet with `relationship: true` is a key that links to an item or a person.
+  - **"has one where"** opens a search inside the item at the other end, with its own rows.
+  - **Link** adds conditions on the link, from the facet's `link` fields, and writes `link ( … )`.
+  - **"the same item as"** another condition writes a variable, named from its key, and gives it to both. A variable used once is a draft, as the binder's rule 1 asks.
+  - **Comparison** compares two variables, such as `?approver not-equals ?doer`.
+  - The values of a relationship key are written as `resource` ids, as the API's binder writes them.
+  - The three examples from #376 in spec section 9, and its `link` example, round-trip as trees.
+  - `FacetDefinition` takes `relationship` and `link`, so one list serves the bar and the builder. The bar ignores them, and they are host-only in the agent catalog.
 - **ExpressionBuilder, a visual editor for the query language** (#207, part 1 of 2). It edits the tree the API's Parse call returns, beside FacetSearch, which edits the same query as text.
   - **Rows:** groups joined by all or any, not, conditions with an operator that fits the key's type, and words.
   - **A draft is left out of the tree** until it has what its operator needs, so `onChange` always reports a tree Print accepts.

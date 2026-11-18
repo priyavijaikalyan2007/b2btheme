@@ -118,3 +118,40 @@ test("the grip takes the touch itself, so a drag starts at once", async ({ page 
     expect(await page.locator(".expressionbuilder-drag").first().evaluate((el) => getComputedStyle(el).touchAction))
         .toBe("none");
 });
+
+test("a drag moves a row into a search inside, and never between a link and the rest", async ({ page }) =>
+{
+    await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
+    await page.goto(PAGE);
+    await page.evaluate(() =>
+    {
+        const win = window as unknown as Record<string, any>;
+        const f = (key: string, value: unknown) => ({ kind: "filter", key, op: "Equals", value });
+        win.__changes = [];
+        win.__builder = win.createExpressionBuilder("host", {
+            facets: [
+                { key: "title", label: "Title", valueType: "text" },
+                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true,
+                  link: [{ key: "provenance", label: "Provenance", valueType: "text" }] },
+            ],
+            tree: { root: { kind: "and", children: [
+                f("title", { text: "budget" }),
+                { kind: "nested", key: "rel.signed_off_by", link: f("provenance", { text: "manual" }),
+                  where: f("title", { text: "plan" }) },
+            ] } },
+            onChange: (tree: unknown) => win.__changes.push(tree),
+        });
+    });
+
+    // The title row goes into the search inside, below its row.
+    await drag(page, "0", "1.where.0", true);
+    const tree = await page.evaluate(() => (window as any).__builder.getTree());
+    expect(tree.root.where).toEqual({ kind: "and", children: [
+        { kind: "filter", key: "title", op: "Equals", value: { text: "plan" } },
+        { kind: "filter", key: "title", op: "Equals", value: { text: "budget" } }] });
+
+    // The link's row does not leave the link, and a row of the item's keys does not enter it.
+    await drag(page, "0.link.0", "0.where.0", true);
+    await drag(page, "0.where.0", "0.link.0", true);
+    expect(await page.evaluate(() => (window as any).__changes.length)).toBe(1);
+});

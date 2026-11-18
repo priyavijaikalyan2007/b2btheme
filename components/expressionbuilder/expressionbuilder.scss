@@ -43,6 +43,19 @@
     background-color: var(--theme-surface-sunken-bg);
 }
 
+// A condition's search inside (`where`) and its link conditions sit under
+// the condition, across the whole row. The link's border is dashed, because
+// its keys are the link's own fields, not the item's.
+.expressionbuilder-group-where,
+.expressionbuilder-group-link {
+    flex-basis: 100%;
+    margin-left: $sp-12;
+}
+
+.expressionbuilder-group-link {
+    border-left-style: dashed;
+}
+
 .expressionbuilder-group-head,
 .expressionbuilder-row {
     display: flex;
