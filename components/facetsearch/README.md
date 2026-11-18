@@ -199,6 +199,8 @@ A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean
 
 `getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
 
+**The time zone.** A date in a query depends on the zone, so a page sends a zone with each search. Put a compact [TimezonePicker](../timezonepicker/README.md#compact-form) beside the bar, with `compact: true`, and send its `getValue()` with each Parse and each search (#208).
+
 **Syntax colors.** The typed text takes the colors of the apps' grammar, which [QueryLanguage](../querylanguage/README.md) reads it with (#205). So a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors never say a query is wrong. That is the job of Parse's errors, above.
 
 | Part | Token |

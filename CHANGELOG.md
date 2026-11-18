@@ -27,6 +27,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **TimezonePicker has a compact form** (#208). `compact: true` shows one button with the zone's city and offset, such as "Kolkata GMT+5:30", and opens the same dropdown. It fits beside a search bar, for the zone a page sends with each search. The FacetSearch demo shows it beside the query bar. Without the option, the picker is unchanged.
 - **FacetSearch colors the query language as the API reads it** (#205), with `syntax: "query"`. A new component, QueryLanguage, reads the text with a lexer and parser that ANTLR 4.13.1 generated from the apps' own grammar. So `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors are the `--theme-query-*` tokens. They never report an error.
   - **Load two more scripts with `syntax: "query"`:** `/lib/antlr4-4.13.1.js` and `components/querylanguage/querylanguage.js`. The bar throws and names them when they are missing. Today's syntax needs nothing new.
   - **`/lib/antlr4-4.13.1.js` is a new served library,** the ANTLR JavaScript runtime (BSD-3-Clause). It is the version the apps generate their C# with, because generated code must match its runtime.

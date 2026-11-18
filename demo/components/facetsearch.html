@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="../../dist/icons/bootstrap-icons.css">
     <link rel="stylesheet" href="../../dist/components/themetoggle/themetoggle.css">
     <link rel="stylesheet" href="../../dist/components/facetsearch/facetsearch.css">
+    <link rel="stylesheet" href="../../dist/components/timezonepicker/timezonepicker.css">
     <link rel="stylesheet" href="../shared/demo-shell.css">
 </head>
 <body class="demo-shell-body">
@@ -82,11 +83,14 @@
 
         <div class="demo-section" id="facetsearch-query-section">
             <h2><i class="bi bi-braces"></i> The query language</h2>
-            <p class="text-muted">With <code>syntax: "query"</code>, the text takes the colors the apps' grammar gives it (#205). Type <code>created_at on 2026-11-15@kol</code> for time zones. The API decides what a query means, so this page shows one sample error from its Parse call (#206).</p>
+            <p class="text-muted">With <code>syntax: "query"</code>, the text takes the colors the apps' grammar gives it (#205). Type <code>created_at on 2026-11-15@kol</code> for time zones. The API decides what a query means, so this page shows one sample error from its Parse call (#206). The compact TimezonePicker beside the bar picks the zone a page sends with each search (#208).</p>
 
             <div class="row g-4">
                 <div class="col-12">
-                    <div id="fs-demo-query"></div>
+                    <div class="d-flex flex-wrap align-items-start gap-2">
+                        <div id="fs-demo-query" class="flex-grow-1"></div>
+                        <div id="fs-demo-zone"></div>
+                    </div>
                 </div>
                 <div class="col-12">
                     <button class="btn btn-sm btn-outline-secondary" id="fs-demo-query-error">Show a sample error</button>
@@ -182,6 +186,9 @@
             value: "type in (note, task) and created_at on-or-after 2026-11-01@Asia/Kolkata not ?owner",
             placeholder: "Search with the query language..."
         });
+
+        // The zone the page would send with each search, beside the bar (#208).
+        createTimezonePicker("fs-demo-zone", { compact: true, timezone: "local" });
 
         // The apps' Parse call answers `budget (type:` with this error.
         document.getElementById("fs-demo-query-error").addEventListener("click", function() {
