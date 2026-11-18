@@ -119,7 +119,9 @@ test.describe("vditor-integrity entry", () =>
         await preview(page, "KaTeX");
 
         await expect(page.locator("#preview .katex").first()).toBeVisible();
-        await expect(page.locator("#preview svg").first()).toBeVisible();
+        // Mermaid's own drawing (#217). A code block's copy button is an svg too, so `#preview svg`
+        // could pass before Mermaid had loaded its script.
+        await expect(page.locator("#preview .language-mermaid svg").first()).toBeVisible();
         await expect(page.locator("#preview pre code.hljs").first()).toBeVisible();
 
         const tags = await treeTags(page);
