@@ -1273,6 +1273,7 @@ describe("syntax: \"query\", Parse's problems and the suggestions (#206)", () =>
     test.each([
         ["a key", "typ", "keys"],
         ["a value after `key:`", "-type:t", "values"],
+        ["a value after a joined `>=`, read whole", "amount>=1", "values"],
         ["a value after a word operator", "budget type equals ", "values"],
         ["a value after a short form", "amount gte ", "values"],
         ["a value after a symbol written apart", "amount >= ", "values"],

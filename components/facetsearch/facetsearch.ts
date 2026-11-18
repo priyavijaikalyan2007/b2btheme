@@ -288,8 +288,24 @@ const JOINS_INTO_IN = new Set([":", "equals", "in"]);
 const QUERY_VALUE_OPS = new Set([...QUERY_OP_WORDS].filter((w) => w !== "exists" && w !== "missing")
     .concat(["eq", "neq", "gt", "gte", "geq", "lt", "lte", "leq", "=", "!=", "!:", ">", ">=", "<", "<="]));
 
-/** A key with its operator joined on, and the value typed so far, such as `-type:no` or `amount>=5`. */
-const QUERY_JOINED_KEY = /^-?([^\s:!<>=@]+)(?:>=|<=|!=|!:|>|<|=|:)(.*)$/;
+/** The operators that can be joined to a key, longest first, so `>=` is read before `>`. */
+const QUERY_JOINED_OPS = [">=", "<=", "!=", "!:", ">", "<", "=", ":"];
+
+/**
+ * A key with its operator joined on, and the value typed so far, such as `-type:no` or `amount>=5`, else
+ * null. String code, not a pattern: a pattern for this also matches `-->`, which CodeQL reads as a bad
+ * HTML comment filter.
+ */
+function queryJoinedKey(token: string): { key: string; partial: string } | null
+{
+    const body = token.startsWith("-") ? token.slice(1) : token;
+    let at = 0;
+
+    while (at < body.length && !":!<>=".includes(body[at])) { at++; }
+    const op = (at > 0) ? QUERY_JOINED_OPS.find((o) => body.startsWith(o, at)) : undefined;
+
+    return op ? { key: body.slice(0, at), partial: body.slice(at + op.length) } : null;
+}
 
 /** A zone typed after a date, a time or a relative date, such as `2026-11-15@kol`, `-7d@` or `today@kol`. */
 const QUERY_DATE_ZONE = /(?:\d(?:mo|[hdwy])?|now|today|yesterday)@([^@]*)$/i;
@@ -1922,10 +1938,10 @@ export class FacetSearch implements FacetSearchHandle
             return;
         }
 
-        const joined = QUERY_JOINED_KEY.exec(token);
-        if (joined && this.facetMap.has(joined[1].toLowerCase()))
+        const joined = queryJoinedKey(token);
+        if (joined && this.facetMap.has(joined.key.toLowerCase()))
         {
-            this.queryValuesOf(joined[1], joined[2], "value");
+            this.queryValuesOf(joined.key, joined.partial, "value");
             return;
         }
 
