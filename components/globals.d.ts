@@ -109,6 +109,7 @@ import type { FontDropdown, createFontDropdown } from "./fontdropdown/fontdropdo
 import type { FormDialog, FormDialogOptions, createFormDialog } from "./formdialog/formdialog";
 import type { Gauge, createBarGauge, createGauge, createRingGauge, createTileGauge } from "./gauge/gauge";
 import type { createGestureRecognizer } from "./gesturerecognizer/gesturerecognizer";
+import type { createExpressionBuilder } from "./expressionbuilder/expressionbuilder";
 import type { GradientPicker, createGradientPicker } from "./gradientpicker/gradientpicker";
 import type { GraphCanvas, GraphCanvasOptions, createGraphCanvas } from "./graphcanvas/graphcanvas";
 import type { createGraphLegend } from "./graphlegend/graphlegend";
@@ -502,6 +503,9 @@ declare global
         createGauge?: typeof createGauge;
         createRingGauge?: typeof createRingGauge;
         createTileGauge?: typeof createTileGauge;
+
+        /** Published by the ExpressionBuilder component. */
+        createExpressionBuilder?: typeof createExpressionBuilder;
 
         /** Published by the GestureRecognizer component. */
         createGestureRecognizer?: typeof createGestureRecognizer;

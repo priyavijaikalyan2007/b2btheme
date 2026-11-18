@@ -74,6 +74,15 @@ Shortcuts for `MarkdownEditor`, `CodeEditor`, and `SmartTextInputEngine`.
 | `/` | **Trigger Slash Command** | [[SmartTextInputEngine]] |
 | `Shift + Enter` | **Soft Break** (New line without submit) | [[Conversation]] |
 
+### Query Expression Builder
+
+[[ExpressionBuilder]] (#207). Each shortcut moves the row that holds the focus. Every move is also a button on the row.
+
+| Shortcut | Action | Name |
+| :--- | :--- | :--- |
+| `Alt + ↑` | **Move Up** the row in its group | `moveUp` |
+| `Alt + ↓` | **Move Down** the row in its group | `moveDown` |
+
 ## 5. AI & Agent Interactions
 
 Specific to `Conversation` and agentic monitoring tools.

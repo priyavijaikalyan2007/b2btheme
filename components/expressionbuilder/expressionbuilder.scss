@@ -1,0 +1,185 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Priya Vijai Kalyan <priyavijai.kalyan2007@proton.me>
+ * SPDX-License-Identifier: MIT
+ */
+/*
+ * ⚓ COMPONENT: ExpressionBuilderStyles
+ * 📜 PURPOSE: Styles for the ExpressionBuilder (#207): nested groups that
+ *    stand apart in both themes, rows of key, operator and value, drafts,
+ *    problems from Parse, and the drag handle and drop marks.
+ * 🔗 RELATES: [[ExpressionBuilder]], [[FacetSearch]], [[EnterpriseTheme]]
+ */
+
+// @dependency: ../../src/scss/variables
+@import '../../src/scss/variables';
+// @dependency: ../../src/scss/chrome
+@import '../../src/scss/chrome';
+
+.expressionbuilder {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+    font-size: $font-size-sm;
+    color: var(--theme-text-primary);
+}
+
+// ============================================================================
+// GROUPS: each level takes the other surface, with a border on its left, so
+// the nesting shows in both themes.
+// ============================================================================
+
+.expressionbuilder-group {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+    padding: $sp-6 $sp-8;
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    border-left: 3px solid var(--theme-input-border);
+    border-radius: $border-radius;
+}
+
+.expressionbuilder-group-odd {
+    background-color: var(--theme-surface-sunken-bg);
+}
+
+.expressionbuilder-group-head,
+.expressionbuilder-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $sp-4;
+}
+
+.expressionbuilder-rows {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    min-height: $control-height-sm;
+}
+
+.expressionbuilder-row {
+    padding: $sp-2 $sp-4;
+    border-radius: $border-radius;
+}
+
+.expressionbuilder-select {
+    width: auto;
+    max-width: 14rem;
+}
+
+.expressionbuilder-value {
+    width: auto;
+    min-width: 8rem;
+}
+
+.expressionbuilder-values,
+.expressionbuilder-value-item,
+.expressionbuilder-tools {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.expressionbuilder-tools {
+    margin-left: auto;
+}
+
+.expressionbuilder-button {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.expressionbuilder-label,
+.expressionbuilder-empty {
+    color: var(--theme-text-secondary);
+}
+
+// A part this version cannot edit: read as text, with what it is.
+.expressionbuilder-kept {
+    color: var(--theme-text-secondary);
+    font-style: italic;
+}
+
+// ============================================================================
+// DRAFTS AND PROBLEMS
+// ============================================================================
+
+.expressionbuilder-row-draft {
+    outline: $border-width dashed var(--theme-input-border);
+}
+
+.expressionbuilder-draft {
+    color: var(--theme-text-secondary);
+    font-size: $font-size-xs;
+}
+
+.expressionbuilder-has-error {
+    outline: 2px solid var(--theme-query-error);
+}
+
+.expressionbuilder-has-warning {
+    outline: 2px dashed var(--theme-query-warning);
+}
+
+.expressionbuilder-problem {
+    display: flex;
+    flex-basis: 100%;
+    align-items: baseline;
+    gap: $sp-4;
+}
+
+.expressionbuilder-problem-error .expressionbuilder-problem-icon {
+    color: var(--theme-query-error);
+}
+
+.expressionbuilder-problem-warning .expressionbuilder-problem-icon {
+    color: var(--theme-query-warning);
+}
+
+.expressionbuilder-message[hidden] {
+    display: none;
+}
+
+// ============================================================================
+// DRAG: a pointer accelerator. Every move also has buttons.
+// ============================================================================
+
+// The handle starts a drag at once (TOUCH_EXPERIENCE.md, values for touch-action).
+.expressionbuilder-drag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    color: var(--theme-text-secondary);
+    cursor: grab;
+    touch-action: none;
+}
+
+.expressionbuilder-dragging {
+    opacity: 0.5;
+}
+
+.expressionbuilder-drop-before {
+    box-shadow: 0 -3px 0 0 var(--theme-primary);
+}
+
+.expressionbuilder-drop-after {
+    box-shadow: 0 3px 0 0 var(--theme-primary);
+}
+
+.expressionbuilder-drop-into {
+    outline: 2px dashed var(--theme-primary);
+}
+
+// A finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
+@media (any-pointer: coarse) {
+    .expressionbuilder-drag,
+    .expressionbuilder-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

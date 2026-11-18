@@ -27,6 +27,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **ExpressionBuilder, a visual editor for the query language** (#207, part 1 of 2). It edits the tree the API's Parse call returns, beside FacetSearch, which edits the same query as text.
+  - **Rows:** groups joined by all or any, not, conditions with an operator that fits the key's type, and words.
+  - **A draft is left out of the tree** until it has what its operator needs, so `onChange` always reports a tree Print accepts.
+  - **A tree that means the same, back from the bar, keeps the rows,** so a person typing in a value loses nothing.
+  - **Errors and warnings** show on the row whose text holds them, or above the rows.
+  - **Kept as it came:** a nested search, `link`, a comparison of variables, a variable or other value with no editor yet, a key with no facet, and `return`. Part 2 of #207 edits them.
+  - **Moves:** buttons on each row, `Alt` with an arrow key, and a drag by the row's grip through GestureRecognizer, which it requires.
+  - It takes FacetSearch's `facets` list, so the two offer the same keys.
 - **TimezonePicker has a compact form** (#208). `compact: true` shows one button with the zone's city and offset, such as "Kolkata GMT+5:30", and opens the same dropdown. It fits beside a search bar, for the zone a page sends with each search. The FacetSearch demo shows it beside the query bar. Without the option, the picker is unchanged.
 - **FacetSearch colors the query language as the API reads it** (#205), with `syntax: "query"`. A new component, QueryLanguage, reads the text with a lexer and parser that ANTLR 4.13.1 generated from the apps' own grammar. So `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors are the `--theme-query-*` tokens. They never report an error.
   - **Load two more scripts with `syntax: "query"`:** `/lib/antlr4-4.13.1.js` and `components/querylanguage/querylanguage.js`. The bar throws and names them when they are missing. Today's syntax needs nothing new.
