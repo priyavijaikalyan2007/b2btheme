@@ -46,6 +46,14 @@ export interface FacetDefinition
     operators?: string[];
     color?: string;
     valuePlaceholder?: string;
+    /**
+     * Read by ExpressionBuilder, not by the bar (#207). The key links to an item or a person, such as
+     * `rel.created_by` or `created_by`. A condition on it can take a variable, "the same item as" another row,
+     * and a search inside it with `where`. Its values are item ids, as `resource` values in the tree.
+     */
+    relationship?: boolean;
+    /** Read by ExpressionBuilder, not by the bar: the link's own fields, for `link ( … )` on this key. */
+    link?: FacetDefinition[];
 }
 
 /** A single parsed facet from the query string. */

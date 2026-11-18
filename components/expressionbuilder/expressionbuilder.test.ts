@@ -11,8 +11,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import
 {
-    createExpressionBuilder, facetOps, meaning, moveRow, moveRowTo, opName, opWord, removeRow, rootOf, rowAt,
-    setOp, treeOf, unwrapRow, wrapRow,
+    allRows, createExpressionBuilder, facetMap, facetOps, meaning, moveRow, moveRowTo, newVariable, opName, opWord,
+    parsePath, removeRow, rootOf, rowAt, setOp, treeOf, unwrapRow, variableUses, wrapRow,
 } from "./expressionbuilder";
 import type { ExpressionBuilderFacet, FilterRow, GroupRow, QueryNode, QueryTree } from "./expressionbuilder";
 // The builder drags rows through the shared recognizer, which this publishes.
@@ -95,7 +95,7 @@ describe("rows and trees", () =>
         expect(treeOf(root, MAP)).toEqual(negated);
     });
 
-    test("everything this version cannot edit is kept exactly as it came (UI_EXPERIENCE.md 5.7)", () =>
+    test("everything the builder cannot edit is kept exactly as it came (UI_EXPERIENCE.md 5.7)", () =>
     {
         const kept: QueryTree = { root: { kind: "or", children: [
             { kind: "nested", key: "rel.parent_of", where: f("type", "Equals", { text: "x" }) },
@@ -119,14 +119,15 @@ describe("rows and trees", () =>
         expect(treeOf(root, MAP, kept.return)).toEqual(kept);
         expect(root.op).toBe("or");
         expect(root.children.map((r) => r.kind)).toEqual([
-            "kept", "kept", "kept", "kept", "kept", "kept", "kept", "kept", "filter", "filter", "text", "filter",
+            "kept", "compare", "kept", "kept", "kept", "kept", "kept", "kept", "filter", "filter", "text", "filter",
             "kept"]);
         expect(root.children.map((r) => (r.kind === "kept" ? r.what : null))).toEqual([
-            "A search inside rel.parent_of", "A comparison of two variables", "A filter with a link condition",
+            "A search inside rel.parent_of, which is not a relationship key", null,
+            "A filter on rel.owner, which has no facet",
             "A filter with a value this builder has no editor for",
-            "A filter with a value this builder has no editor for", "A filter on a variable",
+            "A filter with a value this builder has no editor for", "A filter on a parameter",
             "A filter on note, which has no facet", "A filter with the operator Matches", null, null, null, null,
-            "A filter with a link condition"]);
+            "A filter with a link condition on a key that takes none"]);
     });
 
     test("a draft and an empty group are left out, so the tree always prints", () =>
@@ -520,7 +521,8 @@ describe("ExpressionBuilder", () =>
         const nested: QueryNode = { kind: "nested", key: "rel.parent_of", where: f("type", "Equals", { text: "x" }) };
         const { eb } = make({ root: { kind: "and", children: [f("title", "Contains", { text: "a" }), nested] } });
 
-        expect(row("1").textContent).toContain("A search inside rel.parent_of. Edit this in the search bar.");
+        expect(row("1").textContent)
+            .toContain("A search inside rel.parent_of, which is not a relationship key. Edit this in the search bar.");
         expect(row("1").querySelector("input, select")).toBeNull();
         control("1", "up").click();
         expect(eb.getTree().root!.children![0]).toEqual(nested);
@@ -545,5 +547,385 @@ describe("ExpressionBuilder", () =>
         eb.destroy();
         expect(container.children).toHaveLength(0);
         expect(eb.getElement()).toBeNull();
+    });
+});
+
+// ============================================================================
+// PART 2: SEARCHES INSIDE, LINK CONDITIONS AND VARIABLES (spec section 9)
+// ============================================================================
+
+const REL: ExpressionBuilderFacet[] = [
+    { key: "type", label: "Type", valueType: "enum", values: ["checklists.instance"] },
+    { key: "rel.created_by", label: "Created by", valueType: "text", relationship: true },
+    { key: "rel.completed_by", label: "Completed by", valueType: "text", relationship: true },
+    { key: "rel.belongs_to_org_unit", label: "Org unit", valueType: "text", relationship: true },
+    { key: "rel.member_of", label: "Member of", valueType: "text", relationship: true },
+    { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true, link: [
+        { key: "provenance", label: "Provenance", valueType: "enum", values: ["manual", "ai"] },
+        { key: "at", label: "Made", valueType: "date" },
+    ] },
+];
+const RMAP = facetMap(REL);
+const v = (name: string) => ({ var: name });
+const rel = (key: string, value: Record<string, unknown>, op = "Equals"): QueryNode =>
+    ({ kind: "filter", key, op, value });
+
+/** The three examples from #376 in spec section 9, and its `link` example, as trees. */
+const EXAMPLES: Array<[string, QueryTree]> = [
+    ["the same person created and completed it", { root: { kind: "and", children: [
+        rel("type", { text: "checklists.instance" }), rel("rel.created_by", v("p")), rel("rel.completed_by", v("p")),
+    ] } }],
+    ["the approver is not the doer", { root: { kind: "and", children: [
+        rel("rel.completed_by", v("doer")), rel("rel.signed_off_by", v("approver")),
+        { kind: "compare", left: v("approver"), op: "NotEquals", right: v("doer") },
+    ] } }],
+    ["signed off by someone outside the org", { root: { kind: "and", children: [
+        rel("rel.belongs_to_org_unit", v("org")),
+        { kind: "nested", key: "rel.signed_off_by", where: { kind: "not", child: rel("rel.member_of", v("org")) } },
+    ] } }],
+    ["a manual sign-off after a date, by someone outside the org", { root: { kind: "and", children: [
+        rel("rel.belongs_to_org_unit", v("org")),
+        { kind: "nested", key: "rel.signed_off_by",
+            link: { kind: "and", children: [rel("provenance", { text: "manual" }),
+                rel("at", { date: "2026-11-01", zone: "Asia/Kolkata" }, "After")] },
+            where: { kind: "not", child: rel("rel.member_of", v("org")) } },
+    ] } }],
+];
+
+describe("searches inside, link conditions and variables", () =>
+{
+    test.each(EXAMPLES)("%s: the rows make the same tree, with nothing kept", (_name, tree) =>
+    {
+        const root = rootOf(tree, RMAP);
+
+        expect(treeOf(root, RMAP)).toEqual(tree);
+        expect(Array.from(allRows(root)).filter(({ row }) => row.kind === "kept")).toEqual([]);
+    });
+
+    test("a search inside is a condition with `where`, and its link conditions use the link's fields", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+        const signed = root.children[1] as FilterRow;
+
+        expect(signed).toMatchObject({ key: "rel.signed_off_by", op: "where" });
+        expect(signed.link).toMatchObject({ kind: "group", linkOf: "rel.signed_off_by" });
+        expect((signed.link!.children[1] as FilterRow))
+            .toMatchObject({ key: "at", op: "after", values: ["2026-11-01"] });
+        expect(signed.where!.children[0])
+            .toMatchObject({ kind: "filter", key: "rel.member_of", nots: 1, variable: "org" });
+    });
+
+    test("a value on a relationship key is an item's id, read and written as `resource`", () =>
+    {
+        const id = "6f1c0d6e-27a4-4b9d-9e3e-6b0f5d0b9a11";
+        const tree: QueryTree = { root: rel("rel.created_by", { resource: id }) };
+        const root = rootOf(tree, RMAP);
+
+        expect(treeOf(root, RMAP)).toEqual(tree);
+        (root.children[0] as FilterRow).values = ["7"];
+        expect(treeOf(root, RMAP).root!.value).toEqual({ resource: "7" });
+    });
+
+    test("a variable used once is a draft, left out, as the binder's rule 1 asks; `return` counts as a use", () =>
+    {
+        const root = rootOf(EXAMPLES[0][1], RMAP);
+        removeRow(root, [2]);
+
+        expect(treeOf(root, RMAP).root).toEqual(rel("type", { text: "checklists.instance" }));
+        expect(treeOf(root, RMAP, ["p"]).root!.children![1]).toEqual(rel("rel.created_by", v("p")));
+    });
+
+    test("variableUses counts conditions, comparisons, kept parts and `return`", () =>
+    {
+        const root = rootOf(EXAMPLES[1][1], RMAP);
+        root.children.push({ kind: "kept", node: { kind: "filter", key: "x", op: "Equals", value: v("doer") },
+            what: "kept", nots: 0 });
+
+        expect(Object.fromEntries(variableUses(root, ["approver"]))).toEqual({ doer: 3, approver: 3 });
+    });
+
+    test("newVariable names a variable from its key, and never one already used", () =>
+    {
+        expect(newVariable("rel.created_by", new Set())).toBe("created_by");
+        expect(newVariable("rel.created_by", new Set(["created_by", "created_by2"]))).toBe("created_by3");
+        expect(newVariable("rel.1st-owner", new Set())).toBe("_1st_owner");
+    });
+
+    test("setOp keeps the search inside when the operator changes, and drops a variable off `equals`", () =>
+    {
+        const root = rootOf(EXAMPLES[2][1], RMAP);
+        const signed = root.children[1] as FilterRow;
+        const where = signed.where;
+
+        // Off "where", the search inside is not in the tree, so ?org is used once, and its condition is a draft.
+        setOp(signed, "equals");
+        expect(treeOf(root, RMAP)).toEqual({});
+        setOp(signed, "where");
+        expect(signed.where).toBe(where);
+        expect(treeOf(root, RMAP)).toEqual(EXAMPLES[2][1]);
+
+        const org = root.children[0] as FilterRow;
+        setOp(org, "not-equals");
+        expect(org.variable).toBeUndefined();
+    });
+
+    test("a where or link group sits in a condition: it does not move or go on its own", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+
+        expect(rowAt(root, [1, "where"])).toMatchObject({ parent: null, index: -1 });
+        expect(moveRow(root, [1, "link"], 1)).toBeNull();
+        removeRow(root, [1, "where"]);
+        expect(treeOf(root, RMAP)).toEqual(EXAMPLES[3][1]);
+        expect(parsePath("1.link.0")).toEqual([1, "link", 0]);
+    });
+
+    test("a group made in a link uses the link's fields, and a row never moves between a link and the rest", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+
+        wrapRow(root, [1, "link", 0]);
+        expect(rowAt(root, [1, "link", 0]).row).toMatchObject({ kind: "group", linkOf: "rel.signed_off_by" });
+        expect(meaning(treeOf(root, RMAP).root)).toEqual(meaning(EXAMPLES[3][1].root));
+
+        expect(moveRowTo(root, [1, "link", 1], [], 0)).toBeNull();
+        expect(moveRowTo(root, [0], [1, "link"], 0)).toBeNull();
+        expect(moveRowTo(root, [0], [1, "where"], 0)).toEqual([0, "where", 0]);
+    });
+
+    test("meaning reaches into where and link, and ignores the order of a node's fields", () =>
+    {
+        const one = rel("rel.member_of", v("org"));
+        const sent: QueryNode = { kind: "nested", key: "rel.signed_off_by", where: { kind: "and", children: [one] } };
+        const back = { where: one, key: "rel.signed_off_by", kind: "nested" } as QueryNode;
+
+        // The builder compares the two as text, so the order of the fields must not matter.
+        expect(JSON.stringify(meaning(back))).toBe(JSON.stringify(meaning(sent)));
+    });
+
+    test.each([
+        ["a variable on a key that is not a relationship", rel("type", v("p"))],
+        ["a variable after an operator other than equals", rel("rel.created_by", v("p"), "NotEquals")],
+        ["a variable in a list", { kind: "filter", key: "rel.created_by", op: "In", values: [v("p"), v("q")] }],
+        ["a comparison with a value on one side",
+            { kind: "compare", left: v("a"), op: "Equals", right: { text: "x" } }],
+        ["a comparison with an operator the language does not have",
+            { kind: "compare", left: v("a"), op: "Matches", right: v("b") }],
+    ])("keeps %s as it came", (_name, node) =>
+    {
+        expect(rootOf({ root: node as QueryNode }, RMAP).children[0].kind).toBe("kept");
+    });
+
+    test("a link holds no variables or comparisons: they are kept there", () =>
+    {
+        const root = rootOf({ root: { kind: "nested", key: "rel.signed_off_by", where: rel("rel.member_of", v("o")),
+            link: { kind: "and", children: [rel("provenance", v("o")),
+                { kind: "compare", left: v("o"), op: "Equals", right: v("o") }] } } }, RMAP);
+
+        expect((root.children[0] as FilterRow).link!.children.map((r) => r.kind)).toEqual(["kept", "kept"]);
+    });
+
+    test("a comparison of a variable with itself is a draft", () =>
+    {
+        const root = rootOf(EXAMPLES[1][1], RMAP);
+        root.children[2] = { kind: "compare", left: "doer", op: "not-equals", right: "doer", nots: 0 };
+
+        expect(JSON.stringify(treeOf(root, RMAP))).not.toContain("compare");
+    });
+});
+
+describe("ExpressionBuilder, part 2", () =>
+{
+    let container: HTMLElement;
+
+    beforeEach(() =>
+    {
+        vi.useFakeTimers();
+        container = document.createElement("div");
+        container.id = "eb";
+        document.body.appendChild(container);
+    });
+    afterEach(() =>
+    {
+        container.remove();
+        vi.useRealTimers();
+    });
+
+    const make = (tree?: QueryTree, onChange = vi.fn()) =>
+        ({ eb: createExpressionBuilder("eb", { facets: REL, tree, onChange }), onChange });
+    const row = (path: string): HTMLElement => container.querySelector(`[data-path="${path}"]`)!;
+    const control = (path: string, role: string): HTMLInputElement =>
+        Array.from(row(path).querySelectorAll<HTMLInputElement>(`[data-role="${role}"]`))
+            .find((e) => e.closest("[data-path]") === row(path))!;
+    const choose = (el: HTMLInputElement, value: string): void =>
+    {
+        el.value = value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    const optionTexts = (el: HTMLInputElement): string[] =>
+        Array.from((el as unknown as HTMLSelectElement).options).map((o) => o.textContent ?? "");
+
+    test("\"the same item as\" makes one variable for both conditions, and removing one makes the other a draft", () =>
+    {
+        const { eb, onChange } = make();
+
+        control("", "add-filter").click();
+        choose(control("0", "key"), "rel.created_by");
+        control("", "add-filter").click();
+        choose(control("1", "key"), "rel.completed_by");
+        expect(optionTexts(control("1", "same"))).toEqual(["a value", "the same item as Created by"]);
+
+        choose(control("1", "same"), "row:0");
+
+        expect(onChange.mock.calls.at(-1)![0]).toEqual({ root: { kind: "and", children: [
+            rel("rel.created_by", v("created_by")), rel("rel.completed_by", v("created_by"))] } });
+        expect(control("0", "same").value).toBe("var:created_by");
+        expect(row("1").querySelector("[data-role='value-0']")).toBeNull();
+
+        control("0", "remove").click();
+
+        expect(row("0").textContent).toContain("Needs a second use of ?created_by");
+        expect(eb.getTree()).toEqual({});
+    });
+
+    test("\"has one where\" opens a search inside, and a condition there makes a nested search", () =>
+    {
+        const { onChange } = make({ root: rel("rel.belongs_to_org_unit", v("org")) });
+
+        control("", "add-filter").click();
+        choose(control("1", "key"), "rel.signed_off_by");
+        choose(control("1", "op"), "where");
+        expect(row("1").textContent).toContain("Needs a condition inside");
+        expect(row("1.where")).not.toBeNull();
+
+        control("1.where", "add-filter").click();
+        choose(control("1.where.0", "key"), "rel.member_of");
+        control("1.where.0", "not").click();
+        choose(control("1.where.0", "same"), "var:org");
+
+        // A search inside of one condition is that condition, as Print writes it.
+        expect(onChange.mock.calls.at(-1)![0]).toEqual({ root: { kind: "and", children: [
+            rel("rel.belongs_to_org_unit", v("org")),
+            { kind: "nested", key: "rel.signed_off_by",
+                where: { kind: "not", child: rel("rel.member_of", v("org")) } }] } });
+    });
+
+    test("link conditions use the link's fields, and go with their own button", () =>
+    {
+        const { eb } = make();
+
+        control("", "add-filter").click();
+        choose(control("0", "key"), "rel.signed_off_by");
+        control("0", "add-link").click();
+        expect(document.activeElement).toBe(control("0.link", "add-filter"));
+        expect(control("0.link", "add-text")).toBeUndefined();
+
+        control("0.link", "add-filter").click();
+        expect(optionTexts(control("0.link.0", "key"))).toEqual(["Choose a key", "Provenance", "Made"]);
+        choose(control("0.link.0", "key"), "provenance");
+        choose(control("0.link.0", "value-0"), "manual");
+        choose(control("0", "value-0"), "6f1c");
+
+        expect(eb.getTree()).toEqual({ root: { ...rel("rel.signed_off_by", { resource: "6f1c" }),
+            link: rel("provenance", { text: "manual" }) } });
+
+        control("0.link", "remove-link").click();
+        expect(eb.getTree()).toEqual({ root: rel("rel.signed_off_by", { resource: "6f1c" }) });
+    });
+
+    test("a comparison is offered once the query has two variables, and compares them", () =>
+    {
+        const tree = EXAMPLES[1][1];
+        const { eb } = make(EXAMPLES[0][1]);
+
+        // One variable, ?p: nothing to compare it with.
+        expect(control("", "add-compare")).toBeUndefined();
+        eb.setParsed({ tree: { root: { kind: "and", children: [...tree.root!.children!.slice(0, 2),
+            rel("rel.created_by", v("doer")), rel("rel.member_of", v("approver"))] } } });
+        control("", "add-compare").click();
+        choose(control("4", "left"), "approver");
+        choose(control("4", "right"), "doer");
+
+        expect(eb.getTree().root!.children![4])
+            .toEqual({ kind: "compare", left: v("approver"), op: "NotEquals", right: v("doer") });
+    });
+
+    test("a warning lands on the row inside a where or a link whose text holds it", () =>
+    {
+        const { eb } = make();
+        const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual ) "
+            + "where ( -rel.member_of:?org )";
+        const at = (s: string): [number, number] => [text.indexOf(s), text.indexOf(s) + s.length];
+        const span = (s: string) => ({ start: at(s)[0], end: at(s)[1] });
+
+        eb.setParsed({ tree: { root: { kind: "and", children: [
+            { ...rel("rel.belongs_to_org_unit", v("org")), span: span("rel.belongs_to_org_unit:?org") },
+            { kind: "nested", key: "rel.signed_off_by", span: span("rel.signed_off_by link ( provenance:manual ) "
+                + "where ( -rel.member_of:?org )"),
+                link: { ...rel("provenance", { text: "manual" }), span: span("provenance:manual") },
+                where: { kind: "not", span: span("-rel.member_of:?org"),
+                    child: { ...rel("rel.member_of", v("org")), span: span("rel.member_of:?org") } } },
+        ] } }, warnings: [
+            { code: "QL_A", title: "On the link", detail: "A.", start: at("manual")[0], end: at("manual")[1] },
+            { code: "QL_B", title: "Inside", detail: "B.", start: at("member_of")[0], end: at("member_of")[1] },
+        ] });
+
+        expect(row("1.link.0").classList.contains("expressionbuilder-has-warning")).toBe(true);
+        expect(row("1.where.0").classList.contains("expressionbuilder-has-warning")).toBe(true);
+        expect(row("1").querySelectorAll(".expressionbuilder-problem")).toHaveLength(2);
+    });
+
+    test("the same tree back with spans gives them to the rows in text order, a draft's link rows left out", () =>
+    {
+        const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual at after 2026-11-01 ) "
+            + "where ( -rel.member_of:?org ) title";
+        const span = (s: string) => ({ start: text.indexOf(s), end: text.indexOf(s) + s.length });
+        const sent = EXAMPLES[3][1];
+        const { eb } = make(sent);
+        // A draft with a complete link condition comes first, and none of its rows are in the tree.
+        control("", "add-filter").click();
+        choose(control("2", "key"), "rel.signed_off_by");
+        control("2", "add-link").click();
+        control("2.link", "add-filter").click();
+        choose(control("2.link.0", "key"), "provenance");
+        choose(control("2.link.0", "value-0"), "ai");
+        control("2", "up").click();
+        control("1", "up").click();
+        expect(control("0", "key").value).toBe("rel.signed_off_by");
+
+        const nested = sent.root!.children![1];
+        eb.setParsed({ tree: { root: { kind: "and", children: [
+            { ...sent.root!.children![0], span: span("rel.belongs_to_org_unit:?org") },
+            { ...nested, span: span("rel.signed_off_by"),
+                link: { kind: "and", span: span("provenance:manual at after 2026-11-01"), children: [
+                    { ...nested.link!.children![0], span: span("provenance:manual") },
+                    { ...nested.link!.children![1], span: span("at after 2026-11-01") }] },
+                where: { ...nested.where!, span: span("-rel.member_of:?org") } },
+        ] } }, warnings: [
+            { code: "QL_A", title: "Date", detail: "A.", ...span("2026-11-01") },
+            { code: "QL_B", title: "Across the link", detail: "B.", ...span("manual at") },
+            { code: "QL_C", title: "Inside", detail: "C.", ...span("member_of") },
+        ] });
+
+        // The draft at row 0 took no span, so each warning lands where its text is.
+        expect(row("2.link.1").querySelector(".expressionbuilder-problem-text")!.textContent).toBe("Date. A.");
+        expect(row("2.link").querySelector(":scope > .expressionbuilder-problem .expressionbuilder-problem-text")!
+            .textContent).toBe("Across the link. B.");
+        expect(row("2.where.0").querySelector(".expressionbuilder-problem-text")!.textContent).toBe("Inside. C.");
+        expect(row("0").querySelector(".expressionbuilder-problem")).toBeNull();
+    });
+
+    test("a search inside back from the bar as one bare condition keeps the rows and the focus", () =>
+    {
+        const { eb } = make(EXAMPLES[2][1]);
+        const op = control("1", "op");
+        op.focus();
+
+        eb.setParsed({ tree: { root: { kind: "and", children: [rel("rel.belongs_to_org_unit", v("org")),
+            { kind: "nested", key: "rel.signed_off_by",
+                where: { kind: "and", children: [{ kind: "not", child: rel("rel.member_of", v("org")) }] } }] } } });
+
+        expect(control("1", "op")).toBe(op);
+        expect(document.activeElement).toBe(op);
     });
 });

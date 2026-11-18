@@ -8,8 +8,9 @@
  * ⚓ COMPONENT: ExpressionBuilder
  * 📜 PURPOSE: A visual editor for a query in the apps' query language, for
  *    people who would rather not type one (#207). It edits the tree that the
- *    API's Parse call returns: groups joined by `and` or `or`, `not`, filters
- *    and free text. The search bar edits the same query as text, and the
+ *    API's Parse call returns: groups joined by `and` or `or`, `not`, filters,
+ *    free text, searches inside a relationship (`where`), conditions on a
+ *    link, and variables. The search bar edits the same query as text, and the
  *    host keeps the two in step with the API's Parse and Print calls.
  * 🔗 RELATES: [[FacetSearch]], [[QueryLanguage]], [[GestureRecognizer]]
  * ⚡ FLOW: [host Parse] -> [setParsed(tree)] -> [rows] -> [person edits]
@@ -20,10 +21,10 @@
  * reports a tree that Print accepts: a row a person has not finished is a
  * draft, shown and marked, and left out of the tree until it is complete.
  *
- * WHAT THIS VERSION CANNOT EDIT IT KEEPS (UI_EXPERIENCE.md section 5.7). A
- * nested search, a `link`, a comparison of variables, a variable or other
- * value it has no editor for, a key with no facet, and `return` are shown
- * read-only, kept in place, and reported exactly as they came.
+ * WHAT IT CANNOT EDIT IT KEEPS (UI_EXPERIENCE.md section 5.7). A parameter,
+ * a value it has no editor for, a key with no facet, a variable or a
+ * nested search on a key that is not a relationship, and `return` are
+ * shown read-only, kept in place, and reported exactly as they came.
  */
 
 // @entrypoint
@@ -148,6 +149,14 @@ export interface ExpressionBuilderFacet
     loadValues?: (query: string) => Promise<Array<string | { value: string; label: string }>>;
     /** The operators a filter on this key may use: words such as "on-or-after", or the bar's symbols. */
     operators?: string[];
+    /**
+     * The key links to an item or a person, such as `rel.created_by` or `created_by` (spec section 9). A
+     * condition on it can be "the same item as" another, which writes a variable, can have a search inside it
+     * with `where`, and, with `link`, conditions on the link. Its values are item ids, as `resource` values.
+     */
+    relationship?: boolean;
+    /** The link's own fields, for `link ( … )` on this key: provenance, confidence, at, and its properties. */
+    link?: ExpressionBuilderFacet[];
 }
 
 export interface ExpressionBuilderOptions
@@ -221,6 +230,12 @@ const OP_LABELS: Record<string, string> = {
     "on": "is on", "on-or-after": "is on or after", "on-or-before": "is on or before", "in": "is one of",
     "contains": "contains", "starts-with": "starts with", "ends-with": "ends with", "descendant-of": "is within",
     "is": "is", "is-not": "is not", "exists": "has a value", "missing": "has no value",
+    "where": "has one where",
+};
+
+/** What a person reads for an operator between two variables. */
+const COMPARE_LABELS: Record<string, string> = {
+    "equals": "is the same item as", "not-equals": "is not the same item as",
 };
 
 /** The tree's name for an operator word, such as "on-or-after" to "OnOrAfter". */
@@ -269,8 +284,16 @@ function arity(op: string): "none" | "one" | "many"
 // The rows a person edits. A row is kept apart from the tree because a
 // draft has no place in a tree that must print, and because a `not` is a
 // toggle on a row rather than a box of its own.
+//
+// SCOPES. Inside `link ( … )` the keys are the link's own fields, which the
+// relationship's facet lists in `link`. Everywhere else, including inside a
+// `where`, they are the builder's facets. A group says which: `linkOf` names
+// the relationship key whose link fields apply.
 
 export interface Span { start: number; end: number }
+
+/** A step from a row: a child's index in a group, or into a condition's `where` or `link` group. */
+export type Step = number | "where" | "link";
 
 interface RowBase
 {
@@ -280,25 +303,56 @@ interface RowBase
     span?: Span;
 }
 
-export interface GroupRow extends RowBase { kind: "group"; op: "and" | "or"; children: Row[] }
+export interface GroupRow extends RowBase
+{
+    kind: "group";
+    op: "and" | "or";
+    children: Row[];
+    /** Set inside `link ( … )`: the relationship key whose link fields its rows use. */
+    linkOf?: string;
+}
 
 export interface FilterRow extends RowBase
 {
     kind: "filter";
     key: string;
+    /** An operator word, or "where" for a search inside the item at the other end. */
     op: string;
     /** As the inputs hold them. */
     values: string[];
     /** The value each came from, so an edited date keeps its zone. */
     original: Array<QueryValue | undefined>;
+    /** The variable the row's value is, without its `?`, for "the same item as" another row. */
+    variable?: string;
+    /** The search inside, while the operator is "where". Kept when it changes, so nothing is lost. */
+    where?: GroupRow;
+    /** Conditions on the link itself. */
+    link?: GroupRow;
 }
 
 export interface TextRow extends RowBase { kind: "text"; phrase: string }
 
-/** A part of the query this version cannot edit, kept as it came, with what it is. */
+/** Two variables compared, such as `?approver not-equals ?doer`. */
+export interface CompareRow extends RowBase { kind: "compare"; left: string; op: string; right: string }
+
+/** A part of the query the builder cannot edit, kept as it came, with what it is. */
 export interface KeptRow extends RowBase { kind: "kept"; node: QueryNode; what: string }
 
-export type Row = GroupRow | FilterRow | TextRow | KeptRow;
+export type Row = GroupRow | FilterRow | TextRow | CompareRow | KeptRow;
+
+type Facets = Map<string, ExpressionBuilderFacet>;
+
+/** A facet list by lower-case key. */
+export function facetMap(list: ExpressionBuilderFacet[]): Facets
+{
+    return new Map(list.map((f) => [f.key.toLowerCase(), f]));
+}
+
+/** The facets a group's rows use: a relationship's link fields inside its `link`, else the builder's. */
+function scopeOf(facets: Facets, linkOf: string | undefined): Facets
+{
+    return linkOf ? facetMap(facets.get(linkOf.toLowerCase())?.link ?? []) : facets;
+}
 
 /** A copy of a node without its spans, as the builder reports every node. */
 function withoutSpans(node: QueryNode): QueryNode
@@ -306,10 +360,14 @@ function withoutSpans(node: QueryNode): QueryNode
     return JSON.parse(JSON.stringify(node, (k, v) => (k === "span" ? undefined : v)));
 }
 
-/** A value as the input holds it, or null when the builder has no editor for it on this facet. */
+/**
+ * A value as the input holds it, or null when the builder has no editor for it on this facet. A value on a
+ * relationship key is an item's id, which the API's binder writes as `resource`.
+ */
 function valueText(v: QueryValue, facet: ExpressionBuilderFacet): string | null
 {
     const t = facet.valueType;
+    if (facet.relationship && v.resource !== undefined) { return v.resource; }
     if ((t === "text" || t === "enum") && v.text !== undefined) { return v.text; }
     if (t === "number" && v.number !== undefined) { return String(v.number); }
     if (t === "boolean" && v.boolean !== undefined) { return String(v.boolean); }
@@ -318,26 +376,54 @@ function valueText(v: QueryValue, facet: ExpressionBuilderFacet): string | null
 }
 
 /** Why a node is kept as it came, or null when the builder can edit it. */
-function keptWhy(node: QueryNode, facets: Map<string, ExpressionBuilderFacet>): string | null
+function keptWhy(node: QueryNode, scope: Facets, inLink: boolean): string | null
 {
-    if (node.kind === "nested") { return "A search inside " + (node.key ?? "a key"); }
-    if (node.kind === "compare") { return "A comparison of two variables"; }
-    if (node.kind !== "filter") { return "A part of the query of the kind " + node.kind; }
-    if (node.link) { return "A filter with a link condition"; }
+    const facet = scope.get((node.key ?? "").toLowerCase());
+    const takesLinks = !!facet?.relationship && !inLink;
 
-    const facet = facets.get((node.key ?? "").toLowerCase());
+    if (node.kind === "nested")
+    {
+        return takesLinks ? null : "A search inside " + (node.key ?? "a key") + ", which is not a relationship key";
+    }
+    if (node.kind === "compare")
+    {
+        const ok = !inLink && node.left?.var !== undefined && node.right?.var !== undefined && !!node.op
+            && opWord(node.op) !== null;
+        return ok ? null : "A comparison this builder has no editor for";
+    }
+    if (node.kind !== "filter") { return "A part of the query of the kind " + node.kind; }
     if (!facet) { return "A filter on " + (node.key ?? "a key") + ", which has no facet"; }
+    if (node.link && !takesLinks) { return "A filter with a link condition on a key that takes none"; }
     if (!node.op || !opWord(node.op)) { return "A filter with the operator " + (node.op ?? "(none)"); }
 
     const values = node.values ?? (node.value ? [node.value] : []);
-    if (values.some((v) => v.var !== undefined || v.param !== undefined)) { return "A filter on a variable"; }
-    if (values.some((v) => valueText(v, facet) === null)) { return "A filter with a value this builder has no "
-        + "editor for"; }
+    if (values.some((v) => v.param !== undefined)) { return "A filter on a parameter"; }
+    if (values.some((v) => v.var !== undefined))
+    {
+        // A variable stands alone after `equals`, on a key that links to an item or a person (spec section 9).
+        const alone = takesLinks && opWord(node.op) === "equals" && values.length === 1;
+        return alone ? null : "A filter on a variable this builder has no editor for";
+    }
+    if (values.some((v) => valueText(v, facet) === null))
+    {
+        return "A filter with a value this builder has no editor for";
+    }
     return null;
 }
 
-/** The rows of a node. A row of `not`s around a node counts them. */
-export function rowOf(node: QueryNode, facets: Map<string, ExpressionBuilderFacet>): Row
+/** A node as a group: itself when it is one, with no `not`, else in a group of its own. */
+function groupOf(node: QueryNode | undefined, facets: Facets, linkOf: string | undefined): GroupRow
+{
+    const empty: GroupRow = { kind: "group", op: "and", nots: 0, children: [], ...(linkOf ? { linkOf } : {}) };
+    if (!node) { return empty; }
+
+    const row = rowOf(node, facets, linkOf);
+    if (row.kind === "group" && row.nots === 0) { return row; }
+    return { ...empty, children: [row], span: row.span };
+}
+
+/** The rows of a node, in the scope `linkOf` names. A row of `not`s around a node counts them. */
+export function rowOf(node: QueryNode, facets: Facets, linkOf?: string): Row
 {
     const span = node.span;
     let nots = 0;
@@ -349,25 +435,44 @@ export function rowOf(node: QueryNode, facets: Map<string, ExpressionBuilderFace
 
     if (node.kind === "and" || node.kind === "or")
     {
-        return { kind: "group", op: node.kind, nots, span,
-            children: (node.children ?? []).map((c) => rowOf(c, facets)) };
+        return { kind: "group", op: node.kind, nots, span, ...(linkOf ? { linkOf } : {}),
+            children: (node.children ?? []).map((c) => rowOf(c, facets, linkOf)) };
     }
     if (node.kind === "text" && node.phrase !== undefined)
     {
         return { kind: "text", phrase: node.phrase, nots, span };
     }
 
-    const why = keptWhy(node, facets);
+    const scope = scopeOf(facets, linkOf);
+    const why = keptWhy(node, scope, !!linkOf);
     if (why !== null) { return { kind: "kept", node: withoutSpans(node), what: why, nots, span }; }
 
-    const facet = facets.get(node.key!.toLowerCase())!;
+    if (node.kind === "compare")
+    {
+        return { kind: "compare", left: node.left!.var!, op: opWord(node.op!)!, right: node.right!.var!, nots, span };
+    }
+
+    const facet = scope.get(node.key!.toLowerCase())!;
+    const link = node.link ? { link: groupOf(node.link, facets, facet.key) } : {};
+    if (node.kind === "nested")
+    {
+        return { kind: "filter", key: facet.key, op: "where", values: [], original: [], nots, span,
+            where: groupOf(node.where, facets, undefined), ...link };
+    }
+
     const values = node.values ?? (node.value ? [node.value] : []);
-    return { kind: "filter", key: facet.key, op: opWord(node.op!)!, nots, span,
+    const variable = values[0]?.var;
+    if (variable !== undefined)
+    {
+        return { kind: "filter", key: facet.key, op: "equals", values: [""], original: [undefined], variable,
+            nots, span, ...link };
+    }
+    return { kind: "filter", key: facet.key, op: opWord(node.op!)!, nots, span, ...link,
         values: values.map((v) => valueText(v, facet)!), original: values.map((v) => ({ ...v })) };
 }
 
 /** The root row of a tree: always a group, so a person can add beside a single filter. */
-export function rootOf(tree: QueryTree, facets: Map<string, ExpressionBuilderFacet>): GroupRow
+export function rootOf(tree: QueryTree, facets: Facets): GroupRow
 {
     if (!tree.root) { return { kind: "group", op: "and", nots: 0, children: [] }; }
 
@@ -376,16 +481,88 @@ export function rootOf(tree: QueryTree, facets: Map<string, ExpressionBuilderFac
     return { kind: "group", op: "and", nots: 0, children: [row], span: row.span };
 }
 
-/** Whether a filter row has what its operator needs, so Print accepts it. */
-export function isComplete(row: FilterRow, facet: ExpressionBuilderFacet | undefined): boolean
+/** Every row, depth first, with its path: the children of groups, then a condition's link and where groups. */
+export function* allRows(row: Row, path: Step[] = []): Generator<{ row: Row; path: Step[] }>
+{
+    yield { row, path };
+    if (row.kind === "group")
+    {
+        for (let i = 0; i < row.children.length; i += 1) { yield* allRows(row.children[i], [...path, i]); }
+    }
+    else if (row.kind === "filter")
+    {
+        if (row.link) { yield* allRows(row.link, [...path, "link"]); }
+        if (row.where) { yield* allRows(row.where, [...path, "where"]); }
+    }
+}
+
+/** The variable names in a node, as many times as it uses each. */
+function nodeVariables(node: unknown, out: string[]): string[]
+{
+    if (Array.isArray(node)) { node.forEach((n) => nodeVariables(n, out)); }
+    else if (node && typeof node === "object")
+    {
+        for (const [k, v] of Object.entries(node))
+        {
+            if (k === "var" && typeof v === "string") { out.push(v); }
+            else { nodeVariables(v, out); }
+        }
+    }
+    return out;
+}
+
+/**
+ * How many times the query uses each variable. Rule 1 of spec section 9: a variable appears at least twice,
+ * and `return` counts as one use. So a row with a variable used once is a draft, which the tree leaves out.
+ */
+export function variableUses(root: GroupRow, ret: string[]): Map<string, number>
+{
+    const uses = new Map<string, number>();
+    const add = (name: string): void => { uses.set(name, (uses.get(name) ?? 0) + 1); };
+
+    // Only what the tree can hold: a search inside counts while its operator is "where", as the tree has it.
+    const visit = (row: Row): void =>
+    {
+        if (row.kind === "group") { row.children.forEach(visit); }
+        else if (row.kind === "compare") { [row.left, row.right].filter(Boolean).forEach(add); }
+        else if (row.kind === "kept") { nodeVariables(row.node, []).forEach(add); }
+        else if (row.kind === "filter")
+        {
+            // setOp and a new key clear a variable, so a row holds one only after `equals`.
+            if (row.variable) { add(row.variable); }
+            if (row.link) { visit(row.link); }
+            if (row.where && row.op === "where") { visit(row.where); }
+        }
+    };
+    ret.forEach(add);
+    visit(root);
+    return uses;
+}
+
+/** A name for a new variable, from the key it first stands for, such as `?created_by`, and unused so far. */
+export function newVariable(key: string, taken: Set<string>): string
+{
+    let base = (key.split(".").pop() ?? "item").replace(/[^\p{L}\p{N}_]/gu, "_");
+    if (!/^[\p{L}_]/u.test(base)) { base = "_" + base; }
+    let name = base;
+    for (let n = 2; taken.has(name); n += 1) { name = base + n; }
+    return name;
+}
+
+/** Whether a filter row has what its operator needs, so Print accepts it. "where" is decided by its rows. */
+export function isComplete(row: FilterRow, facet: ExpressionBuilderFacet | undefined,
+    uses: Map<string, number> = new Map()): boolean
 {
     if (!facet || !row.op) { return false; }
+    if (row.op === "where") { return true; }
+    if (row.variable !== undefined) { return row.op === "equals" && (uses.get(row.variable) ?? 0) >= 2; }
 
     const filled = row.values.filter((v) => v.trim() !== "");
     const fits = (v: string): boolean =>
-        (facet.valueType === "number") ? v.trim() !== "" && Number.isFinite(Number(v))
-            : (facet.valueType === "date") ? /^\d{4}-\d{2}-\d{2}$/.test(v)
-                : (facet.valueType === "boolean") ? v === "true" || v === "false" : true;
+        (facet.relationship) ? true
+            : (facet.valueType === "number") ? v.trim() !== "" && Number.isFinite(Number(v))
+                : (facet.valueType === "date") ? /^\d{4}-\d{2}-\d{2}$/.test(v)
+                    : (facet.valueType === "boolean") ? v === "true" || v === "false" : true;
 
     switch (arity(row.op))
     {
@@ -395,9 +572,10 @@ export function isComplete(row: FilterRow, facet: ExpressionBuilderFacet | undef
     }
 }
 
-/** A value from what the input holds. A date keeps the zone of the one it came from. */
+/** A value from what the input holds. A date keeps the zone of the one it came from; an item's id is a resource. */
 function valueOf(text: string, original: QueryValue | undefined, facet: ExpressionBuilderFacet): QueryValue
 {
+    if (facet.relationship) { return { resource: text }; }
     switch (facet.valueType)
     {
         case "number": return { number: Number(text) };
@@ -415,59 +593,115 @@ function negate(node: QueryNode, nots: number): QueryNode
     return node;
 }
 
-/** A row's node, or null for a draft or an empty group, which the tree leaves out. */
-export function nodeOf(row: Row, facets: Map<string, ExpressionBuilderFacet>): QueryNode | null
-{
-    let node: QueryNode | null = null;
+/** What building a tree needs: the facets, the variables' uses, and the rows that made nodes, in text order. */
+interface Build { facets: Facets; uses: Map<string, number>; order: Row[] }
 
+/**
+ * A row's node in a scope, or null for a draft or an empty group, which the tree leaves out. Each row that
+ * makes a node joins `order` before the rows inside it, as its text comes before theirs:
+ * `key link ( … ) where ( … )`.
+ */
+function nodeIn(row: Row, b: Build, scope: Facets): QueryNode | null
+{
     if (row.kind === "group")
     {
-        const children = row.children.map((c) => nodeOf(c, facets)).filter((n): n is QueryNode => n !== null);
-        node = (children.length === 0) ? null : { kind: row.op, children };
+        const inner = row.linkOf ? scopeOf(b.facets, row.linkOf) : scope;
+        const children = row.children.map((c) => nodeIn(c, b, inner)).filter((n): n is QueryNode => n !== null);
+        return (children.length === 0) ? null : negate({ kind: row.op, children }, row.nots);
     }
-    else if (row.kind === "text")
-    {
-        node = row.phrase.trim() ? { kind: "text", phrase: row.phrase.trim() } : null;
-    }
-    else if (row.kind === "kept")
-    {
-        node = withoutSpans(row.node);
-    }
-    else
-    {
-        const facet = facets.get(row.key.toLowerCase());
-        if (facet && isComplete(row, facet))
-        {
-            const values = row.values.filter((v) => v.trim() !== "").map((v, i) => valueOf(v, row.original[i], facet));
-            node = { kind: "filter", key: row.key, op: opName(row.op) };
-            if (arity(row.op) === "many") { node.values = values; }
-            else if (arity(row.op) === "one") { node.value = values[0]; }
-        }
-    }
+
+    const at = b.order.length;
+    b.order.push(row);
+    const node = leafNode(row, b, scope);
+    if (!node) { b.order.length = at; }
     return node ? negate(node, row.nots) : null;
 }
 
-/** The tree the rows make. A root group of one node, with no `not`, is that node. */
-export function treeOf(root: GroupRow, facets: Map<string, ExpressionBuilderFacet>, ret?: string[]): QueryTree
+/** A where or link group's node: a group of one, with no `not`, is that one, as Print writes it. */
+function bare(node: QueryNode | null, group: GroupRow): QueryNode | null
 {
+    return (node && group.nots === 0 && node.children?.length === 1) ? node.children[0] : node;
+}
+
+/** The node of a row that is not a group, without its `not`s. */
+function leafNode(row: Exclude<Row, GroupRow>, b: Build, scope: Facets): QueryNode | null
+{
+    if (row.kind === "text") { return row.phrase.trim() ? { kind: "text", phrase: row.phrase.trim() } : null; }
+    if (row.kind === "kept") { return withoutSpans(row.node); }
+    if (row.kind === "compare")
+    {
+        const ok = row.left && row.right && row.left !== row.right && row.op;
+        return ok ? { kind: "compare", left: { var: row.left }, op: opName(row.op), right: { var: row.right } } : null;
+    }
+
+    const facet = scope.get(row.key.toLowerCase());
+    if (!facet) { return null; }
+
+    const link = (row.link && facet.relationship) ? bare(nodeIn(row.link, b, scope), row.link) : null;
+    const withLink = (node: QueryNode): QueryNode => (link ? { ...node, link } : node);
+
+    if (row.op === "where")
+    {
+        const where = row.where ? bare(nodeIn(row.where, b, b.facets), row.where) : null;
+        return where ? withLink({ kind: "nested", key: row.key, where }) : null;
+    }
+    if (!isComplete(row, facet, b.uses)) { return null; }
+
+    const node: QueryNode = { kind: "filter", key: row.key, op: opName(row.op) };
+    if (row.variable !== undefined) { node.value = { var: row.variable }; }
+    else
+    {
+        const values = row.values.filter((v) => v.trim() !== "").map((v, i) => valueOf(v, row.original[i], facet));
+        if (arity(row.op) === "many") { node.values = values; }
+        else if (arity(row.op) === "one") { node.value = values[0]; }
+    }
+    return withLink(node);
+}
+
+/** A row's node, or null for a draft or an empty group. */
+export function nodeOf(row: Row, facets: Facets, uses: Map<string, number> = new Map()): QueryNode | null
+{
+    return nodeIn(row, { facets, uses, order: [] }, facets);
+}
+
+/** The tree the rows make, and the rows that made its nodes, in the order of their text. */
+export function buildTree(root: GroupRow, facets: Facets, ret: string[] = []): { tree: QueryTree; order: Row[] }
+{
+    const b: Build = { facets, uses: variableUses(root, ret), order: [] };
     const tree: QueryTree = {};
-    const node = nodeOf(root, facets);
+    const node = nodeIn(root, b, facets);
 
     if (node && root.nots === 0 && node.children?.length === 1) { tree.root = node.children[0]; }
     else if (node) { tree.root = node; }
-    if (ret && ret.length > 0) { tree.return = [...ret]; }
-    return tree;
+    if (ret.length > 0) { tree.return = [...ret]; }
+    return { tree, order: b.order };
+}
+
+/** The tree the rows make. A root group of one node, with no `not`, is that node. */
+export function treeOf(root: GroupRow, facets: Facets, ret?: string[]): QueryTree
+{
+    return buildTree(root, facets, ret).tree;
+}
+
+/** A copy with each object's keys in order, so two trees compare the same whichever order their fields came. */
+function canonical(v: unknown): unknown
+{
+    if (Array.isArray(v)) { return v.map(canonical); }
+    if (v && typeof v === "object")
+    {
+        return Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical((v as Record<string, unknown>)[k])]));
+    }
+    return v;
 }
 
 /**
  * A node in the form that says only what it means: no spans, a group of one is that one, and a group inside
- * a group of the same kind joins it. Print writes both forms the same way, so a tree that comes back from
- * the bar compares equal to the one the builder sent.
+ * a group of the same kind joins it, at every depth, inside `not`, `where` and `link` too. Print writes both
+ * forms the same way, so a tree that comes back from the bar compares equal to the one the builder sent.
  */
 export function meaning(node: QueryNode | undefined): unknown
 {
     if (!node) { return null; }
-    if (node.kind === "not" && node.child) { return { kind: "not", child: meaning(node.child) }; }
     if (node.kind === "and" || node.kind === "or")
     {
         const children: unknown[] = [];
@@ -477,32 +711,38 @@ export function meaning(node: QueryNode | undefined): unknown
             if (c && c.kind === node.kind && c.children) { children.push(...c.children); }
             else { children.push(c); }
         }
-        return (children.length === 1) ? children[0] : { kind: node.kind, children };
+        return (children.length === 1) ? children[0] : { children, kind: node.kind };
     }
-    return withoutSpans(node);
-}
 
-/** The leaves of a node in order, each with the span of the outermost `not` around it, else its own. */
-function leafSpans(node: QueryNode, outer?: Span): Array<Span | undefined>
-{
-    if (node.kind === "not" && node.child) { return leafSpans(node.child, outer ?? node.span); }
-    if (node.kind === "and" || node.kind === "or")
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(node))
     {
-        return (node.children ?? []).flatMap((c) => leafSpans(c));
+        if (k === "span") { continue; }
+        out[k] = (k === "child" || k === "where" || k === "link") ? meaning(v as QueryNode) : canonical(v);
     }
-    return [outer ?? node.span];
+    return canonical(out);
 }
 
-/** The rows the tree holds, in order, which are the leaves a parse of the same meaning has. */
-function leafRows(row: Row, facets: Map<string, ExpressionBuilderFacet>): Row[]
+/**
+ * The span of each node that is not a group, in the order of its text: itself, then its `link`, then its
+ * `where`. A node under `not`s takes the outermost `not`'s span. Its order is `buildTree`'s.
+ */
+function spanOrder(node: QueryNode, outer?: Span): Array<Span | undefined>
 {
-    if (row.kind === "group") { return row.children.flatMap((c) => leafRows(c, facets)); }
-    return nodeOf(row, facets) ? [row] : [];
+    if (node.kind === "not" && node.child) { return spanOrder(node.child, outer ?? node.span); }
+    if (node.kind === "and" || node.kind === "or") { return (node.children ?? []).flatMap((c) => spanOrder(c)); }
+    return [outer ?? node.span, ...(node.link ? spanOrder(node.link) : []),
+        ...(node.kind === "nested" && node.where ? spanOrder(node.where) : [])];
 }
 
-/** Gives each group the span that covers its rows', once its rows have theirs. */
+/** Gives each group the span that covers its rows', once its rows have theirs, at every depth. */
 function spanGroups(row: Row): Span | undefined
 {
+    if (row.kind === "filter")
+    {
+        if (row.link) { spanGroups(row.link); }
+        if (row.where) { spanGroups(row.where); }
+    }
     if (row.kind !== "group") { return row.span; }
 
     const spans = row.children.map(spanGroups).filter((s): s is Span => s !== undefined);
@@ -512,33 +752,50 @@ function spanGroups(row: Row): Span | undefined
 }
 
 /** Clears every span, once the bar's text no longer matches the rows. */
-function clearSpans(row: Row): void
+function clearSpans(root: Row): void
 {
-    row.span = undefined;
-    if (row.kind === "group") { row.children.forEach(clearSpans); }
+    for (const { row } of allRows(root)) { row.span = undefined; }
 }
 
 // ============================================================================
 // EDITS (pure, on the model)
 // ============================================================================
 
-/** The row at a path of child indices from the root, and its parent group. */
-export function rowAt(root: GroupRow, path: number[]): { row: Row; parent: GroupRow | null; index: number }
+/**
+ * The row at a path from the root, and the group it sits in with its index there. A `where` or `link` group
+ * sits in a condition, not a group, so its parent is null, and it does not move.
+ */
+export function rowAt(root: GroupRow, path: Step[]): { row: Row; parent: GroupRow | null; index: number }
 {
     let row: Row = root;
     let parent: GroupRow | null = null;
     let index = -1;
-    for (const i of path)
+    for (const step of path)
     {
-        parent = row as GroupRow;
-        index = i;
-        row = parent.children[i];
+        if (typeof step === "number")
+        {
+            parent = row as GroupRow;
+            index = step;
+            row = parent.children[step];
+        }
+        else
+        {
+            row = (row as FilterRow)[step]!;
+            parent = null;
+            index = -1;
+        }
     }
     return { row, parent, index };
 }
 
+/** A path from its text in the page, such as "0.where.1". */
+export function parsePath(text: string): Step[]
+{
+    return text === "" ? [] : text.split(".").map((t) => (/^\d+$/.test(t) ? Number(t) : t as "where" | "link"));
+}
+
 /** Moves a row one place up or down among its group's rows. Returns its new path, or null when it cannot. */
-export function moveRow(root: GroupRow, path: number[], by: -1 | 1): number[] | null
+export function moveRow(root: GroupRow, path: Step[], by: -1 | 1): Step[] | null
 {
     const { parent, index } = rowAt(root, path);
     const to = index + by;
@@ -548,18 +805,19 @@ export function moveRow(root: GroupRow, path: number[], by: -1 | 1): number[] | 
     return [...path.slice(0, -1), to];
 }
 
-/** Puts a row in a new `and` group of its own, in its place. Returns the group's path. */
-export function wrapRow(root: GroupRow, path: number[]): number[]
+/** Puts a row in a new `and` group of its own, in its place and its scope. Returns the group's path. */
+export function wrapRow(root: GroupRow, path: Step[]): Step[]
 {
     const { row, parent, index } = rowAt(root, path);
     if (!parent) { return path; }
 
-    parent.children[index] = { kind: "group", op: "and", nots: 0, children: [row] };
+    parent.children[index] = { kind: "group", op: "and", nots: 0, children: [row],
+        ...(parent.linkOf ? { linkOf: parent.linkOf } : {}) };
     return path;
 }
 
 /** Puts a group's rows in its place. A group with `not` keeps it, so this refuses one. */
-export function unwrapRow(root: GroupRow, path: number[]): boolean
+export function unwrapRow(root: GroupRow, path: Step[]): boolean
 {
     const { row, parent, index } = rowAt(root, path);
     if (!parent || row.kind !== "group" || row.nots > 0) { return false; }
@@ -569,46 +827,40 @@ export function unwrapRow(root: GroupRow, path: number[]): boolean
 }
 
 /** Removes a row. */
-export function removeRow(root: GroupRow, path: number[]): void
+export function removeRow(root: GroupRow, path: Step[]): void
 {
     const { parent, index } = rowAt(root, path);
     if (parent) { parent.children.splice(index, 1); }
 }
 
 /** Whether `inner` is `outer` or inside it, so a drag cannot put a group in itself. */
-function isWithin(inner: number[], outer: number[]): boolean
+function isWithin(inner: Step[], outer: Step[]): boolean
 {
     return outer.length <= inner.length && outer.every((v, i) => inner[i] === v);
 }
 
 /** The path of a row, found by the row itself. */
-export function pathOfRow(root: GroupRow, target: Row): number[] | null
+export function pathOfRow(root: GroupRow, target: Row): Step[] | null
 {
-    if (root === target) { return []; }
-    for (let i = 0; i < root.children.length; i += 1)
+    for (const { row, path } of allRows(root))
     {
-        const child = root.children[i];
-        if (child === target) { return [i]; }
-        if (child.kind === "group")
-        {
-            const inner = pathOfRow(child, target);
-            if (inner) { return [i, ...inner]; }
-        }
+        if (row === target) { return path; }
     }
     return null;
 }
 
 /**
  * Moves a row to a place in a group: the group's path, and the index the row takes there as the group stands
- * before the move. Returns the row's new path, or null when the group is the row or inside it.
+ * before the move. Returns the row's new path, or null when the group is the row or inside it, or uses other
+ * keys: a link's fields and the builder's facets do not mix.
  */
-export function moveRowTo(root: GroupRow, from: number[], toGroup: number[], toIndex: number): number[] | null
+export function moveRowTo(root: GroupRow, from: Step[], toGroup: Step[], toIndex: number): Step[] | null
 {
     if (isWithin(toGroup, from)) { return null; }
 
     const { row, parent, index } = rowAt(root, from);
     const group = rowAt(root, toGroup).row;
-    if (!parent || group.kind !== "group") { return null; }
+    if (!parent || group.kind !== "group" || (parent.linkOf ?? "") !== (group.linkOf ?? "")) { return null; }
 
     // The row it goes before, found again once the row has left its place.
     const before = group.children[toIndex];
@@ -619,10 +871,21 @@ export function moveRowTo(root: GroupRow, from: number[], toGroup: number[], toI
     return pathOfRow(root, row);
 }
 
-/** Sets a filter's operator, and fits its values to it: none, one, or a list. */
+/**
+ * Sets a filter's operator, and fits its values to it: none, one, or a list. A variable stands only after
+ * `equals`. The search inside is kept when the operator changes, so changing back loses nothing.
+ */
 export function setOp(row: FilterRow, op: string): void
 {
     row.op = op;
+    if (op !== "equals") { row.variable = undefined; }
+    if (op === "where")
+    {
+        row.values = [];
+        row.original = [];
+        row.where ??= { kind: "group", op: "and", nots: 0, children: [] };
+        return;
+    }
     const kind = arity(op);
     if (kind === "none") { row.values = []; row.original = []; }
     else if (kind === "one")
@@ -651,7 +914,7 @@ function setAttr(el: HTMLElement, name: string, value: string): void
 }
 
 /** A problem from Parse or Print, on a row by its path, or above the rows. */
-interface Placed { diagnostic: QueryDiagnostic; severity: "error" | "warning"; path: number[] | null }
+interface Placed { diagnostic: QueryDiagnostic; severity: "error" | "warning"; path: Step[] | null }
 
 let instanceCounter = 0;
 
@@ -673,8 +936,10 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     private message: HTMLElement | null = null;
     private live: HTMLElement | null = null;
     private gestures: { destroy(): void } | null = null;
-    private dragFrom: number[] | null = null;
-    private dropAt: { group: number[]; index: number } | null = null;
+    private dragFrom: Step[] | null = null;
+    private dropAt: { group: Step[]; index: number } | null = null;
+    /** How many times the query uses each variable, and their names, as of the last draw. */
+    private uses = new Map<string, number>();
     /** Counts the value lists, so each has its own id. */
     private lists = 0;
 
@@ -703,11 +968,12 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         for (const f of options.facets)
         {
             facetOps(f);
+            (f.link ?? []).forEach(facetOps);
             this.facets.set(f.key.toLowerCase(), f);
         }
         this.root = rootOf(options.tree ?? {}, this.facets);
         this.ret = [...(options.tree?.return ?? [])];
-        this.meant = JSON.stringify(meaning(treeOf(this.root, this.facets).root));
+        this.meant = JSON.stringify(meaning(treeOf(this.root, this.facets, this.ret).root));
 
         this.build(container);
         this.render();
@@ -795,24 +1061,23 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     private adoptSpans(tree: QueryTree): void
     {
         clearSpans(this.root);
-        // The two mean the same, so they have the same leaves in the same order.
-        const spans = tree.root ? leafSpans(tree.root) : [];
-        leafRows(this.root, this.facets).forEach((r, i) => { r.span = spans[i]; });
+        // The two mean the same, so their nodes come in the same order, the order of their text.
+        const spans = tree.root ? spanOrder(tree.root) : [];
+        buildTree(this.root, this.facets, this.ret).order.forEach((r, i) => { r.span = spans[i]; });
         spanGroups(this.root);
     }
 
     /** The path of the deepest row whose text holds a problem, or null to show it above the rows. */
-    private rowFor(d: QueryDiagnostic): number[] | null
+    private rowFor(d: QueryDiagnostic): Step[] | null
     {
         if (d.start === undefined || d.end === undefined) { return null; }
 
-        let best: number[] | null = null;
-        const visit = (row: Row, path: number[]): void =>
+        // Depth first, so the last row that holds it is the deepest. The root is shown above the rows.
+        let best: Step[] | null = null;
+        for (const { row, path } of allRows(this.root))
         {
-            if (row.span && row.span.start <= d.start! && d.end! <= row.span.end) { best = path; }
-            if (row.kind === "group") { row.children.forEach((c, i) => visit(c, [...path, i])); }
-        };
-        this.root.children.forEach((c, i) => visit(c, [i]));
+            if (path.length > 0 && row.span && row.span.start <= d.start && d.end <= row.span.end) { best = path; }
+        }
         return best;
     }
 
@@ -837,7 +1102,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     }
 
     /** Redraws, keeps the focus on the same control of the same row, and reports any change. */
-    private edit(focusPath?: number[], focusRole?: string): void
+    private edit(focusPath?: Step[], focusRole?: string): void
     {
         const active = document.activeElement as HTMLElement | null;
         const path = focusPath ?? this.pathOf(active);
@@ -847,15 +1112,14 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         this.changed();
     }
 
-    private pathOf(el: Element | null): number[] | null
+    private pathOf(el: Element | null): Step[] | null
     {
         const row = el?.closest<HTMLElement>("[data-path]");
         if (!row || !this.el?.contains(row)) { return null; }
-        const p = row.getAttribute("data-path")!;
-        return p === "" ? [] : p.split(".").map(Number);
+        return parsePath(row.getAttribute("data-path")!);
     }
 
-    private focusRow(path: number[], role: string | null): void
+    private focusRow(path: Step[], role: string | null): void
     {
         const row = this.el?.querySelector<HTMLElement>(`[data-path="${path.join(".")}"]`);
         if (!row) { return; }
@@ -909,19 +1173,21 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     {
         if (!this.body) { return; }
         while (this.body.firstChild) { this.body.removeChild(this.body.firstChild); }
+        this.uses = variableUses(this.root, this.ret);
 
         if (this.ret.length > 0)
         {
             this.body.appendChild(createElement("div", [`${CLS}-kept`, `${CLS}-return`],
                 "Returns " + this.ret.map((r) => "?" + r).join(", ") + ". Edit this in the search bar."));
         }
-        this.body.appendChild(this.renderGroup(this.root, []));
+        this.body.appendChild(this.renderGroup(this.root, [], this.facets));
         this.renderProblems();
     }
 
-    private renderRow(row: Row, path: number[]): HTMLElement
+    /** A row in a group, whose rows use the keys of `scope`. */
+    private renderRow(row: Row, path: Step[], scope: Facets): HTMLElement
     {
-        if (row.kind === "group") { return this.renderGroup(row, path); }
+        if (row.kind === "group") { return this.renderGroup(row, path, scope); }
 
         const el = createElement("div", [`${CLS}-row`, `${CLS}-row-${row.kind}`]);
         setAttr(el, "data-path", path.join("."));
@@ -929,8 +1195,9 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         el.appendChild(this.dragHandle());
         el.appendChild(this.notToggle(row));
 
-        if (row.kind === "filter") { this.renderFilter(el, row); }
+        if (row.kind === "filter") { this.renderFilter(el, row, path, scope); }
         else if (row.kind === "text") { this.renderText(el, row); }
+        else if (row.kind === "compare") { this.renderCompare(el, row); }
         else
         {
             el.appendChild(createElement("span", [`${CLS}-kept`], row.what + ". Edit this in the search bar."));
@@ -940,17 +1207,29 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         return el;
     }
 
-    private renderGroup(row: GroupRow, path: number[]): HTMLElement
+    /**
+     * A group: the root, a group in a group, a condition's search inside (`where`), or its link conditions. Only
+     * a group in a group moves, wraps and goes on its own; the others go with their condition.
+     */
+    private renderGroup(row: GroupRow, path: Step[], scope: Facets): HTMLElement
     {
-        const isRoot = path.length === 0;
-        const el = createElement("div", [`${CLS}-group`]);
+        const last = path[path.length - 1];
+        const place = (path.length === 0) ? "root" : (typeof last === "number") ? "child" : last;
+        const inner = row.linkOf ? scopeOf(this.facets, row.linkOf) : scope;
+        const el = createElement("div", [`${CLS}-group`, `${CLS}-group-${place}`]);
         setAttr(el, "data-path", path.join("."));
         setAttr(el, "role", "group");
-        setAttr(el, "aria-label", (row.op === "and" ? "All of these" : "Any of these") + (row.nots % 2 ? ", not" : ""));
-        if (path.length % 2 === 1) { el.classList.add(`${CLS}-group-odd`); }
+        const what = (place === "where") ? "Where the item has " : (place === "link") ? "The link has " : "";
+        setAttr(el, "aria-label", what + (row.op === "and" ? "all of these" : "any of these")
+            + (row.nots % 2 ? ", not" : ""));
+        if (path.filter((p) => typeof p === "number" || p === "where").length % 2 === 1)
+        {
+            el.classList.add(`${CLS}-group-odd`);
+        }
 
         const head = createElement("div", [`${CLS}-group-head`]);
-        if (!isRoot) { head.appendChild(this.dragHandle()); }
+        if (place === "child") { head.appendChild(this.dragHandle()); }
+        if (what) { head.appendChild(createElement("span", [`${CLS}-label`], what.trim())); }
         head.appendChild(this.notToggle(row));
 
         const op = this.select("op", [["and", "All of these"], ["or", "Any of these"]], row.op, "How the rows join");
@@ -961,47 +1240,67 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         });
         head.appendChild(op);
 
-        for (const [kind, label, icon] of [["filter", "Condition", "bi-funnel"], ["text", "Words", "bi-fonts"],
-            ["group", "Group", "bi-collection"]])
+        // A link's fields take no words and no variables, so a link group adds conditions and groups only.
+        const adds: Array<[string, string, string]> = [["filter", "Condition", "bi-funnel"]];
+        if (!row.linkOf) { adds.push(["text", "Words", "bi-fonts"]); }
+        adds.push(["group", "Group", "bi-collection"]);
+        if (!row.linkOf && this.uses.size >= 2) { adds.push(["compare", "Comparison", "bi-arrow-left-right"]); }
+        for (const [kind, label, icon] of adds)
         {
             const add = this.button(`add-${kind}`, "Add " + label.toLowerCase(), icon, label);
-            add.addEventListener("click", () => this.add(row, path, kind as "filter" | "text" | "group"));
+            add.addEventListener("click", () => this.add(row, path, kind as "filter" | "text" | "group" | "compare"));
             head.appendChild(add);
         }
-        if (!isRoot) { head.appendChild(this.rowTools(path, true)); }
+        if (place === "child") { head.appendChild(this.rowTools(path, true)); }
+        if (place === "link")
+        {
+            const remove = this.button("remove-link", "Remove the link conditions", "bi-trash", "");
+            remove.addEventListener("click", () =>
+            {
+                (rowAt(this.root, path.slice(0, -1)).row as FilterRow).link = undefined;
+                this.announce("Link conditions removed");
+                this.edit(path.slice(0, -1), "add-link");
+            });
+            head.appendChild(remove);
+        }
         el.appendChild(head);
 
         const list = createElement("div", [`${CLS}-rows`]);
         setAttr(list, "data-group", path.join("."));
-        row.children.forEach((c, i) => list.appendChild(this.renderRow(c, [...path, i])));
+        row.children.forEach((c, i) => list.appendChild(this.renderRow(c, [...path, i], inner)));
         if (row.children.length === 0)
         {
-            list.appendChild(createElement("div", [`${CLS}-empty`], "No rows yet. Add a condition, words or a group."));
+            list.appendChild(createElement("div", [`${CLS}-empty`], "No rows yet. Add a condition."));
         }
         el.appendChild(list);
         return el;
     }
 
-    private renderFilter(el: HTMLElement, row: FilterRow): void
+    private renderFilter(el: HTMLElement, row: FilterRow, path: Step[], scope: Facets): void
     {
-        const facet = this.facets.get(row.key.toLowerCase());
-        const keys = this.opts.facets.map((f): [string, string] => [f.key, f.label]);
+        const inLink = scope !== this.facets;
+        const facet = scope.get(row.key.toLowerCase());
+        const keys = Array.from(scope.values()).map((f): [string, string] => [f.key, f.label]);
         const key = this.select("key", [["", "Choose a key"], ...keys], row.key, "Key");
         key.addEventListener("change", () =>
         {
-            const next = this.facets.get((key as HTMLSelectElement).value.toLowerCase());
+            const next = scope.get((key as HTMLSelectElement).value.toLowerCase());
             row.key = next?.key ?? "";
             row.op = next ? facetOps(next)[0] : "";
             row.values = [];
             row.original = [];
+            row.variable = row.where = row.link = undefined;
             if (next) { setOp(row, row.op); }
             this.edit(undefined, "key");
         });
         el.appendChild(key);
         if (!facet) { el.classList.add(`${CLS}-row-draft`); return; }
 
+        // A relationship key also offers a search inside the item at its other end (spec section 9).
+        const relationship = !!facet.relationship && !inLink;
+        const offered = [...facetOps(facet), ...(relationship ? ["where"] : [])];
         // An operator the facet does not list stays on offer for this row, so a parse is never changed.
-        const ops = facetOps(facet).includes(row.op) ? facetOps(facet) : [row.op, ...facetOps(facet)];
+        const ops = offered.includes(row.op) ? offered : [row.op, ...offered];
         const op = this.select("op", ops.map((o): [string, string] => [o, OP_LABELS[o] ?? o]), row.op, "Operator");
         op.addEventListener("change", () =>
         {
@@ -1010,25 +1309,132 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         });
         el.appendChild(op);
 
-        const values = createElement("span", [`${CLS}-values`]);
-        row.values.forEach((_v, i) => values.appendChild(this.valueInput(row, facet, i)));
-        if (arity(row.op) === "many")
+        if (relationship && row.op === "equals") { el.appendChild(this.sameAs(row)); }
+        if (row.op !== "where" && row.variable === undefined)
         {
-            const more = this.button("add-value", "Add a value", "bi-plus", "Value");
-            more.addEventListener("click", () =>
+            const values = createElement("span", [`${CLS}-values`]);
+            row.values.forEach((_v, i) => values.appendChild(this.valueInput(row, facet, i)));
+            if (arity(row.op) === "many")
             {
-                row.values.push("");
-                row.original.push(undefined);
-                this.edit(undefined, `value-${row.values.length - 1}`);
-            });
-            values.appendChild(more);
+                const more = this.button("add-value", "Add a value", "bi-plus", "Value");
+                more.addEventListener("click", () =>
+                {
+                    row.values.push("");
+                    row.original.push(undefined);
+                    this.edit(undefined, `value-${row.values.length - 1}`);
+                });
+                values.appendChild(more);
+            }
+            el.appendChild(values);
         }
-        el.appendChild(values);
+        if (relationship && facet.link?.length && !row.link)
+        {
+            const add = this.button("add-link", "Add conditions on the link", "bi-link-45deg", "Link");
+            add.addEventListener("click", () =>
+            {
+                row.link = { kind: "group", op: "and", nots: 0, children: [], linkOf: facet.key };
+                this.announce("Link conditions added");
+                this.edit([...path, "link"], "add-filter");
+            });
+            el.appendChild(add);
+        }
 
-        if (!isComplete(row, facet))
+        const draft = this.draftReason(row, facet);
+        if (draft)
         {
             el.classList.add(`${CLS}-row-draft`);
-            el.appendChild(createElement("span", [`${CLS}-draft`], "Needs a value"));
+            el.appendChild(createElement("span", [`${CLS}-draft`], draft));
+        }
+
+        // The link's conditions, then the search inside: the order of the text, `key link ( … ) where ( … )`.
+        if (row.link) { el.appendChild(this.renderGroup(row.link, [...path, "link"], scope)); }
+        if (row.op === "where") { el.appendChild(this.renderGroup(row.where!, [...path, "where"], this.facets)); }
+    }
+
+    /** What a condition still needs, or null when it is complete. */
+    private draftReason(row: FilterRow, facet: ExpressionBuilderFacet): string | null
+    {
+        if (row.op === "where")
+        {
+            return nodeOf(row.where!, this.facets, this.uses) ? null : "Needs a condition inside";
+        }
+        if (isComplete(row, facet, this.uses)) { return null; }
+        return (row.variable !== undefined) ? `Needs a second use of ?${row.variable}` : "Needs a value";
+    }
+
+    /**
+     * The choice between a value and "the same item as" another condition (spec section 9). Choosing a condition
+     * that has no variable yet makes one for both, named from its key. A variable stands only after `equals`.
+     */
+    private sameAs(row: FilterRow): HTMLSelectElement
+    {
+        const options: Array<[string, string]> = [["", "a value"]];
+        for (const name of this.uses.keys())
+        {
+            options.push(["var:" + name, "the same item as ?" + name]);
+        }
+        for (const { row: other, path: at } of allRows(this.root))
+        {
+            if (other === row || other.kind !== "filter" || other.variable !== undefined) { continue; }
+            const facet = this.facets.get(other.key.toLowerCase());
+            const empty = other.values.every((v) => v.trim() === "");
+            // A condition another can share a variable with: a relationship key, outside a link, with no value yet.
+            const open = facet?.relationship && !at.includes("link") && empty && ["", "equals"].includes(other.op);
+            if (!open) { continue; }
+            const inside = at.includes("where") ? " (in a search inside)" : "";
+            options.push(["row:" + at.join("."), "the same item as " + facet.label + inside]);
+        }
+
+        const select = this.select("same", options, row.variable ? "var:" + row.variable : "", "Value");
+        select.addEventListener("change", () =>
+        {
+            const [kind, rest] = [select.value.slice(0, 4), select.value.slice(4)];
+            if (kind === "var:") { row.variable = rest; }
+            else if (kind === "row:")
+            {
+                const other = rowAt(this.root, parsePath(rest)).row as FilterRow;
+                const name = newVariable(other.key, new Set(this.uses.keys()));
+                other.op = "equals";
+                other.values = [""];
+                other.original = [undefined];
+                other.variable = name;
+                row.variable = name;
+            }
+            else { row.variable = undefined; }
+            row.values = [""];
+            row.original = [undefined];
+            this.announce(row.variable ? "The same item as ?" + row.variable : "A value");
+            this.edit(undefined, "same");
+        });
+        return select;
+    }
+
+    /** Two variables compared: the same item, or not. */
+    private renderCompare(el: HTMLElement, row: CompareRow): void
+    {
+        const names = Array.from(this.uses.keys()).map((n): [string, string] => [n, "?" + n]);
+        const side = (role: string, value: string, label: string, set: (v: string) => void): HTMLSelectElement =>
+        {
+            const known = names.some(([n]) => n === value);
+            const s = this.select(role, [["", "Choose"], ...(known || !value ? [] : [[value, "?" + value]] as
+                Array<[string, string]>), ...names], value, label);
+            s.addEventListener("change", () => { set(s.value); this.edit(undefined, role); });
+            return s;
+        };
+        el.appendChild(side("left", row.left, "First item", (v) => { row.left = v; }));
+
+        const ops = Object.keys(COMPARE_LABELS).includes(row.op) ? Object.keys(COMPARE_LABELS)
+            : [row.op, ...Object.keys(COMPARE_LABELS)];
+        const op = this.select("op", ops.map((o): [string, string] => [o, COMPARE_LABELS[o] ?? OP_LABELS[o] ?? o]),
+            row.op, "Comparison");
+        op.addEventListener("change", () => { row.op = op.value; this.edit(undefined, "op"); });
+        el.appendChild(op);
+        el.appendChild(side("right", row.right, "Second item", (v) => { row.right = v; }));
+
+        if (!row.left || !row.right || row.left === row.right)
+        {
+            el.classList.add(`${CLS}-row-draft`);
+            el.appendChild(createElement("span", [`${CLS}-draft`], "Needs two different items"));
         }
     }
 
@@ -1195,11 +1601,11 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         return b;
     }
 
-    private rowTools(path: number[], group: boolean): HTMLElement
+    private rowTools(path: Step[], group: boolean): HTMLElement
     {
         const tools = createElement("span", [`${CLS}-tools`]);
         const parent = rowAt(this.root, path.slice(0, -1)).row as GroupRow;
-        const index = path[path.length - 1];
+        const index = path[path.length - 1] as number;
         const actions: Array<[string, string, string, () => void, boolean]> = [
             ["up", "Move up", "bi-arrow-up", () => this.move(path, -1), index > 0],
             ["down", "Move down", "bi-arrow-down", () => this.move(path, 1), index < parent.children.length - 1],
@@ -1226,18 +1632,21 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
 
     // ── Actions ──
 
-    private add(group: GroupRow, path: number[], kind: "filter" | "text" | "group"): void
+    private add(group: GroupRow, path: Step[], kind: "filter" | "text" | "group" | "compare"): void
     {
-        const row: Row = (kind === "group") ? { kind: "group", op: "and", nots: 0, children: [] }
+        const linkOf = group.linkOf ? { linkOf: group.linkOf } : {};
+        const row: Row = (kind === "group") ? { kind: "group", op: "and", nots: 0, children: [], ...linkOf }
             : (kind === "text") ? { kind: "text", phrase: "", nots: 0 }
-                : { kind: "filter", key: "", op: "", values: [], original: [], nots: 0 };
+                : (kind === "compare") ? { kind: "compare", left: "", op: "not-equals", right: "", nots: 0 }
+                    : { kind: "filter", key: "", op: "", values: [], original: [], nots: 0 };
         group.children.push(row);
-        this.announce(kind === "group" ? "Group added" : kind === "text" ? "Words added" : "Condition added");
+        this.announce({ group: "Group added", text: "Words added", compare: "Comparison added",
+            filter: "Condition added" }[kind]);
         this.edit([...path, group.children.length - 1],
-            kind === "filter" ? "key" : kind === "text" ? "phrase" : "op");
+            { filter: "key", text: "phrase", group: "op", compare: "left" }[kind]);
     }
 
-    private move(path: number[], by: -1 | 1): void
+    private move(path: Step[], by: -1 | 1): void
     {
         const to = moveRow(this.root, path, by);
         if (!to) { return; }
@@ -1245,27 +1654,27 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         this.edit(to, by < 0 ? "up" : "down");
     }
 
-    private wrap(path: number[]): void
+    private wrap(path: Step[]): void
     {
         wrapRow(this.root, path);
         this.announce("Put in a group");
         this.edit(path, "op");
     }
 
-    private unwrap(path: number[]): void
+    private unwrap(path: Step[]): void
     {
         if (!unwrapRow(this.root, path)) { return; }
         this.announce("Group taken apart");
         this.edit(path);
     }
 
-    private remove(path: number[]): void
+    private remove(path: Step[]): void
     {
         const parentPath = path.slice(0, -1);
         removeRow(this.root, path);
         this.announce("Removed");
         const parent = rowAt(this.root, parentPath).row as GroupRow;
-        const next = Math.min(path[path.length - 1], parent.children.length - 1);
+        const next = Math.min(path[path.length - 1] as number, parent.children.length - 1);
         // The focus goes to the row that took its place, else to the group's own controls.
         this.edit(next >= 0 ? [...parentPath, next] : parentPath, next >= 0 ? undefined : "add-filter");
     }
@@ -1276,7 +1685,8 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     {
         if (this.opts.disabled) { return; }
         const path = this.pathOf(e.target as Element);
-        if (!path || path.length === 0) { return; }
+        // Only a row in a group moves: not the root, and not a condition's where or link group.
+        if (!path || typeof path[path.length - 1] !== "number") { return; }
 
         for (const by of [-1, 1] as const)
         {
@@ -1308,7 +1718,11 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     private dragStart(e: PointerEvent): void
     {
         this.dragFrom = this.pathOf(e.target as Element);
-        if (!this.dragFrom || this.dragFrom.length === 0) { this.dragFrom = null; return; }
+        if (!this.dragFrom || typeof this.dragFrom[this.dragFrom.length - 1] !== "number")
+        {
+            this.dragFrom = null;
+            return;
+        }
         this.el?.querySelector(`[data-path="${this.dragFrom.join(".")}"]`)?.classList.add(`${CLS}-dragging`);
         logDebug("Drag started at", this.dragFrom.join("."));
     }
@@ -1326,10 +1740,13 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         const list = under?.closest<HTMLElement>(`.${CLS}-rows`);
         if (!list || !this.el.contains(list)) { return; }
 
-        const groupPath = list.getAttribute("data-group")!;
-        const group = groupPath === "" ? [] : groupPath.split(".").map(Number);
+        const group = parsePath(list.getAttribute("data-group")!);
         const target = under?.closest<HTMLElement>(`.${CLS}-row, .${CLS}-group`);
-        let index = (rowAt(this.root, group).row as GroupRow).children.length;
+        const into = rowAt(this.root, group).row as GroupRow;
+        const from = rowAt(this.root, this.dragFrom.slice(0, -1)).row as GroupRow;
+        // A link's fields and the builder's facets do not mix, so a row stays among keys of its own kind.
+        if ((into.linkOf ?? "") !== (from.linkOf ?? "")) { return; }
+        let index = into.children.length;
         let mark: HTMLElement = list;
         let cls = `${CLS}-drop-into`;
 
@@ -1404,7 +1821,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         }
     }
 
-    private rowEl(path: number[]): HTMLElement | null
+    private rowEl(path: Step[]): HTMLElement | null
     {
         return this.el?.querySelector<HTMLElement>(`[data-path="${path.join(".")}"]`) ?? null;
     }

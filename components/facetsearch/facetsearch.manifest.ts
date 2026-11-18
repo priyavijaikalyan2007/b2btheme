@@ -50,6 +50,8 @@ export const FACETSEARCH_MANIFEST: CapabilityManifest =
     protocol: {
         hostOnly: {
             "facets[].loadValues": "A function that loads a facet's values; over A2UI each facet lists its values.",
+            "facets[].relationship": "Read by ExpressionBuilder, which a surface does not have (#207).",
+            "facets[].link": "Read by ExpressionBuilder, which a surface does not have (#207).",
             onFacetAdd: "Fires per added filter; the two-way value already carries the query.",
             onFacetRemove: "Fires per removed filter; the two-way value already carries the query.",
             onClear: "Fires when the user clears the query; the two-way value already carries it.",
