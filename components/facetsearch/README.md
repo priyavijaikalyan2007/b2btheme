@@ -31,7 +31,7 @@ Facet-aware search bar that combines free-text search with structured `key:value
 | JS    | `components/facetsearch/facetsearch.js` |
 | Types | `components/facetsearch/facetsearch.d.ts` |
 
-**Requires:** Bootstrap CSS, Bootstrap Icons CSS.
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS. With `syntax: "query"`, also `components/timezonepicker/timezonepicker.js`, loaded before the bar is made. The bar suggests time zones with the picker's search, so both find a zone the same way. Without it, the bar throws.
 
 ## Facet Definition (`FacetDefinition`)
 
@@ -108,7 +108,7 @@ createFacetSearch("search", {
 | `removeFacet` | `(key, value?) => void` | Remove the chips on a key. With `value`, remove only the chips on that key with that value, such as one of several `type:` chips. `onFacetRemove` fires once per call |
 | `learnLabels` | `(key, values: FacetValue[]) => void` | Record labels learned after the bar was made, such as from a search answer. The chips that hold those values show the new labels at once. No `onFacetAdd`, `onFacetRemove` or `onChange` fires, and focus and the typed text stay |
 | `getFacets` | `() => ParsedFacet[]` | Get active facets |
-| `setParsed` | `({ text, tree }) => boolean` | With `syntax: "query"`, draws chips from the API's parse of `text`. See [The query language](#the-query-language). Throws with the default syntax |
+| `setParsed` | `({ text, tree?, errors?, warnings? }) => boolean` | With `syntax: "query"`, applies the API's answer to Parse for `text`: chips from the tree, and marks for the errors and warnings. See [The query language](#the-query-language). Throws with the default syntax |
 | `enable` | `() => void` | Enable the component |
 | `disable` | `() => void` | Disable the component |
 
@@ -140,26 +140,50 @@ async function parse(text)
 {
     const answer = await api.post("/api/v1/search/query/parse", { text, zone, mode: "search" });
 
-    // Errors have no tree. The bar keeps the text as typed.
-    if (answer.tree) { bar.setParsed({ text, tree: answer.tree }); }
+    // The whole answer: the tree, when there is one, and the errors and warnings.
+    bar.setParsed({ text, ...answer });
 }
 ```
 
+Pass `text` as the bar's value you sent to Parse, not the `text` of the answer, which is the standard spelling. The bar uses it to tell an old answer from a new one.
+
 **Chips from the tree.** `setParsed` turns each top-level filter on a known facet into a chip: one chip for each value, so `type in ("a", "b")` shows two chips. A negated filter becomes a negated chip. Everything else stays in the input as the exact text it came from, such as free text, an `or` group, a nested search, a filter with `link`, `exists`, and a filter on a key with no facet. A key without `multiple` keeps a second filter on it as text.
 
-**When it changes nothing.** `setParsed` returns `false` and changes nothing in two cases:
+**What it returns.** `setParsed` returns `true` when it drew chips from the tree. It returns `false` in three cases, and each is normal while a person types:
 
-- **The text has changed.** If `text` is no longer the bar's value, the person typed after the parse began, and the newer input wins (`UI_EXPERIENCE.md` section 2.8).
-- **The tree cannot be split.** This is a tree with `return`, or a node outside the chips that has no `span`.
+- **The text has changed.** If `text` is no longer the bar's value, the person typed after the parse began, and the newer input wins (`UI_EXPERIENCE.md` section 2.8). The bar changes nothing.
+- **There is no tree,** because the text has errors. The bar keeps the text as typed, and shows the errors.
+- **The tree cannot be split.** This is a tree with `return`, or a node outside the chips that has no `span`. The bar keeps the text as typed, and shows the warnings.
 
 It fires no `onChange` or `onFacetAdd`, because the query means the same.
+
+**Errors and warnings.** Each error and warning from Parse marks where it is. Its `start` and `end` count in the text you sent, and the bar places them on what it now shows:
+
+- **A range in a chip** outlines the chip, solid for an error and dashed for a warning. In `type in ("a", "b")`, a range on one value outlines that value's chip, and a range on `type` outlines both.
+- **A range in the typed text** is underlined, wavy for an error and dotted for a warning. A range of no width, such as the end of the text, gets a short line at its place.
+- **The line under the bar** says one problem: its title, what is wrong and what to do. It says the problem under the pointer, else the one at the caret, else the first error, else the first warning. With more than one, it shows a count, such as "1 of 3". The input names the line with `aria-describedby`, and has `aria-invalid="true"` while there is an error. A screen reader hears a new set of problems once, not after each pause in typing.
+- **Typing removes the marks,** because their places no longer hold. So does any change to the bar's value: `setValue`, `clear`, `addFacet` and `removeFacet`. Your next parse brings new ones.
+
+An error with no `start` shows in the line under the bar only.
+
+**Suggestions.** The dropdown offers what fits where the caret is. This only chooses what to suggest. What the text means is still the API's to say.
+
+| The caret is after | The dropdown offers |
+|---|---|
+| A word, or nothing | Keys, from `facets` |
+| `type:` or `-type:`, or a key and an operator in any form, such as `type equals `, `amount gte ` or `amount >= ` | That key's values, from `values` or `loadValues` |
+| `type in (note, ` | More values of `type` |
+| A date, a time or a relative date and `@`, such as `2026-11-15@kol`, or `zone:` | Time zones by their IANA names. A zone matches by its city, so `kol` offers `Asia/Kolkata`, and `los angeles` offers `America/Los_Angeles` |
+| An open quote | Nothing |
+
+**A pick is written as text,** at the caret, and the host's next parse makes a chip of it. So the API decides what it is. A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean`. A value after `in` is written in brackets, such as `type in ("note")`. Each pick fires `onChange`.
 
 **What the bar writes.** `getValue()` writes the chips, joined by `and`, then the typed text:
 
 | Chips | `getValue()` |
 |---|---|
 | From the tree: `type equals "note"`, `created_at on 2026-11-15@Asia/Kolkata` | `type equals "note" and created_at on 2026-11-15@Asia/Kolkata`, the API's standard spelling |
-| Two chips on `type`, from `addFacet` or the dropdown | `type in ("note", "task")`, which means "either". Two filters on one key mean "both" (spec section 6) |
+| Two chips on `type`, from `addFacet` | `type in ("note", "task")`, which means "either". Two filters on one key mean "both" (spec section 6) |
 | One chip from `addFacet` | `type:"task"`. The bar keeps `:`, because only the API knows a key's default operator, such as `descendant-of` for `within` |
 | A chip, and typed text with `or` | `type:"note" and (budget or forecast)`. The text is bracketed, so `or` does not take the chip into it |
 
@@ -168,6 +192,8 @@ A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean
 **After a search,** show the API's text for the query it ran. Call `setValue(apiText)` to put the text in the bar, then parse it and call `setParsed`. **Buttons outside the bar** call `addFacet(key, value)` and `removeFacet(key, value)`, as before. Two chips on one key then write `in`.
 
 `getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
+
+**Syntax colors.** The theme has a token for each part of a query, in light and dark mode: `--theme-query-keyword`, `--theme-query-key`, `--theme-query-operator`, `--theme-query-value`, `--theme-query-variable`, `--theme-query-error` and `--theme-query-warning`. The bar uses the last two for its marks today. The others are for coloring the typed text (#205). Each passes 4.5 to 1 on the bar and on a chip.
 
 ## Keyboard Interaction
 

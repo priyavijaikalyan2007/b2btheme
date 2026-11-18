@@ -13,6 +13,7 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Fixed
+- **TimezonePicker finds a zone by its current name** (#213). Chrome and Node list 18 zones by an old IANA name, such as Asia/Calcutta for Asia/Kolkata and Europe/Kiev for Europe/Kyiv, so a search for `kolkata` or `kyiv` found nothing. The search now reads each old name as its current name too. The list and the values keep the browser's names, so a page that stores Asia/Calcutta works as before. A city's name also matches with a space or a hyphen, so `los angeles` finds America/Los_Angeles.
 - **`bench:canvas` measures a zoom again** (#200). Its "Wheel zoom" step sent a plain wheel, so since #183 it measured a DiagramEngine pan. It now holds `Ctrl`.
 - **DiagramEngine's cursor shows what a press does** (#191). With the select tool, a mouse or a pen over a handle shows its resize cursor, or `grab` for the rotation handle, and an object shows `move`, or `pointer` outside edit mode. Before, the cursor never changed. The stylesheet rules for this used `de-object` and `de-handle` classes that the renderer never set. #189 said the view-mode `pointer` cursor worked, and it did not. The cursor now comes from the same hit tests as a press, so it matches the larger targets. The dead rules are gone, and a drawing tool keeps its crosshair over a shape.
 - **A mouse or a pen grabs a DiagramEngine handle from 12 screen px outside it** (#192), so the target is 24 px at any zoom (`TOUCH_EXPERIENCE.md` section 7). Before, it was 12 canvas units, and shrank to 6 screen px at zoom 0.5. Inside the object the target is unchanged, so a press there still moves it. With the connect tool, a mouse or a pen can also press or lift 12 px beside a connection point.
@@ -26,6 +27,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **FacetSearch shows the API's errors and warnings, and suggests what fits the query language** (#206, knobbyio/apps#379), with `syntax: "query"`.
+  - **`setParsed` takes Parse's whole answer:** `{ text, tree?, errors?, warnings? }`. A range in a chip outlines the chip. A range in the typed text is underlined, wavy for an error and dotted for a warning. The line under the bar says the problem under the pointer, else the one at the caret, else the first error, so the sentence never needs a hover. The input names it with `aria-describedby`, and has `aria-invalid` while there is an error.
+  - **Suggestions follow the caret:** keys, a key's values after any form of its operator, more values in `key in (`, and time zones after a date's `@` or `zone:`. A pick is written as text, and the host's next parse makes the chip, so the API decides.
+  - **Load `timezonepicker.js` with `syntax: "query"`.** The bar suggests zones with the picker's search, `window.searchTimezones`, and throws when it is missing. Today's syntax needs nothing new.
+  - **Seven theme tokens for syntax colors,** in light and dark mode: `--theme-query-keyword`, `-key`, `-operator`, `-value`, `-variable`, `-error` and `-warning`.
+  - `setParsed` with a tree it cannot split now shows the warnings, and still returns `false`. Before, it changed nothing.
 - **FacetSearch reads and writes the apps' query language** (#204, knobbyio/apps#379), with `syntax: "query"`. The default stays today's `key:value` syntax, so no page changes.
   - **The API decides what a query means.** The bar never parses typed text in this mode. The host passes the API's Parse answer to the new `setParsed({ text, tree })`. Each top-level filter on a known facet becomes a chip, one for each value. Everything else stays in the input as the exact text it came from.
   - **Several values on one key mean "either".** Two chips on `type` write `type in ("a", "b")`. Today's syntax writes `type:a type:b`, which in the new language means "both".

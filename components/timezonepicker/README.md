@@ -52,12 +52,23 @@ A searchable dropdown selector for IANA timezones with grouped regions, UTC offs
 
 ## Features
 
-- **Searchable dropdown** with substring matching on timezone name and offset
+- **Searchable dropdown** with substring matching on timezone name and offset. A city's name matches with a space or a hyphen, so `los angeles` finds America/Los_Angeles. A zone the browser lists by an old IANA name matches by its current name too, so `kolkata` finds Asia/Calcutta (#213). The list and the values keep the browser's names.
 - **Grouped by region** — Common timezones first, then Americas, Europe, Asia, Pacific, etc.
 - **Live time preview** — Shows current time in the selected timezone, updated every second
 - **UTC offset display** — Each timezone shows its current GMT offset
 - **Keyboard navigation** — Arrow keys, Enter to select, Escape to close
 - **Accessible** — WAI-ARIA combobox/listbox pattern
+
+## Zone search for other components
+
+The picker publishes its search as `window.searchTimezones(query)`, so another component finds a zone the same way. FacetSearch uses it to suggest zones in its query syntax (#206).
+
+```javascript
+searchTimezones("kol");
+// [{ zone: "Asia/Kolkata", offset: "GMT+5:30" }, { zone: "Asia/Srednekolymsk", offset: "GMT+11" }]
+```
+
+It returns the matching zones, each by its current IANA name, with its UTC offset now. The zones whose city starts with the query come first.
 
 ## Keyboard Shortcuts
 
