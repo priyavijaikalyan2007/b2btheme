@@ -31,7 +31,13 @@ Facet-aware search bar that combines free-text search with structured `key:value
 | JS    | `components/facetsearch/facetsearch.js` |
 | Types | `components/facetsearch/facetsearch.d.ts` |
 
-**Requires:** Bootstrap CSS, Bootstrap Icons CSS. With `syntax: "query"`, also `components/timezonepicker/timezonepicker.js`, loaded before the bar is made. The bar suggests time zones with the picker's search, so both find a zone the same way. Without it, the bar throws.
+**Requires:** Bootstrap CSS, Bootstrap Icons CSS. With `syntax: "query"`, also these three scripts, loaded before the bar is made. Without them, the bar throws and names what is missing.
+
+| Script | Why |
+|--------|-----|
+| `/lib/antlr4-4.13.1.js` | The ANTLR runtime that QueryLanguage's parser runs on |
+| `components/querylanguage/querylanguage.js` | The syntax colors, from the apps' own grammar (#205) |
+| `components/timezonepicker/timezonepicker.js` | The time-zone search, so the bar and the picker find a zone the same way |
 
 ## Facet Definition (`FacetDefinition`)
 
@@ -193,7 +199,18 @@ A value is quoted unless its facet's `valueType` is `number`, `date` or `boolean
 
 `getQuery()` reports the chips as `facets`, the typed text as `text`, and `getValue()` as `raw`. The operator of a chip from the tree is its word form, such as `on-or-after`.
 
-**Syntax colors.** The theme has a token for each part of a query, in light and dark mode: `--theme-query-keyword`, `--theme-query-key`, `--theme-query-operator`, `--theme-query-value`, `--theme-query-variable`, `--theme-query-error` and `--theme-query-warning`. The bar uses the last two for its marks today. The others are for coloring the typed text (#205). Each passes 4.5 to 1 on the bar and on a chip.
+**Syntax colors.** The typed text takes the colors of the apps' grammar, which [QueryLanguage](../querylanguage/README.md) reads it with (#205). So a word is colored as the API reads it: `in` after a key is an operator, and the `in` of `meeting in march` is plain text. The colors never say a query is wrong. That is the job of Parse's errors, above.
+
+| Part | Token |
+|------|-------|
+| `and`, `or`, `not`, `-` before a term, `where`, `link`, `return` | `--theme-query-keyword` |
+| A filter's key | `--theme-query-key` |
+| `:`, `>=`, `on-or-after`, and `in`, `is` or `exists` after a key | `--theme-query-operator` |
+| A filter's value | `--theme-query-value` |
+| `?variable` and `$parameter` | `--theme-query-variable` |
+| An error's and a warning's marks | `--theme-query-error`, `--theme-query-warning` |
+
+Each token has a light and a dark value, and passes 4.5 to 1 on the bar and on a chip. The colored text is drawn by the layer behind the input, which also draws the marks. The input itself draws only the caret, the placeholder and the selection.
 
 ## Keyboard Interaction
 

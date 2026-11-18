@@ -159,13 +159,13 @@
 }
 
 // ============================================================================
-// THE QUERY LANGUAGE: PROBLEMS FROM PARSE (#206)
+// THE QUERY LANGUAGE: SYNTAX COLORS (#205) AND PROBLEMS FROM PARSE (#206)
 // ============================================================================
 //
 // An input cannot style a range of its text. So in `syntax: "query"` the
-// input sits in a field over a layer that holds the same text, clear, with
-// each problem's range in a mark. The layer has the input's font and box,
-// and scrolls with it.
+// input sits in a field over a layer that draws the same text, with its
+// syntax colors and each problem's range in a mark. The layer has the
+// input's font and box, and scrolls with it.
 
 .facetsearch-field {
     position: relative;
@@ -173,10 +173,19 @@
     flex: 1 1 120px;
     min-width: 120px;
 
+    // The layer draws the text, in its colors, so the input draws only the
+    // caret, the placeholder and a see-through selection over the layer.
     .facetsearch-input {
         position: relative;
         flex: 1 1 auto;
         min-width: 0;
+        color: transparent;
+        caret-color: var(--theme-text-primary);
+
+        &::selection {
+            color: transparent;
+            background-color: rgba(var(--theme-primary-rgb), 0.25);
+        }
     }
 }
 
@@ -187,11 +196,19 @@
     inset: 0 0 -8px 0;
     overflow: hidden;
     white-space: pre;
-    color: transparent;
+    color: var(--theme-text-primary);
     pointer-events: none;
     font-size: $font-size-base;
     line-height: $line-height-base;
 }
+
+// The syntax colors (#205), by what QueryLanguage read each range as. Plain
+// text keeps the text color.
+.facetsearch-tok-keyword { color: var(--theme-query-keyword); }
+.facetsearch-tok-key { color: var(--theme-query-key); }
+.facetsearch-tok-operator { color: var(--theme-query-operator); }
+.facetsearch-tok-value { color: var(--theme-query-value); }
+.facetsearch-tok-variable { color: var(--theme-query-variable); }
 
 // An error is a wavy line and a warning a dotted one, so the two differ in
 // shape as well as in color (UI_EXPERIENCE.md section 3.6).
