@@ -46,17 +46,31 @@
  * be protecting, and it is the one worth pinning.
  */
 
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 
 const SELECTED_STROKE = "rgb(28, 126, 214)";      // $blue-600, src/scss/_variables.scss:23
+
+/**
+ * Opens the GraphCanvas demo and returns its first node, inside the view.
+ * The demo's force layout has no seed, so about 1 load in 40 put that node
+ * at the canvas edge or past it, and the page around the canvas took the
+ * click until the test timed out (#228). These tests check a CSS rule, so
+ * they press the demo's Zoom to Fit first, as a person would.
+ */
+async function firstNodeInView(page: Page): Promise<Locator>
+{
+    await page.goto("/demo/components/graphcanvas.html");
+    const node = page.locator("#demo-graphcanvas .gc-node").first();
+    await node.waitFor();
+    await page.locator("#demo-gc-fit").click();
+    return node;
+}
 
 test.describe("IMP-1 !important removals", () =>
 {
     test("selectedNode_UsesTheSelectionStroke", async ({ page }) =>
     {
-        await page.goto("/demo/components/graphcanvas.html");
-        const node = page.locator("#demo-graphcanvas .gc-node").first();
-        await node.waitFor();
+        const node = await firstNodeInView(page);
         await node.click();
 
         const rect = page.locator("#demo-graphcanvas .gc-node-selected rect").first();
@@ -66,9 +80,7 @@ test.describe("IMP-1 !important removals", () =>
 
     test("selectedNodeKeepsItsStrokeWhileHovered", async ({ page }) =>
     {
-        await page.goto("/demo/components/graphcanvas.html");
-        const node = page.locator("#demo-graphcanvas .gc-node").first();
-        await node.waitFor();
+        const node = await firstNodeInView(page);
         await node.click();
         await node.hover();
 
