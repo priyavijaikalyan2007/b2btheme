@@ -775,6 +775,13 @@ export class FacetSearch implements FacetSearchHandle
     private highlightIdx = -1;
     private dropdownOpen = false;
     private loadTimer: number | null = null;
+    /**
+     * The number of the latest change to the suggestions. A `loadValues`
+     * answer, or a pending load, whose number is older is dropped. So a slow
+     * answer for "ab" cannot replace the answer for "abc", or the key list
+     * that the person moved on to (#225, UI_EXPERIENCE.md section 2.8).
+     */
+    private suggestionRequest = 0;
     private parseTimer: number | null = null;
     private activeContext: "keys" | "values" | "recent" | "zones" | null = null;
     private activeFacetKey: string | null = null;
@@ -898,6 +905,7 @@ export class FacetSearch implements FacetSearchHandle
         this.chips = [];
         this.problems = [];
         this.suggestions = [];
+        this.suggestionRequest += 1;
         this.searchHandlers.clear();
         if (this.loadTimer !== null) { clearTimeout(this.loadTimer); }
         if (this.parseTimer !== null) { clearTimeout(this.parseTimer); }
@@ -2041,6 +2049,7 @@ export class FacetSearch implements FacetSearchHandle
         this.dropdown.style.display = "none";
         this.highlightIdx = -1;
         this.suggestions = [];
+        this.suggestionRequest += 1;
         if (this.input)
         {
             setAttr(this.input, "aria-expanded", "false");
@@ -2050,6 +2059,7 @@ export class FacetSearch implements FacetSearchHandle
 
     private updateSuggestions(): void
     {
+        this.suggestionRequest += 1;
         this.detectContext();
 
         if (this.activeContext === "values" && this.activeFacetKey)
@@ -2147,13 +2157,20 @@ export class FacetSearch implements FacetSearchHandle
         fd: FacetDefinition, query: string): void
     {
         if (this.loadTimer !== null) { clearTimeout(this.loadTimer); }
+        const request = this.suggestionRequest;
 
         this.loadTimer = window.setTimeout(() =>
         {
+            if (request !== this.suggestionRequest) { return; }
             this.showLoadingIndicator(fd.label);
             fd.loadValues!(query)
                 .then(values =>
                 {
+                    if (request !== this.suggestionRequest)
+                    {
+                        logDebug("Dropped the values for an older query:", { facet: fd.key, query });
+                        return;
+                    }
                     this.rememberLabels(fd.key, values);
                     this.suggestions = values.map((v) => this.valueSuggestion(fd, v));
                     this.renderDropdown();
@@ -2161,6 +2178,11 @@ export class FacetSearch implements FacetSearchHandle
                 })
                 .catch(err =>
                 {
+                    if (request !== this.suggestionRequest)
+                    {
+                        logDebug("Dropped a failure for an older query:", { facet: fd.key, query });
+                        return;
+                    }
                     logError("Failed to load values:", err);
                     this.showLoadError();
                 });

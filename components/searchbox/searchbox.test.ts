@@ -244,6 +244,82 @@ describe("suggestions", () =>
 });
 
 // ============================================================================
+// ASYNC SUGGESTIONS — a newer query always wins (#225)
+// ============================================================================
+
+/** An async source whose answers the test releases one at a time, in any order. */
+function deferredSource(): { fn: (q: string) => Promise<string[]>; answer: (q: string, items: string[]) => void }
+{
+    const pending = new Map<string, (items: string[]) => void>();
+    return {
+        fn: (q) => new Promise<string[]>((resolve) => { pending.set(q, resolve); }),
+        answer: (q, items) => { pending.get(q)!(items); },
+    };
+}
+
+function typeInto(text: string): void
+{
+    const input = queryInput()!;
+    input.value = text;
+    input.dispatchEvent(new Event("input"));
+}
+
+function shownSuggestions(): string[]
+{
+    return Array.from(container.querySelectorAll(".searchbox-suggestion")).map((el) => el.textContent ?? "");
+}
+
+describe("async suggestions", () =>
+{
+    test("OlderAnswerArrivingLast_DoesNotReplaceTheNewer", async () =>
+    {
+        const source = deferredSource();
+        const sb = new SearchBox({ suggestions: source.fn, minChars: 1 });
+        sb.show("test-searchbox");
+
+        typeInto("ab");
+        typeInto("abc");
+        source.answer("abc", ["abc one"]);
+        await vi.runAllTimersAsync();
+        source.answer("ab", ["ab one", "ab two"]);
+        await vi.runAllTimersAsync();
+
+        expect(shownSuggestions()).toEqual(["abc one"]);
+    });
+
+    test("OlderAnswer_LeavesTheNewerRequestsSpinner", async () =>
+    {
+        const source = deferredSource();
+        const sb = new SearchBox({ suggestions: source.fn, minChars: 1 });
+        sb.show("test-searchbox");
+
+        typeInto("ab");
+        typeInto("abc");
+        source.answer("ab", ["ab one"]);
+        await vi.runAllTimersAsync();
+
+        const spinner = container.querySelector(".searchbox-spinner") as HTMLElement;
+        expect(spinner.style.display).not.toBe("none");
+        expect(shownSuggestions()).toEqual([]);
+    });
+
+    test("AnswerAfterTheFieldIsCleared_DoesNotOpenTheList", async () =>
+    {
+        const source = deferredSource();
+        const sb = new SearchBox({ suggestions: source.fn, minChars: 1 });
+        sb.show("test-searchbox");
+
+        typeInto("ab");
+        typeInto("");
+        source.answer("ab", ["ab one"]);
+        await vi.runAllTimersAsync();
+
+        expect(querySuggestions()!.style.display).toBe("none");
+        expect((container.querySelector(".searchbox-spinner") as HTMLElement).style.display).toBe("none");
+    });
+});
+
+// ============================================================================
 // ARIA / ACCESSIBILITY
 // ============================================================================
 

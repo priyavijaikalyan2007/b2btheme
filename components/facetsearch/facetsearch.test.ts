@@ -20,6 +20,7 @@ import type
 {
     FacetSearchOptions,
     FacetDefinition,
+    FacetValue,
     FacetSearchQuery,
     QueryValue,
 } from "./facetsearch";
@@ -533,6 +534,72 @@ describe("values with labels: the chip shows the label, the query keeps the valu
         fs.setValue("status:open");
         expect(chipTexts()).toEqual(["status:open"]);
         expect(fs.getFacets()).toEqual([{ key: "status", operator: ":", value: "open", negated: false }]);
+        fs.destroy();
+    });
+
+    // #225. A newer query always wins (UI_EXPERIENCE.md section 2.8).
+    function deferredLoad(): { loadValues: (q: string) => Promise<FacetValue[]>; answer: (q: string,
+        values: FacetValue[]) => void; reject: (q: string) => void; }
+    {
+        const pending = new Map<string, { resolve: (v: FacetValue[]) => void; reject: (e: Error) => void }>();
+        return {
+            loadValues: (q) => new Promise<FacetValue[]>((resolve, reject) => { pending.set(q, { resolve, reject }); }),
+            answer: (q, values) => { pending.get(q)!.resolve(values); },
+            reject: (q) => { pending.get(q)!.reject(new Error("offline")); },
+        };
+    }
+
+    test("an older loadValues answer that arrives last does not replace the newer one", async () =>
+    {
+        const load = deferredLoad();
+        const fs = createFacetSearch("test-facetsearch",
+            { facets: [{ key: "owner", label: "Owner", valueType: "text", loadValues: load.loadValues }] });
+
+        await typeIn(fs, "owner:a");
+        await typeIn(fs, "owner:ab");
+        load.answer("ab", [{ value: "u2", label: "Abe" }]);
+        await vi.advanceTimersByTimeAsync(0);
+        load.answer("a", [{ value: "u1", label: "Ada" }, { value: "u3", label: "Al" }]);
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(items()).toEqual([["Abe", "u2"]]);
+        fs.destroy();
+    });
+
+    test("an older failure that arrives last does not replace the newer values", async () =>
+    {
+        const load = deferredLoad();
+        const fs = createFacetSearch("test-facetsearch",
+            { facets: [{ key: "owner", label: "Owner", valueType: "text", loadValues: load.loadValues }] });
+
+        await typeIn(fs, "owner:a");
+        await typeIn(fs, "owner:ab");
+        load.answer("ab", [{ value: "u2", label: "Abe" }]);
+        await vi.advanceTimersByTimeAsync(0);
+        load.reject("a");
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(items()).toEqual([["Abe", "u2"]]);
+        expect(container.querySelector(".facetsearch-dropdown-empty")).toBeNull();
+        fs.destroy();
+    });
+
+    test("a pending load does not start, or draw, after the person moves back to the keys", async () =>
+    {
+        const load = deferredLoad();
+        const fs = createFacetSearch("test-facetsearch", { facets: [
+            { key: "owner", label: "Owner", valueType: "text", loadValues: load.loadValues },
+            { key: "type", label: "Type", valueType: "enum", values: ["a"] }] });
+
+        const input = fs.getElement()!.querySelector("input")!;
+        input.value = "owner:a";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        // Past the 50 ms input pause and inside the 200 ms load pause: the load is scheduled, not started.
+        await vi.advanceTimersByTimeAsync(100);
+        await typeIn(fs, "ty");
+
+        expect(items()).toEqual([["Type", "type:"]]);
+        expect(container.querySelector(".facetsearch-dropdown-loading")).toBeNull();
         fs.destroy();
     });
 });
