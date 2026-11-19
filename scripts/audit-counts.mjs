@@ -55,6 +55,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync } from "node:fs";
 import { scanComponents } from "./trace-scan.mjs";
+import { measureTouch } from "./touch-counts.mjs";
 import { census as testCensus, standInsOf, guardedAssertions } from "./test-assertions.mjs";
 import { factoriesReturningClass, handlesWithoutImplements }
     from "./gen-handles.mjs";
@@ -752,6 +753,21 @@ export const BASELINES = {
     untracedHotShims: 0,
     deadTraceShims: 0,
     hotWithoutTraceShim: 0,
+    // #202 (2026-11-18). The touch ratchets, measured by scripts/touch-counts.mjs,
+    // which owns each definition. The owner chose these six on 2026-11-18. Each
+    // family's fix under #181 lowers them. specs/2026-11-18-touch-ux-review.md
+    // names the components in each count.
+    //   touchHoverRules counts RULES, not components, so it moves with each fix.
+    //   touchContextmenuOnly holds HoverCard, which only closes on `contextmenu`.
+    //   touchDragNoTouchAction holds ContextMenu's long press, which must leave
+    //   the scroll to the browser, and GestureRecognizer, which leaves the
+    //   property to its host. Neither needs `touch-action`.
+    touchHoverRules: 410,
+    touchMousedownOnly: 25,
+    touchDragNoCancel: 25,
+    touchContextmenuOnly: 7,
+    touchHtmlDrag: 6,
+    touchDragNoTouchAction: 22,
     // DEBT-TEST-1, ADR-196. A test block with no expect() at all. It
     // passes unless the code under it throws, and every one of the 21
     // was named for a behaviour: setFilters_UpdatesFilterState,
@@ -1971,6 +1987,15 @@ function measure()
     counts.untracedHotShims = trace.untracedHotShim.length;
     counts.deadTraceShims = trace.deadTraceShim.length;
     counts.hotWithoutTraceShim = trace.hotWithoutShim.length;
+
+    // #202. Touch and pointer input, measured by scripts/touch-counts.mjs.
+    const touch = measureTouch();
+    counts.touchHoverRules = touch.hoverRules;
+    counts.touchMousedownOnly = touch.mousedownOnly.length;
+    counts.touchDragNoCancel = touch.dragNoCancel.length;
+    counts.touchContextmenuOnly = touch.contextmenuOnly.length;
+    counts.touchHtmlDrag = touch.htmlDrag.length;
+    counts.touchDragNoTouchAction = touch.dragNoTouchAction.length;
 
     return { counts, consoleLogKinds, windowCastKinds, callSites, nonConforming, unmarked, fileCount: files.length };
 }
