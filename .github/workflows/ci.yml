@@ -1,10 +1,43 @@
 name: CI
 
+# A change to specs, the knowledge base or a root guidance document alone
+# does not need the 15-minute build. docs.yml checks those files in about
+# a minute. GitHub reads the list in order, and the last pattern that
+# matches a file decides. So a change runs this workflow when any one of
+# its files ends on a pattern without `!`.
+#
+# The paths put back after each `!` are read by a build or test step:
+# specs/agentui/ holds the published catalog baselines, the exceptions in
+# scripts/audit-exceptions.mjs name ADRs in decisions.yaml, and the root
+# documents are read by generate-docs.js, copy-docs.sh, test-local.sh,
+# audit-counts.mjs or a unit test. scripts/ci-paths.test.ts fails when a
+# script names a file under these paths that is not put back. `**` may
+# not match a leading dot, so the dot files are named.
 on:
   push:
     branches: [main]
+    paths: &source
+      - "**"
+      - ".*"
+      - ".*/**"
+      - "!specs/**"
+      - "specs/agentui/**"
+      - "!agentknowledge/**"
+      - "agentknowledge/decisions.yaml"
+      - "!*.md"
+      - "A2UI.md"
+      - "CODEBASE_FIXES.md"
+      - "COMPONENT_INDEX.md"
+      - "COMPONENTS.md"
+      - "DISCLAIMER.md"
+      - "KEYBOARD.md"
+      - "MASTER_COMPONENT_INDEX.md"
+      - "MASTER_COMPONENT_LIST.md"
+      - "README.md"
+      - "RIBBON_SETUP_GUIDE.md"
   pull_request:
     branches: [main]
+    paths: *source
 
 permissions:
   contents: read

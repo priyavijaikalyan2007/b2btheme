@@ -187,20 +187,7 @@ echo ""
 # serializer. This check is what makes that fail loudly next time.
 echo "[8] Agent knowledge base integrity"
 if [ -f agentknowledge/history.jsonl ]; then
-    if python3 - <<'PY'
-import json, sys
-bad = []
-for n, line in enumerate(open("agentknowledge/history.jsonl", encoding="utf-8"), 1):
-    if not line.strip():
-        continue
-    try:
-        json.loads(line)
-    except Exception as exc:
-        bad.append(f"line {n}: {exc}")
-if bad:
-    print("\n".join(f"      {b}" for b in bad), file=sys.stderr)
-    sys.exit(1)
-PY
+    if python3 scripts/check-history.py
     then pass "history.jsonl is valid JSONL"
     else fail "history.jsonl has malformed lines (see above) — append with a JSON serializer, never echo/cat"
     fi
