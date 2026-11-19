@@ -268,6 +268,14 @@ export class SearchBox implements SearchBoxHandle
     private highlightedIndex = -1;
     private currentSuggestions: string[] = [];
     private suggestionsVisible = false;
+    /**
+     * The number of the latest suggestions request. An answer whose number
+     * is older is dropped, so a slow answer for "ab" cannot replace the
+     * answer for "abc" (#225, UI_EXPERIENCE.md section 2.8). Closing the
+     * list also moves it on, so an answer that arrives after the person
+     * cleared the field or pressed Escape does not reopen the list.
+     */
+    private suggestionRequest = 0;
     // `isLoading` LEFT ON 2026-10-21 (UNUSED-1): it mirrored the
     // spinner's `display` and nothing read it. The element IS the
     // state.
@@ -1026,22 +1034,35 @@ export class SearchBox implements SearchBoxHandle
         query: string
     ): Promise<void>
     {
+        this.suggestionRequest += 1;
+        const request = this.suggestionRequest;
         this.showSpinner();
 
         try
         {
             const results = await fn(query);
+            if (request !== this.suggestionRequest)
+            {
+                logDebug("Dropped the suggestions for an older query:", { query });
+                return;
+            }
             this.renderSuggestions(results);
             this.showSuggestions();
         }
         catch (error)
         {
+            if (request !== this.suggestionRequest)
+            {
+                logDebug("Dropped a failure for an older query:", { query });
+                return;
+            }
             logError("Failed to fetch suggestions:", error);
             this.hideSuggestions();
         }
         finally
         {
-            this.hideSpinner();
+            // A newer request owns the spinner. Closing the list hid it already.
+            if (request === this.suggestionRequest) { this.hideSpinner(); }
         }
     }
 
@@ -1124,6 +1145,10 @@ export class SearchBox implements SearchBoxHandle
      */
     private hideSuggestions(): void
     {
+        // A request still in flight is for a list that is now closed.
+        this.suggestionRequest += 1;
+        this.hideSpinner();
+
         if (!this.suggestionsEl)
         {
             return;

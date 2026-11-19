@@ -359,6 +359,13 @@ class RelationshipManagerImpl implements RelationshipManager
     private selectedRelDef: RelationshipDefinitionSummary | null = null;
     private selectedTarget: ResourceSearchResult | null = null;
     private searchDebounceTimer: number | null = null;
+    /**
+     * The number of the latest target search. An answer whose number is
+     * older is dropped, so a slow answer for "ab" cannot replace the answer
+     * for "abc" (#225, UI_EXPERIENCE.md section 2.8). Closing the add panel
+     * moves it on too.
+     */
+    private searchRequest = 0;
 
     /** Surface contract channel subscribers, one Set per declared channel (B7). */
     private readonly channelHandlers = new Map<string, Set<(payload: unknown) => void>>(
@@ -461,6 +468,7 @@ class RelationshipManagerImpl implements RelationshipManager
     public destroy(): void
     {
         if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
+        this.searchRequest += 1;
         if (this.toolbarHandle)
         {
             try { this.toolbarHandle.destroy(); }
@@ -1206,6 +1214,7 @@ class RelationshipManagerImpl implements RelationshipManager
     private closeAddPanel(): void
     {
         this.addStep = 0;
+        this.searchRequest += 1;
         if (this.addPanelEl) { this.addPanelEl.style.display = "none"; }
     }
 
@@ -1328,26 +1337,33 @@ class RelationshipManagerImpl implements RelationshipManager
     private runSearch(query: string): void
     {
         if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
+        this.searchRequest += 1;
+        const request = this.searchRequest;
         if (query.length < 2) { return; }
+
+        const draw = (results: ResourceSearchResult[]): void =>
+        {
+            if (request !== this.searchRequest)
+            {
+                logDebug("Dropped the targets for an older query:", { query });
+                return;
+            }
+            this.renderSearchResults(results);
+        };
 
         this.searchDebounceTimer = window.setTimeout(() =>
         {
             const typeKeys = this.selectedRelDef?.targetTypeKeys ?? [];
             if (this.opts.onSearchResources)
             {
-                this.opts.onSearchResources(query, typeKeys).then((results) =>
-                {
-                    this.renderSearchResults(results);
-                });
+                this.opts.onSearchResources(query, typeKeys).then(draw);
                 return;
             }
             // The single-object variant (B7). Over A2UI the agent answers it,
             // and a request it never answers rejects; the adapter has already
             // reported that on the surface, so the results stay as they were.
-            this.opts.onSearchTargets?.({ query, typeKeys }).then((results) =>
-            {
-                this.renderSearchResults(results);
-            }, (err: unknown) => { logError("onSearchTargets rejected:", err); });
+            this.opts.onSearchTargets?.({ query, typeKeys }).then(draw,
+                (err: unknown) => { logError("onSearchTargets rejected:", err); });
         }, DEBOUNCE_MS);
     }
 
