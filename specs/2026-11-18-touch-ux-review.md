@@ -280,6 +280,17 @@ The 11 components with no pointer input are done: the eight layouts, ThemeInit, 
 
 Each family's pull request also does the work in section 4 for its components.
 
+### Decisions for the shell and navigation family
+
+The owner made these decisions on 18 November 2026, after #226 merged.
+
+- **Three pull requests.** The family is too large for one review. Each pull request says "Part N of 3 of #181".
+  1. Dividers and drags: SplitLayout, StackLayout, Sidebar, TabbedPanel, Toolbar and RibbonBuilder.
+  2. Popups and menus: ContextMenu, AppLauncher, UserMenu, TenantSwitcher, NotificationCenter and CommandPalette.
+  3. The other ten components. They need only the work in section 4.
+- **ContextMenu opens as a sheet on a phone by default.** Below the compact width, the menu shows as a sheet at the bottom of the screen. A host option keeps today's menu at the pointer. Larger screens do not change.
+- **TabbedPanel gets a close and a tab menu in part 1.** A middle click closes a closable tab, through `onTabClose` as a close button does today. A long press or a secondary click opens a menu with Close, Close others and Close to the right, for closable tabs only. Moving a tab waits for its own issue, because it needs an order option and a callback.
+
 ---
 
 ## 7. Ratchets (step 4)
@@ -314,4 +325,4 @@ The ActionItems drag handle looked like a defect. Section 3 records why it is no
 
 ## 9. What this changes in other documents
 
-The table in section 1 of `TOUCH_EXPERIENCE.md` holds the 15 November counts. Section 2 of this review holds the new ones and the reason for each change. The owner can choose to update that table from this review.
+The table in section 1 of `TOUCH_EXPERIENCE.md` held the 15 November counts. On 18 November 2026 the owner chose to update it. It now holds the counts from section 2 of this review and tells the reader to run `node scripts/touch-counts.mjs` for the current ones.
