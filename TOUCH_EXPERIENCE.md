@@ -25,29 +25,32 @@ This document defines the mandatory touch, mouse, trackpad, and pen interactions
 
 ### Current state
 
-On 15 November 2026, a search of the component library source gave these results. The library has 127 component directories. The search excluded tests, demos, and build output.
+On 18 November 2026, `node scripts/touch-counts.mjs` gave these results. The library has 129 component directories. The script names the components in each count, and its header states the file set and the patterns. Run it for the current numbers. The review in `specs/2026-11-18-touch-ux-review.md` section 2 compares these numbers with the search of 15 November 2026 and gives the reason for each change. Six of the counts are ratchets in `scripts/audit-counts.mjs`, so a count that grows fails the structure tests.
 
 | Finding | Number of components |
 | :--- | :--- |
 | Listen for `pointerdown` | 33 |
 | Listen for `pointerdown` and do not handle `pointercancel` | 29 |
+| Run a drag and do not handle `pointercancel` | 25 |
+| Run a drag and declare no `touch-action` | 22 |
 | Listen for `mousedown` and not for `pointerdown` | 25 |
-| Listen for `contextmenu` | 9 |
-| Recognize a long press | 1 |
-| Recognize a pinch or a two-finger drag | 0 |
-| Use the HTML drag-and-drop interface | 17 |
+| Listen for `contextmenu` | 8 |
+| Listen for `contextmenu` and recognize no long press | 7 |
+| Recognize a long press | 3 |
+| Recognize a pinch or a two-finger drag | 2 |
+| Use the HTML drag-and-drop interface as a drag source | 6 |
 | Contain a `:hover` style | 100 |
-| Put a hover style in `@media (hover: hover)` | 0 |
-| Contain a `(pointer: coarse)` style | 22 |
-| Accept `keyBindings` | 48 |
+| Have a `:hover` style outside `@media (hover: hover)` | 99 |
+| Contain a `(pointer: coarse)` style | 24 |
+| Accept `keyBindings` | 49 |
 
 Three facts explain most of the problems that people see on a touch screen.
 
-First, no component recognizes a two-finger gesture. `DiagramEngine` adopted Pointer Events on 14 November 2026 (issue 176). That change ignores each pointer after the first. It also sets `touch-action: none` on the canvas. As a result, two fingers on the canvas do nothing, and the page cannot scroll or zoom there.
+First, only `DiagramEngine` recognizes a two-finger gesture. It gets its pointers through `GestureRecognizer`. The other canvases recognize no pinch and no two-finger drag.
 
 Second, the wheel has two meanings. `DiagramEngine`, `GraphCanvas`, and `SpineMap` zoom on the wheel. `Timeline` pans on the wheel. A trackpad sends a two-finger scroll as a wheel event. Therefore, two fingers on a trackpad zoom a diagram and pan a timeline.
 
-Third, the context menu needs a mouse in most components. Nine components listen for `contextmenu`, and only `ContextMenu` recognizes a long press. Browsers do not all send `contextmenu` for a long press.
+Third, the context menu needs a mouse in most components. Eight components listen for `contextmenu`, and seven of them recognize no long press. Browsers do not all send `contextmenu` for a long press.
 
 The application repository delegates canvas input to the maxGraph library. In `typescript/` and `frontend/` of that repository, 12 files listen for `mousedown` and 1 file listens for `pointerdown`.
 
