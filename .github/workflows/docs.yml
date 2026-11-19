@@ -1,0 +1,56 @@
+name: Docs
+
+# The checks that read specs, the knowledge base and the root documents,
+# without the build. ci.yml skips a change that touches only those files,
+# and those files can still break a check: audit-counts.mjs reads every
+# tracked Markdown file for CDN tags with no pin or no SRI hash, and check
+# [8] parses the knowledge base. Without this workflow such a change would
+# land green, and the next code change would fail for it.
+#
+# It also runs when ci.yml runs for a root document, which costs about a
+# minute.
+on:
+  push:
+    branches: [main]
+    paths: &docs
+      - "specs/**"
+      - "agentknowledge/**"
+      - "*.md"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    branches: [main]
+    paths: *docs
+
+permissions:
+  contents: read
+
+jobs:
+  docs-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # The same Node as ci.yml. See the note there.
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      # js-yaml, and the modules that audit-counts.mjs imports.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: The history is valid JSON lines
+        run: python3 scripts/check-history.py
+
+      - name: The knowledge base is valid YAML
+        run: node scripts/check-knowledge-yaml.mjs
+
+      - name: Every count in the tracker is re-derivable
+        run: node scripts/audit-counts.mjs
+
+      - name: The CI paths put back every file a script reads
+        run: npx vitest run scripts/ci-paths.test.ts
