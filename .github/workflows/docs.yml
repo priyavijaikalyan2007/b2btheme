@@ -49,6 +49,14 @@ jobs:
       - name: The knowledge base is valid YAML
         run: node scripts/check-knowledge-yaml.mjs
 
+      # audit-counts.mjs measures the A2UI classification, which reads
+      # dist/capability-manifest.json and dist/lib-manifest.json. These two
+      # steps write them in about a second, with no compiled bundle.
+      - name: Write the two manifests that audit-counts.mjs reads
+        run: |
+          node scripts/build-manifest.js
+          npm run build:vendor
+
       - name: Every count in the tracker is re-derivable
         run: node scripts/audit-counts.mjs
 
