@@ -16228,6 +16228,7 @@ The editor has three panels:
 | `Delete` / `Backspace` | Remove selected node |
 | `F2` | Focus the first property field (rename) |
 | `ArrowUp` / `ArrowDown` | Move selection in tree |
+| `Alt + ArrowUp` / `Alt + ArrowDown` | Move the selected node one place up or down, as **Move Up** and **Move Down** do |
 
 ## Drag-and-Drop
 
@@ -16235,6 +16236,25 @@ The editor has three panels:
 - Groups can be dragged between tabs
 - Tabs can be reordered
 - Drop position: top 25% = before, middle 50% = inside, bottom 25% = after
+
+## Pointer and touch
+
+- **Every move works without a drag.** **Move Up** and **Move Down** in the toolbar, or `Alt + ArrowUp` and `Alt + ArrowDown`, move the selected node one place. Past the first or last place among its siblings, a control moves into the end of the group before or the start of the group after, and a group into the tab before or after. The selection stays on the node. The tree drags use the browser's HTML drag and drop, which a finger cannot always start.
+- **Drag the divider** between the tree and the properties to change the tree's width. A vertical swipe that starts on it still scrolls (`touch-action: pan-y`). A canceled drag puts the width back. Under a coarse pointer its target is 44 CSS pixels wide.
+- **A long press on a row** does not open the iOS callout.
+- **The hover colors** show only on a device with hover.
+- **A scroll that reaches the end** of the tree, the properties or a menu stays there and does not move the page.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Empty | A tree with no tabs. The properties panel has nothing to edit. |
+| Selected | The node's row is highlighted, and the properties panel edits it. |
+| Dragging | A line above or below a row shows where the node will go, and a highlighted row shows that it will go inside. |
+| Focused | A focus ring on the focused control. |
+
+The builder has no loading, disabled or read-only state.
 
 ## Export Formats
 
@@ -17194,6 +17214,25 @@ In floating mode, dragging the sidebar near a viewport edge (within 40px) shows 
 | Drop zone overlays | 1037 |
 | StatusBar | 1040 |
 | Bootstrap modals | 1050+ |
+
+## Pointer and touch
+
+- **Drag the title bar** of a floating sidebar to move it, or onto a dock zone to dock it. The title bar takes the touch at once (`touch-action: none`).
+- **Drag a resize handle** to change the width or the height.
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A title bar drag puts the panel back where it was and does not dock. A resize puts the size back, and `onResize` hears nothing, as it hears only a finished resize.
+- **Hover colors** show only on a device with hover. A scroll that reaches the end of the content or the tab bar stays there and does not move the page.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `setWidth()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The sidebar at the left or right edge, beside the page. |
+| Floating | The sidebar over the page, with a title bar to move it by. |
+| Collapsed | A narrow strip with the sidebar's icon and title. |
+| Dragging | The dock zones show while a title bar drag is under way. |
+
+The sidebar has no loading, empty, disabled or read-only state. Its content shows its own.
 
 ## Accessibility
 
@@ -18606,6 +18645,28 @@ Supports pixels (`200`), percentages (`"30%"`), and fractional units (`"1fr"`).
 | End | Collapse the right/bottom adjacent pane |
 | Enter | Toggle collapse on the smaller adjacent pane |
 
+## Pointer and touch
+
+- **Drag a divider** to resize the two panes beside it. The divider captures the pointer, so the drag goes on when the pointer leaves it. `onResize` reports the sizes when the pointer lifts.
+- **A swipe across the divider still scrolls.** A divider between side-by-side panes takes a horizontal drag, and a vertical swipe that starts on it scrolls the page (`touch-action: pan-y`). A divider between stacked panes takes a vertical drag (`pan-x`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. The panes go back to their sizes from before the drag, and neither `onResize` nor the persisted state hears of it.
+- **Double click or double tap a divider** to collapse or expand the pane beside it that is `collapsible`. When both are, it is the smaller pane. When neither is, nothing happens.
+- **Under a coarse pointer** the divider's target is 44 CSS pixels across. The visible line keeps its size.
+- **The hover color** shows only on a device with hover, so a tap does not leave it behind.
+- **Without a drag:** the arrow keys move a focused divider, and `setSizes`, `collapsePane` and `expandPane` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Idle | A thin divider between the panes. |
+| Hover | The divider darkens and glows, on a device with hover. |
+| Focused | A focus ring on the divider. |
+| Dragging | The divider in the primary color until the pointer lifts or the drag is canceled. |
+| Collapsed | The pane has no size, and the divider sits at the edge. |
+
+The layout has no loading, empty, disabled or read-only state. Each pane's content shows its own.
+
 ## Accessibility
 
 - Dividers have `role="separator"` with `aria-orientation`, `aria-valuenow/min/max`
@@ -18935,14 +18996,39 @@ window.createStackLayout
 | Key | Action |
 |-----|--------|
 | Enter / Space | Toggle collapse on focused panel header |
+| Up / Down Arrow | Move a focused divider 10px in a vertical stack |
+| Left / Right Arrow | Move a focused divider 10px in a horizontal stack |
 | Tab | Move focus between panel headers and dividers |
+
+## Pointer and touch
+
+- **Drag a divider** to resize the expanded panels on each side of it. `onResize` reports the sizes on each move.
+- **A swipe across the divider still scrolls.** In a vertical stack the divider takes a vertical drag, and a horizontal swipe that starts on it scrolls (`touch-action: pan-x`). In a horizontal stack it is the other way (`pan-y`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. The panels go back to their sizes from before the drag, and `onResize` reports those sizes once.
+- **Double click or double tap a divider** to collapse or expand a panel beside it, as in SplitLayout. When only one of the two can collapse, it is that one. When both can, it is the smaller one, and a collapsed panel counts as the smallest. When neither can, nothing happens.
+- **Tap or click a header** to collapse or expand its panel.
+- **Under a coarse pointer** the divider's target is 44 CSS pixels across. The visible line stays 4px.
+- **The hover color** on a header or a divider shows only on a device with hover.
+- **Without a drag:** the arrow keys move a focused divider (#232), and `setSizes`, `collapsePanel` and `expandPanel` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Idle | Panels with their headers, and 4px dividers between them. |
+| Hover | The header or the divider changes color, on a device with hover. |
+| Focused | A focus ring on the header or the divider. |
+| Dragging | The divider in the primary color until the pointer lifts or the drag is canceled. |
+| Collapsed | Only the panel's header shows. In a horizontal stack it is a 32px strip. |
+
+The layout has no loading, empty, disabled or read-only state. Each panel's content shows its own.
 
 ## Accessibility
 
 - Panels have `role="region"` with `aria-label` from the panel title
 - Panel headers have `role="button"` with `aria-expanded`
 - Headers are focusable via `tabindex="0"` (when collapsible)
-- Dividers have `role="separator"` with `aria-orientation="horizontal"`
+- Dividers have `role="separator"` with `aria-orientation`, and `aria-valuenow` gives the size of the panel before the divider as a percentage
 - Dividers are focusable via `tabindex="0"` (when resizable)
 
 ## Visual Layout
@@ -19713,6 +19799,7 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 - **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
 - **Bootstrap Icons CSS** — for tab icons and action buttons
 - Does **not** require Bootstrap JS.
+- With `tabMenu: true` only: **ContextMenu** (`components/contextmenu/contextmenu.js`) and **GestureRecognizer** (`components/gesturerecognizer/gesturerecognizer.js`), loaded before `tabbedpanel.js`.
 
 ## Quick Start
 
@@ -19767,6 +19854,7 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 | `onTabSelect` | `function` | — | Tab selection callback |
 | `onTabDeselect` | `function` | — | Tab deselection callback |
 | `onTabClose` | `function` | — | Tab close callback (return false to cancel) |
+| `tabMenu` | `boolean` | `false` | A menu on each tab with Close, Close others and Close to the right. Needs `contextmenu.js` and `gesturerecognizer.js`, or creation throws |
 | `onCollapse` | `function` | — | Collapse/expand callback |
 | `onResize` | `function` | — | Resize complete callback |
 | `onModeChange` | `function` | — | Mode change callback |
@@ -19884,6 +19972,32 @@ When docked, the panel sets a CSS custom property on `<html>`:
 | `--tabbedpanel-bottom-height` | Docked bottom |
 
 Properties are cleared when the panel is hidden or undocked.
+
+## Pointer and touch
+
+- **Tap or click a tab** to select it. A one-finger drag on the tab bar scrolls it.
+- **A middle click** on a closable tab closes it, through `onTabClose` as the close button does.
+- **The tab menu**, with `tabMenu: true`: a long press on a tab opens it on touch, and a secondary click with a mouse or a pen. It has **Close**, **Close others** and **Close to the right**, and each acts on closable tabs only. **Close** is off on a tab that cannot close. A browser that also sends `contextmenu` for the long press opens no second menu.
+- **Drag the title bar** of a floating panel to move it, or onto a dock zone to dock it. The title bar takes the touch at once (`touch-action: none`).
+- **Drag a resize handle** to change the size. A floating panel resized from its left edge keeps its right edge still (#233).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A title bar drag puts the panel back where it was and does not dock. A resize puts the size back, and `onResize` hears nothing, as it hears only a finished resize.
+- **The close button on a tab** shows on hover, on focus, and always on a device with no hover.
+- **Hover colors** show only on a device with hover. A scroll that reaches the end of the tab bar or a panel stays there.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float(x, y)`, `dock()` and `setHeight()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The panel at its edge of the window, with its tab bar. |
+| Floating | The panel over the page, with a title bar to move it by. |
+| Collapsed | Only a strip with the panel's title. |
+| Active tab | The tab's indicator, and its panel's content. |
+| Disabled tab | The tab is dimmed, and a click does not select it. |
+| Dragging | The dock zones show while a title bar drag is under way. |
+| Empty | A tab bar with no tabs, and an empty content area. |
+
+The panel has no loading or read-only state. Each tab's content shows its own.
 
 ## Keyboard Accessibility
 
@@ -21550,6 +21664,25 @@ Set `overflowPriority` on each tool to control which tools collapse first:
 ```
 
 Disable overflow with `overflow: false` in toolbar options.
+
+## Pointer and touch
+
+- **Drag the grip** to move a floating toolbar, or to undock a docked one and move it. Drop it on a dock zone to dock it. The grip takes the touch at once (`touch-action: none`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A floating toolbar goes back where it was. A toolbar that the drag undocked docks again where it was. Nothing is persisted.
+- **Drag the resize handle** to change the length. A canceled resize puts the length back, and `onResize` hears nothing.
+- **Hover colors and the glow** on a tool show only on a device with hover, so a tap does not leave a tool looking selected.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `applyLayoutState()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The toolbar along an edge of the window. |
+| Floating | The toolbar over the page, with a grip to move it by. |
+| Active tool | A toggle tool that is on shows the active color. |
+| Disabled tool | The tool is dimmed and does nothing. |
+| Overflow | Tools that do not fit move into the overflow menu. |
+| Dragging | The dock zones show while a grip drag is under way. |
 
 ## Keyboard Accessibility
 
