@@ -522,3 +522,197 @@ describe("surface contract (B8)", () =>
         builder.destroy();
     });
 });
+
+// ============================================================================
+// MOVES — the drag order (#235), Move Up and Move Down, and a canceled resize
+// ============================================================================
+
+describe("moves", () =>
+{
+    const controls = (ids: string[]) => ids.map((id) => ({ type: "button", id, label: id }));
+
+    function twoGroups(): RibbonOptions
+    {
+        return {
+            tabs: [
+                { id: "t1", label: "T1", groups: [
+                    { id: "g1", label: "G1", controls: controls(["a", "b", "c"]) },
+                    { id: "g2", label: "G2", controls: controls(["d"]) },
+                ] },
+                { id: "t2", label: "T2", groups: [{ id: "g3", label: "G3", controls: [] }] },
+            ],
+        } as RibbonOptions;
+    }
+
+    function open(config: RibbonOptions): RibbonBuilderHandle
+    {
+        const builder = createRibbonBuilder(makeOptions({ initialConfig: config }), "test-ribbonbuilder");
+        // Expand every tab and group, so each row is in the tree.
+        for (let i = 0; i < 10; i++)
+        {
+            container.querySelector<HTMLElement>(".ribbonbuilder-tree-row:has(.bi-chevron-right)")?.click();
+        }
+        return builder;
+    }
+
+    function row(kind: string, tab: number, group?: number, control?: number): HTMLElement
+    {
+        const sel = `.ribbonbuilder-tree-row[data-kind='${kind}'][data-tab='${tab}']`
+            + (group === undefined ? "" : `[data-group='${group}']`)
+            + (control === undefined ? "" : `[data-control='${control}']`);
+        return container.querySelector<HTMLElement>(sel)!;
+    }
+
+    /** Drops a node on the lower quarter ("after") or upper quarter ("before") of a row. */
+    function drop(target: HTMLElement, source: object, where: "before" | "after"): void
+    {
+        target.getBoundingClientRect = () => ({ top: 0, height: 20 } as DOMRect);
+        const e = new Event("drop", { bubbles: true, cancelable: true });
+        Object.defineProperty(e, "clientY", { value: where === "after" ? 19 : 1 });
+        Object.defineProperty(e, "dataTransfer", { value: { getData: () => JSON.stringify(source) } });
+        target.dispatchEvent(e);
+    }
+
+    const ids = (b: RibbonBuilderHandle, t = 0, g = 0) =>
+        b.getConfig().tabs[t].groups[g].controls.map((c) => c.id);
+
+    function button(title: string): HTMLButtonElement
+    {
+        return container.querySelector<HTMLButtonElement>(`.ribbonbuilder-toolbar-btn[title='${title}']`)!;
+    }
+
+    test("dropAfterTheNextSibling_PutsTheControlRightAfterIt", () =>
+    {
+        const b = open(twoGroups());
+
+        drop(row("control", 0, 0, 1), { kind: "control", tabIndex: 0, groupIndex: 0, controlIndex: 0 }, "after");
+
+        expect(ids(b)).toEqual(["b", "a", "c"]);
+        b.destroy();
+    });
+
+    test("dropBeforeALaterSibling_PutsTheControlRightBeforeIt", () =>
+    {
+        const b = open(twoGroups());
+
+        drop(row("control", 0, 0, 2), { kind: "control", tabIndex: 0, groupIndex: 0, controlIndex: 0 }, "before");
+
+        expect(ids(b)).toEqual(["b", "a", "c"]);
+        b.destroy();
+    });
+
+    // Three of each: with two, an insert one place too far still lands last.
+    test("dropAGroupAfterTheNextGroup_AndATabAfterTheNextTab", () =>
+    {
+        const group = (id: string) => ({ id, label: id, controls: [] });
+        const b = open({ tabs: [
+            { id: "t1", label: "T1", groups: [group("g1"), group("g2"), group("g3")] },
+            { id: "t2", label: "T2", groups: [] },
+            { id: "t3", label: "T3", groups: [] },
+        ] } as RibbonOptions);
+
+        drop(row("group", 0, 1), { kind: "group", tabIndex: 0, groupIndex: 0 }, "after");
+        expect(b.getConfig().tabs[0].groups.map((g) => g.id)).toEqual(["g2", "g1", "g3"]);
+
+        drop(row("tab", 1), { kind: "tab", tabIndex: 0 }, "after");
+        expect(b.getConfig().tabs.map((t) => t.id)).toEqual(["t2", "t1", "t3"]);
+        b.destroy();
+    });
+
+    test("moveDown_MovesTheSelectedControl_AndTheSelectionFollowsIt", () =>
+    {
+        const b = open(twoGroups());
+        row("control", 0, 0, 0).click();
+
+        button("Move Down").click();
+        expect(ids(b)).toEqual(["b", "a", "c"]);
+
+        button("Move Down").click();
+        expect(ids(b)).toEqual(["b", "c", "a"]);
+        expect(row("control", 0, 0, 2).classList.contains("ribbonbuilder-tree-row--selected")).toBe(true);
+        b.destroy();
+    });
+
+    test("moveDown_PastTheLastControl_GoesToTheStartOfTheNextGroup", () =>
+    {
+        const b = open(twoGroups());
+        row("control", 0, 0, 2).click();
+
+        button("Move Down").click();
+
+        expect(ids(b)).toEqual(["a", "b"]);
+        expect(ids(b, 0, 1)).toEqual(["c", "d"]);
+        b.destroy();
+    });
+
+    test("moveUp_PastTheFirstControl_GoesToTheEndOfTheGroupBefore", () =>
+    {
+        const b = open(twoGroups());
+        row("control", 0, 1, 0).click();
+
+        button("Move Up").click();
+
+        expect(ids(b)).toEqual(["a", "b", "c", "d"]);
+        expect(ids(b, 0, 1)).toEqual([]);
+        b.destroy();
+    });
+
+    test("moveDown_IntoAnEmptyGroupInTheNextTab", () =>
+    {
+        const b = open(twoGroups());
+        row("control", 0, 1, 0).click();
+
+        button("Move Down").click();
+
+        expect(ids(b, 1, 0)).toEqual(["d"]);
+        b.destroy();
+    });
+
+    test("moveUp_OnTheFirstTab_ChangesNothing", () =>
+    {
+        const onChange = vi.fn();
+        const b = createRibbonBuilder(makeOptions({ initialConfig: twoGroups(), onChange }), "test-ribbonbuilder");
+        row("tab", 0).click();
+
+        button("Move Up").click();
+
+        expect(b.getConfig().tabs.map((t) => t.id)).toEqual(["t1", "t2"]);
+        expect(onChange).not.toHaveBeenCalled();
+        b.destroy();
+    });
+
+    test("AltArrowDown_MovesTheNode_AndArrowDownAloneMovesTheSelection", () =>
+    {
+        const b = open(twoGroups());
+        row("control", 0, 0, 0).click();
+        const root = container.firstElementChild as HTMLElement;
+
+        root.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", altKey: true, bubbles: true }));
+        expect(ids(b)).toEqual(["b", "a", "c"]);
+
+        root.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+        expect(ids(b)).toEqual(["b", "a", "c"]);
+        expect(row("control", 0, 0, 2).classList.contains("ribbonbuilder-tree-row--selected")).toBe(true);
+        b.destroy();
+    });
+
+    test("treeResize_pointercancel_PutsTheWidthBack", () =>
+    {
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        const b = open(twoGroups());
+        const divider = container.querySelector<HTMLElement>(".ribbonbuilder-divider")!;
+        const tree = divider.previousElementSibling as HTMLElement;
+        const before = tree.style.width;
+        const press = (type: string, clientX: number) => divider.dispatchEvent(
+            new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, clientX }));
+
+        press("pointerdown", 300);
+        press("pointermove", 360);
+        expect(tree.style.width).not.toBe(before);
+
+        press("pointercancel", 360);
+
+        expect(tree.style.width).toBe(before);
+        b.destroy();
+    });
+});

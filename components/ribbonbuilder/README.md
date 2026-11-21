@@ -79,6 +79,7 @@ The editor has three panels:
 | `Delete` / `Backspace` | Remove selected node |
 | `F2` | Focus the first property field (rename) |
 | `ArrowUp` / `ArrowDown` | Move selection in tree |
+| `Alt + ArrowUp` / `Alt + ArrowDown` | Move the selected node one place up or down, as **Move Up** and **Move Down** do |
 
 ## Drag-and-Drop
 
@@ -86,6 +87,25 @@ The editor has three panels:
 - Groups can be dragged between tabs
 - Tabs can be reordered
 - Drop position: top 25% = before, middle 50% = inside, bottom 25% = after
+
+## Pointer and touch
+
+- **Every move works without a drag.** **Move Up** and **Move Down** in the toolbar, or `Alt + ArrowUp` and `Alt + ArrowDown`, move the selected node one place. Past the first or last place among its siblings, a control moves into the end of the group before or the start of the group after, and a group into the tab before or after. The selection stays on the node. The tree drags use the browser's HTML drag and drop, which a finger cannot always start.
+- **Drag the divider** between the tree and the properties to change the tree's width. A vertical swipe that starts on it still scrolls (`touch-action: pan-y`). A canceled drag puts the width back. Under a coarse pointer its target is 44 CSS pixels wide.
+- **A long press on a row** does not open the iOS callout.
+- **The hover colors** show only on a device with hover.
+- **A scroll that reaches the end** of the tree, the properties or a menu stays there and does not move the page.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Empty | A tree with no tabs. The properties panel has nothing to edit. |
+| Selected | The node's row is highlighted, and the properties panel edits it. |
+| Dragging | A line above or below a row shows where the node will go, and a highlighted row shows that it will go inside. |
+| Focused | A focus ring on the focused control. |
+
+The builder has no loading, disabled or read-only state.
 
 ## Export Formats
 

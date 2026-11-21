@@ -166,6 +166,9 @@
     padding: 3px 8px;
     cursor: pointer;
     user-select: none;
+    // A long press on a row must not open the iOS callout over it
+    // (TOUCH_EXPERIENCE.md section 9, item 15).
+    -webkit-touch-callout: none;
     gap: 4px;
     transition: background-color 0.1s;
     position: relative;
@@ -234,12 +237,33 @@
 // RESIZE DIVIDER
 // ============================================================================
 
+// The divider takes a horizontal drag, so a vertical swipe that starts on
+// it still scrolls (TOUCH_EXPERIENCE.md section 9, the touch-action table).
 .ribbonbuilder-divider {
+    position: relative;
     width: 4px;
     cursor: col-resize;
     background: var(--theme-border-color);
     flex-shrink: 0;
     transition: background-color 0.15s;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-touch-callout: none;
+
+    // A finger gets a target 44 CSS pixels wide, and the line stays 4px
+    // (TOUCH_EXPERIENCE.md section 6.1).
+    @media (pointer: coarse) {
+        &::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 44px;
+            margin-left: -22px;
+            z-index: 1;
+        }
+    }
 
     @media (hover: hover) {
         &:hover {

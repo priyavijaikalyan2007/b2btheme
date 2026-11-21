@@ -589,6 +589,8 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
         group.appendChild(addControlBtn);
 
         group.appendChild(this.createToolbarBtn("bi-trash", "Delete", () => this.removeSelectedNode()));
+        group.appendChild(this.createToolbarBtn("bi-arrow-up", "Move Up", () => this.moveSelectedNode(-1)));
+        group.appendChild(this.createToolbarBtn("bi-arrow-down", "Move Down", () => this.moveSelectedNode(1)));
 
         return group;
     }
@@ -1334,6 +1336,7 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
             return;
         }
 
+        const selected = this.selectedNode ? this.nodeAt(this.selectedNode) : null;
         const extracted = this.extractNode(source);
 
         if (!extracted)
@@ -1341,8 +1344,196 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
             return;
         }
 
-        this.insertNode(extracted, source.kind, target, position);
+        this.insertNode(extracted, source.kind, this.targetAfterExtract(source, target), position);
+
+        // The selection follows the node it was on, whose indexes may have moved.
+        this.selectedNode = selected ? this.refOf(selected) : null;
+        this.revealNode(this.selectedNode);
         this.mutateConfig();
+    }
+
+    /**
+     * The target's ref once the source is out of the config (#235). When
+     * both share a parent and the source came first, taking it out moves the
+     * target up by one, and an insert at the old index landed one too far.
+     */
+    private targetAfterExtract(source: TreeNodeRef, target: TreeNodeRef): TreeNodeRef
+    {
+        if (source.kind !== target.kind)
+        {
+            return target;
+        }
+
+        if (source.kind === "tab" && source.tabIndex < target.tabIndex)
+        {
+            return { ...target, tabIndex: target.tabIndex - 1 };
+        }
+
+        if (source.kind === "group" && source.tabIndex === target.tabIndex
+            && source.groupIndex! < target.groupIndex!)
+        {
+            return { ...target, groupIndex: target.groupIndex! - 1 };
+        }
+
+        if (source.kind === "control" && source.tabIndex === target.tabIndex
+            && source.groupIndex === target.groupIndex && source.controlIndex! < target.controlIndex!)
+        {
+            return { ...target, controlIndex: target.controlIndex! - 1 };
+        }
+
+        return target;
+    }
+
+    /** The config object a ref points at. */
+    private nodeAt(ref: TreeNodeRef): RibbonTab | RibbonGroup | RibbonControlBase | null
+    {
+        const tab = this.config.tabs[ref.tabIndex];
+
+        if (!tab || ref.kind === "tab")
+        {
+            return tab ?? null;
+        }
+
+        const group = tab.groups[ref.groupIndex!];
+
+        if (!group || ref.kind === "group")
+        {
+            return group ?? null;
+        }
+
+        return group.controls[ref.controlIndex!] ?? null;
+    }
+
+    /** The ref of a config object, found by identity. */
+    private refOf(node: RibbonTab | RibbonGroup | RibbonControlBase): TreeNodeRef | null
+    {
+        for (let ti = 0; ti < this.config.tabs.length; ti++)
+        {
+            const tab = this.config.tabs[ti];
+
+            if (tab === node)
+            {
+                return { kind: "tab", tabIndex: ti };
+            }
+
+            for (let gi = 0; gi < tab.groups.length; gi++)
+            {
+                const group = tab.groups[gi];
+
+                if (group === node)
+                {
+                    return { kind: "group", tabIndex: ti, groupIndex: gi };
+                }
+
+                const ci = group.controls.indexOf(node as RibbonControlBase);
+
+                if (ci >= 0)
+                {
+                    return { kind: "control", tabIndex: ti, groupIndex: gi, controlIndex: ci };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** Expands the tab and the group that hold a node, so its row shows. */
+    private revealNode(ref: TreeNodeRef | null): void
+    {
+        if (!ref || ref.kind === "tab")
+        {
+            return;
+        }
+
+        this.expandedNodes.add(`tab-${ref.tabIndex}`);
+
+        if (ref.kind === "control")
+        {
+            this.expandedNodes.add(`group-${ref.tabIndex}-${ref.groupIndex}`);
+        }
+    }
+
+    /**
+     * Moves the selected node one place up or down, the way to reorder
+     * without a drag (UI_EXPERIENCE.md section 22, TOUCH_EXPERIENCE.md
+     * section 8). Past the first or last place among its siblings, a group
+     * or a control moves into the parent before or after its own.
+     */
+    private moveSelectedNode(direction: -1 | 1): void
+    {
+        const ref = this.selectedNode;
+        const move = ref ? this.moveTarget(ref, direction) : null;
+
+        if (!ref || !move)
+        {
+            logDebug("Nothing to move to:", { ref, direction });
+            return;
+        }
+
+        this.executeMoveNode(ref, move.target, move.position);
+    }
+
+    /** Where a one-place move of a node goes, or null at the very end. */
+    private moveTarget(
+        ref: TreeNodeRef, direction: -1 | 1
+    ): { target: TreeNodeRef; position: "before" | "after" | "inside" } | null
+    {
+        const tabs = this.config.tabs;
+        const t = ref.tabIndex;
+        const position = direction < 0 ? "before" : "after";
+
+        if (ref.kind === "tab")
+        {
+            const next = t + direction;
+            return next >= 0 && next < tabs.length ? { target: { kind: "tab", tabIndex: next }, position } : null;
+        }
+
+        const g = ref.groupIndex!;
+
+        if (ref.kind === "group")
+        {
+            const next = g + direction;
+
+            if (next >= 0 && next < tabs[t].groups.length)
+            {
+                return { target: { kind: "group", tabIndex: t, groupIndex: next }, position };
+            }
+
+            const tab = t + direction;
+
+            if (tab < 0 || tab >= tabs.length)
+            {
+                return null;
+            }
+
+            // Into the end of the tab before, or the start of the tab after.
+            return direction < 0 || tabs[tab].groups.length === 0
+                ? { target: { kind: "tab", tabIndex: tab }, position: "inside" }
+                : { target: { kind: "group", tabIndex: tab, groupIndex: 0 }, position: "before" };
+        }
+
+        const c = ref.controlIndex!;
+        const next = c + direction;
+
+        if (next >= 0 && next < tabs[t].groups[g].controls.length)
+        {
+            return { target: { kind: "control", tabIndex: t, groupIndex: g, controlIndex: next }, position };
+        }
+
+        const groups = tabs.flatMap((tab, ti) => tab.groups.map((_, gi) => ({ ti, gi })));
+        const here = groups.findIndex((x) => x.ti === t && x.gi === g);
+        const to = groups[here + direction];
+
+        if (!to)
+        {
+            return null;
+        }
+
+        // Into the end of the group before, or the start of the group after.
+        const controls = tabs[to.ti].groups[to.gi].controls;
+        return direction < 0 || controls.length === 0
+            ? { target: { kind: "group", tabIndex: to.ti, groupIndex: to.gi }, position: "inside" }
+            : { target: { kind: "control", tabIndex: to.ti, groupIndex: to.gi, controlIndex: 0 }, position: "before" };
     }
 
     /** Validate that a move operation is allowed. */
@@ -2987,6 +3178,14 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
             }
 
             e.preventDefault();
+
+            // Alt moves the node itself, as in ExpressionBuilder (KEYBOARD.md).
+            if (e.altKey)
+            {
+                this.moveSelectedNode(e.key === "ArrowDown" ? 1 : -1);
+                return;
+            }
+
             this.moveSelection(e.key === "ArrowDown" ? 1 : -1);
         }
     }
@@ -3114,10 +3313,23 @@ class RibbonBuilderImpl implements RibbonBuilderHandle
             this.treeResizing = false;
             divider.removeEventListener("pointermove", onMove);
             divider.removeEventListener("pointerup", onUp);
+            divider.removeEventListener("pointercancel", onCancel);
+        };
+
+        // TOUCH_EXPERIENCE.md section 9, item 5. The browser sends
+        // pointercancel when it takes the gesture for a scroll or a call
+        // arrives. The tree goes back to its width from before the drag.
+        const onCancel = () =>
+        {
+            onUp();
+            this.currentTreeWidth = startWidth;
+            this.treeEl.style.width = `${startWidth}px`;
+            logDebug("Tree resize canceled. The width is back where it was.");
         };
 
         divider.addEventListener("pointermove", onMove);
         divider.addEventListener("pointerup", onUp);
+        divider.addEventListener("pointercancel", onCancel);
     }
 
     // ========================================================================
