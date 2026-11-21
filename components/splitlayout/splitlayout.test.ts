@@ -460,3 +460,72 @@ describe("SplitLayout surface", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// POINTER — a cancelled drag (TOUCH_EXPERIENCE.md section 9, item 5)
+// ============================================================================
+
+describe("SplitLayout divider drag", () =>
+{
+    beforeEach(() =>
+    {
+        // jsdom has no pointer capture.
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+    });
+
+    function press(el: Element, type: string, clientX: number): void
+    {
+        el.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", clientX, clientY: 10,
+        }));
+    }
+
+    function dragged(onResize = vi.fn()): { layout: SplitLayout; divider: Element; onResize: typeof onResize }
+    {
+        const layout = new SplitLayout(makeOptions({ onResize }));
+        layout.show("split-test-container");
+        layout.setSizes({ left: 300, right: 500 });
+        onResize.mockClear();
+
+        const divider = container.querySelector(".splitlayout-divider")!;
+        press(divider, "pointerdown", 300);
+        press(divider, "pointermove", 400);
+        return { layout, divider, onResize };
+    }
+
+    test("pointerup_KeepsTheNewSizes_AndReportsThem", () =>
+    {
+        const { layout, divider, onResize } = dragged();
+
+        press(divider, "pointerup", 400);
+
+        expect(layout.getSizes()).toEqual({ left: 400, right: 400 });
+        expect(onResize).toHaveBeenCalledTimes(1);
+        layout.destroy();
+    });
+
+    test("pointercancel_RestoresTheSizesFromBeforeTheDrag_AndReportsNothing", () =>
+    {
+        const { layout, divider, onResize } = dragged();
+        expect(layout.getSizes()).toEqual({ left: 400, right: 400 });
+
+        press(divider, "pointercancel", 400);
+
+        expect(layout.getSizes()).toEqual({ left: 300, right: 500 });
+        expect(divider.classList.contains("splitlayout-divider-active")).toBe(false);
+        expect(onResize).not.toHaveBeenCalled();
+        layout.destroy();
+    });
+
+    test("pointermove_AfterACancel_MovesNothing", () =>
+    {
+        const { layout, divider } = dragged();
+
+        press(divider, "pointercancel", 400);
+        press(divider, "pointermove", 450);
+
+        expect(layout.getSizes()).toEqual({ left: 300, right: 500 });
+        layout.destroy();
+    });
+});

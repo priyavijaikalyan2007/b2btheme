@@ -98,14 +98,39 @@ window.createStackLayout
 | Key | Action |
 |-----|--------|
 | Enter / Space | Toggle collapse on focused panel header |
+| Up / Down Arrow | Move a focused divider 10px in a vertical stack |
+| Left / Right Arrow | Move a focused divider 10px in a horizontal stack |
 | Tab | Move focus between panel headers and dividers |
+
+## Pointer and touch
+
+- **Drag a divider** to resize the expanded panels on each side of it. `onResize` reports the sizes on each move.
+- **A swipe across the divider still scrolls.** In a vertical stack the divider takes a vertical drag, and a horizontal swipe that starts on it scrolls (`touch-action: pan-x`). In a horizontal stack it is the other way (`pan-y`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. The panels go back to their sizes from before the drag, and `onResize` reports those sizes once.
+- **Double click or double tap a divider** to collapse or expand a panel beside it, as in SplitLayout. When only one of the two can collapse, it is that one. When both can, it is the smaller one, and a collapsed panel counts as the smallest. When neither can, nothing happens.
+- **Tap or click a header** to collapse or expand its panel.
+- **Under a coarse pointer** the divider's target is 44 CSS pixels across. The visible line stays 4px.
+- **The hover color** on a header or a divider shows only on a device with hover.
+- **Without a drag:** the arrow keys move a focused divider (#232), and `setSizes`, `collapsePanel` and `expandPanel` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Idle | Panels with their headers, and 4px dividers between them. |
+| Hover | The header or the divider changes color, on a device with hover. |
+| Focused | A focus ring on the header or the divider. |
+| Dragging | The divider in the primary color until the pointer lifts or the drag is canceled. |
+| Collapsed | Only the panel's header shows. In a horizontal stack it is a 32px strip. |
+
+The layout has no loading, empty, disabled or read-only state. Each panel's content shows its own.
 
 ## Accessibility
 
 - Panels have `role="region"` with `aria-label` from the panel title
 - Panel headers have `role="button"` with `aria-expanded`
 - Headers are focusable via `tabindex="0"` (when collapsible)
-- Dividers have `role="separator"` with `aria-orientation="horizontal"`
+- Dividers have `role="separator"` with `aria-orientation`, and `aria-valuenow` gives the size of the panel before the divider as a percentage
 - Dividers are focusable via `tabindex="0"` (when resizable)
 
 ## Visual Layout

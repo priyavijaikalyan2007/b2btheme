@@ -27,6 +27,7 @@ import
     codeLines,
     hoverOutsideHoverMedia,
     listensFor,
+    mixinHoverOutsideHoverMedia,
     runsDrag,
     startsHtmlDrag,
     usesGestureRecognizer,
@@ -180,6 +181,32 @@ describe("hoverOutsideHoverMedia", () =>
     {
         // A prelude resets at each `;`, so text before a declaration's end is not a selector.
         expect(hoverOutsideHoverMedia('.a { content: ":hover"; } .b { color: red; }')).toBe(0);
+    });
+});
+
+// #234. hover-glow wrote its rule into six components, and no per-component
+// count could see it.
+describe("mixinHoverOutsideHoverMedia", () =>
+{
+    test("AHoverRuleInAMixin_Counts", () =>
+    {
+        expect(mixinHoverOutsideHoverMedia("@mixin glow() { transition: none; &:hover { color: red; } }")).toBe(1);
+    });
+
+    test("AHoverRuleInAMixinInsideTheMediaBlock_DoesNotCount", () =>
+    {
+        expect(mixinHoverOutsideHoverMedia("@mixin glow() { @media (hover: hover) { &:hover { color: red; } } }"))
+            .toBe(0);
+    });
+
+    test("AGlobalHoverRuleOutsideAnyMixin_DoesNotCount", () =>
+    {
+        expect(mixinHoverOutsideHoverMedia(".btn:hover { color: red; } @mixin a() { color: blue; }")).toBe(0);
+    });
+
+    test("AHoverRuleAfterTheMixinCloses_DoesNotCount", () =>
+    {
+        expect(mixinHoverOutsideHoverMedia("@mixin a() { color: blue; } .b:hover { color: red; }")).toBe(0);
     });
 });
 

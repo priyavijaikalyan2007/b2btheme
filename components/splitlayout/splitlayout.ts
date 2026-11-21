@@ -434,6 +434,7 @@ export class SplitLayout implements SplitLayoutHandle
         div.addEventListener("pointerdown", (e) => this.onDividerPointerDown(e, index));
         div.addEventListener("pointermove", (e) => this.onDividerPointerMove(e));
         div.addEventListener("pointerup", (e) => this.onDividerPointerUp(e));
+        div.addEventListener("pointercancel", (e) => this.onDividerPointerCancel(e));
 
         // Keyboard events
         div.addEventListener("keydown", (e) => this.onDividerKeyDown(e, index));
@@ -721,6 +722,31 @@ export class SplitLayout implements SplitLayoutHandle
         this.activeDividerIndex = -1;
         this.fireOnResize();
         this.persistState();
+    }
+
+    /**
+     * Aborts a drag and restores the sizes from before it. The browser sends
+     * pointercancel when it takes the gesture for a scroll or a call arrives
+     * (TOUCH_EXPERIENCE.md section 9, item 5). Nothing changed, so neither
+     * onResize nor the persisted state hears of it.
+     */
+    private onDividerPointerCancel(e: PointerEvent): void
+    {
+        if (this.activeDividerIndex < 0)
+        {
+            return;
+        }
+
+        const index = this.activeDividerIndex;
+        const divider = this.dividers[index];
+        divider.releasePointerCapture(e.pointerId);
+        divider.classList.remove("splitlayout-divider-active");
+
+        this.panes[index].size = this.dragStartSizeA;
+        this.panes[index + 1].size = this.dragStartSizeB;
+        this.activeDividerIndex = -1;
+        this.applySizesToDom();
+        logDebug("Divider drag canceled. The sizes from before it are back:", { index });
     }
 
     /**

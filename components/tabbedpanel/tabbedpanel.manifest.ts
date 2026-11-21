@@ -96,6 +96,8 @@ export const TABBEDPANEL_MANIFEST: CapabilityManifest =
             minWidth: CONTAINED,
             maxWidth: CONTAINED,
             zIndex: CONTAINED,
+            tabMenu: "It needs contextmenu.js and gesturerecognizer.js on the page, which only the host can load. "
+                + "Without them the panel throws when it is created.",
             onTabSelect: "Fires as the active tab changes; that is view state, which activeTabId restores.",
             onTabDeselect: "Fires as the active tab changes; that is view state, which activeTabId restores.",
             onModeChange: "The panel cannot float or dock over A2UI, so its mode never changes.",

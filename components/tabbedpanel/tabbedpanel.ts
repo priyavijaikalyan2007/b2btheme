@@ -162,6 +162,16 @@ export interface TabbedPanelOptions
     /** Called when a tab close is requested. Return false to prevent close. */
     onTabClose?: (tabId: string, panel: TabbedPanel) => boolean | void;
 
+    /**
+     * Opens a menu on a tab with Close, Close others and Close to the right,
+     * which act on closable tabs. A long press opens it on touch, and a
+     * secondary click with a mouse or a pen (TOUCH_EXPERIENCE.md section
+     * 6.1). It needs ContextMenu and GestureRecognizer: load
+     * contextmenu.js and gesturerecognizer.js first, or creation throws.
+     * Default: false.
+     */
+    tabMenu?: boolean;
+
     /** Called when collapse state changes. */
     onCollapse?: (collapsed: boolean, panel: TabbedPanel) => void;
 
@@ -296,6 +306,28 @@ function setAttr(el: HTMLElement, name: string, value: string): void
 /**
  * Clamps a number between a minimum and maximum value.
  */
+/**
+ * The tab menu draws with ContextMenu and takes its long press from
+ * GestureRecognizer (TOUCH_EXPERIENCE.md section 9, item 3). A panel that
+ * asks for the menu without them fails here, at creation, and not at the
+ * first long press.
+ *
+ * @throws When contextmenu.js or gesturerecognizer.js is not loaded.
+ */
+function requireTabMenuScripts(): void
+{
+    const missing = [
+        typeof window.createContextMenu !== "function" ? "components/contextmenu/contextmenu.js" : "",
+        typeof window.createGestureRecognizer !== "function" ? "components/gesturerecognizer/gesturerecognizer.js" : "",
+    ].filter(Boolean);
+
+    if (missing.length > 0)
+    {
+        throw new Error(`${LOG_PREFIX} tabMenu needs ContextMenu and GestureRecognizer. Load `
+            + `${missing.join(" and ")} before tabbedpanel.js, or leave tabMenu off.`);
+    }
+}
+
 function clamp(value: number, min: number, max: number): number
 {
     return Math.max(min, Math.min(max, value));
@@ -439,6 +471,12 @@ export class TabbedPanel implements TabbedPanelHandle
     private titleBarEl: HTMLElement | null = null;
     private titleTextEl: HTMLElement | null = null;
     private tabBarEl: HTMLElement | null = null;
+    /** The long press on a tab, when `tabMenu` is on. */
+    private tabGestures: { destroy(): void } | null = null;
+    /** The open tab menu, closed when another opens or the panel goes. */
+    private tabMenuHandle: { close(): void } | null = null;
+    /** The pointer type of the last press on the tab bar, so a touch opens one menu. */
+    private lastTabPointerType = "";
     private contentEl: HTMLElement | null = null;
     private collapsedStripEl: HTMLElement | null = null;
     private collapseBtn: HTMLElement | null = null;
@@ -459,6 +497,7 @@ export class TabbedPanel implements TabbedPanelHandle
     // Bound event handlers for cleanup
     private boundDragMove: ((e: PointerEvent) => void) | null = null;
     private boundDragEnd: ((e: PointerEvent) => void) | null = null;
+    private boundDragCancel: ((e: PointerEvent) => void) | null = null;
 
     constructor(options: TabbedPanelOptions)
     {
@@ -503,6 +542,11 @@ export class TabbedPanel implements TabbedPanelHandle
         }
 
         this.contained = this.options.contained || false;
+
+        if (this.options.tabMenu)
+        {
+            requireTabMenuScripts();
+        }
 
         this.buildDOM();
 
@@ -617,6 +661,11 @@ export class TabbedPanel implements TabbedPanelHandle
             this.options.onClose(this);
         }
 
+        this.tabGestures?.destroy();
+        this.tabGestures = null;
+        this.tabMenuHandle?.close();
+        this.tabMenuHandle = null;
+
         // Null all DOM references
         this.rootEl = null;
         this.titleBarEl = null;
@@ -633,6 +682,7 @@ export class TabbedPanel implements TabbedPanelHandle
         this.resizeHandleCorner = null;
         this.boundDragMove = null;
         this.boundDragEnd = null;
+        this.boundDragCancel = null;
         this.tabButtonEls.clear();
         this.tabPanelEls.clear();
 
@@ -1500,7 +1550,99 @@ export class TabbedPanel implements TabbedPanelHandle
 
         bar.appendChild(barActions);
 
+        if (this.options.tabMenu)
+        {
+            this.attachTabMenu(bar);
+        }
+
         return bar;
+    }
+
+    /**
+     * The tab menu (TOUCH_EXPERIENCE.md section 6.1). A mouse or a pen
+     * opens it with a secondary click. A touch opens it with a long press
+     * from GestureRecognizer, and the contextmenu event that some browsers
+     * also send for a long press is ignored, so one menu opens (section 9,
+     * item 8).
+     */
+    private attachTabMenu(bar: HTMLElement): void
+    {
+        bar.addEventListener("pointerdown", (e) =>
+        {
+            this.lastTabPointerType = e.pointerType;
+        });
+
+        bar.addEventListener("contextmenu", (e) =>
+        {
+            const tabId = this.tabIdAt(e.target);
+
+            if (!tabId)
+            {
+                return;
+            }
+
+            e.preventDefault();
+
+            if (this.lastTabPointerType !== "touch")
+            {
+                this.openTabMenu(tabId, e.clientX, e.clientY);
+            }
+        });
+
+        this.tabGestures = window.createGestureRecognizer!(bar, {
+            accept: (e: PointerEvent) => e.pointerType === "touch" && this.tabIdAt(e.target) !== null,
+            onLongPress: (g) =>
+            {
+                const tabId = this.tabIdAt(g.event.target);
+
+                if (tabId)
+                {
+                    this.openTabMenu(tabId, g.x, g.y);
+                }
+            },
+        });
+    }
+
+    /** The id of the tab whose button holds an event target, or null. */
+    private tabIdAt(target: EventTarget | null): string | null
+    {
+        const btn = (target as Element | null)?.closest?.(".tabbedpanel-tab");
+
+        for (const [id, el] of this.tabButtonEls)
+        {
+            if (el === btn)
+            {
+                return id;
+            }
+        }
+
+        return null;
+    }
+
+    /** Opens the tab menu for one tab at a point. Each item acts on closable tabs only. */
+    private openTabMenu(tabId: string, x: number, y: number): void
+    {
+        const index = this.tabs.findIndex((t) => t.id === tabId);
+        const closable = (t: TabDefinition): boolean => t.closable === true && !t.disabled;
+        const others = this.tabs.filter((t) => t.id !== tabId && closable(t)).map((t) => t.id);
+        const right = this.tabs.slice(index + 1).filter(closable).map((t) => t.id);
+        const closeAll = (ids: string[]): void => ids.forEach((id) => this.removeTab(id));
+
+        this.tabMenuHandle?.close();
+        this.tabMenuHandle = window.createContextMenu!({
+            x,
+            y,
+            items: [
+                { id: "close", label: "Close", disabled: !closable(this.tabs[index]),
+                    onClick: () => this.removeTab(tabId) },
+                { id: "close-others", label: "Close others", disabled: others.length === 0,
+                    onClick: () => closeAll(others) },
+                { id: "close-right", label: "Close to the right", disabled: right.length === 0,
+                    onClick: () => closeAll(right) },
+            ],
+            onClose: () => { this.tabMenuHandle = null; },
+        });
+        logDebug("Tab menu opened:", tabId);
     }
 
     /**
@@ -1631,6 +1773,18 @@ export class TabbedPanel implements TabbedPanelHandle
             });
 
             btn.appendChild(closeBtn);
+
+            // A middle click closes a closable tab, as in a browser
+            // (TOUCH_EXPERIENCE.md section 6.1). Chromium sends no click for
+            // the middle button, only auxclick.
+            btn.addEventListener("auxclick", (e) =>
+            {
+                if (e.button === 1 && !tab.disabled)
+                {
+                    e.preventDefault();
+                    this.removeTab(tab.id);
+                }
+            });
         }
 
         // Tab click handler
@@ -2517,9 +2671,12 @@ export class TabbedPanel implements TabbedPanelHandle
             this.handleDragMove(ev);
         this.boundDragEnd = (ev: PointerEvent) =>
             this.handleDragEnd(ev, bar);
+        this.boundDragCancel = (ev: PointerEvent) =>
+            this.handleDragCancel(ev, bar);
 
         bar.addEventListener("pointermove", this.boundDragMove);
         bar.addEventListener("pointerup", this.boundDragEnd);
+        bar.addEventListener("pointercancel", this.boundDragCancel);
 
         TabbedPanelManager.getInstance().showDropZones();
     }
@@ -2552,6 +2709,43 @@ export class TabbedPanel implements TabbedPanelHandle
             return;
         }
 
+        this.stopDrag(e, bar);
+
+        const dockTarget = TabbedPanelManager.getInstance().getDockTarget(
+            e.clientY
+        );
+
+        TabbedPanelManager.getInstance().hideDropZones();
+
+        if (dockTarget)
+        {
+            this.dock(dockTarget);
+        }
+    }
+
+    /**
+     * Aborts a drag and puts the panel back where it was. The browser sends
+     * pointercancel when it takes the gesture for a scroll or a call arrives
+     * (TOUCH_EXPERIENCE.md section 9, item 5). The panel does not dock.
+     */
+    private handleDragCancel(e: PointerEvent, bar: HTMLElement): void
+    {
+        if (!this.isDragging)
+        {
+            return;
+        }
+
+        this.stopDrag(e, bar);
+        this.floatX = this.dragOrigX;
+        this.floatY = this.dragOrigY;
+        this.applyPositionStyles();
+        TabbedPanelManager.getInstance().hideDropZones();
+        logDebug("Drag canceled. The panel is back where it was:", this.instanceId);
+    }
+
+    /** Ends a title bar drag and removes its listeners. */
+    private stopDrag(e: PointerEvent, bar: HTMLElement): void
+    {
         this.isDragging = false;
         bar.releasePointerCapture(e.pointerId);
 
@@ -2565,15 +2759,9 @@ export class TabbedPanel implements TabbedPanelHandle
             bar.removeEventListener("pointerup", this.boundDragEnd);
         }
 
-        const dockTarget = TabbedPanelManager.getInstance().getDockTarget(
-            e.clientY
-        );
-
-        TabbedPanelManager.getInstance().hideDropZones();
-
-        if (dockTarget)
+        if (this.boundDragCancel)
         {
-            this.dock(dockTarget);
+            bar.removeEventListener("pointercancel", this.boundDragCancel);
         }
     }
 
@@ -2603,25 +2791,48 @@ export class TabbedPanel implements TabbedPanelHandle
             const startY = e.clientY;
             const startWidth = this.currentWidth;
             const startHeight = this.currentHeight;
+            const startFloatX = this.floatX;
 
             const onMove = (ev: PointerEvent) =>
             {
                 this.handleResizeMove(
                     ev, direction, startX, startY,
-                    startWidth, startHeight
+                    startWidth, startHeight, startFloatX
                 );
             };
 
-            const onUp = (ev: PointerEvent) =>
+            const stop = (ev: PointerEvent) =>
             {
                 handle.releasePointerCapture(ev.pointerId);
                 handle.removeEventListener("pointermove", onMove);
                 handle.removeEventListener("pointerup", onUp);
+                handle.removeEventListener("pointercancel", onCancel);
+            };
+
+            const onUp = (ev: PointerEvent) =>
+            {
+                stop(ev);
                 this.handleResizeEnd();
+            };
+
+            // TOUCH_EXPERIENCE.md section 9, item 5. The size and the
+            // position go back to where the resize began. onResize and the
+            // resize listeners hear only a finished resize, so they hear
+            // nothing.
+            const onCancel = (ev: PointerEvent) =>
+            {
+                stop(ev);
+                this.currentWidth = startWidth;
+                this.currentHeight = startHeight;
+                this.floatX = startFloatX;
+                this.applyPositionStyles();
+                this.updateResizeHandleAria();
+                logDebug("Resize canceled. The size is back where it was:", this.instanceId);
             };
 
             handle.addEventListener("pointermove", onMove);
             handle.addEventListener("pointerup", onUp);
+            handle.addEventListener("pointercancel", onCancel);
         });
 
         handle.addEventListener("keydown", (e) =>
@@ -2637,7 +2848,8 @@ export class TabbedPanel implements TabbedPanelHandle
         startX: number,
         startY: number,
         startWidth: number,
-        startHeight: number
+        startHeight: number,
+        startFloatX: number
     ): void
     {
         logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
@@ -2666,10 +2878,9 @@ export class TabbedPanel implements TabbedPanelHandle
                 this.options.maxWidth
             );
 
-            // Adjust X position so right edge stays fixed
-            this.floatX = startX + dx - (startX - this.dragOrigX);
-            const widthDiff = startWidth - this.currentWidth;
-            this.floatX = this.dragOrigX + widthDiff;
+            // Keep the right edge where it was when the resize began
+            // (#233). dragOrigX belongs to the last title bar drag.
+            this.floatX = startFloatX + (startWidth - this.currentWidth);
         }
 
         this.applyPositionStyles();

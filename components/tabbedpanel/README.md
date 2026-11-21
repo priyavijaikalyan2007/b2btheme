@@ -17,6 +17,7 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 - **Bootstrap CSS** — for SCSS variables (`$gray-*`, `$font-size-*`, etc.)
 - **Bootstrap Icons CSS** — for tab icons and action buttons
 - Does **not** require Bootstrap JS.
+- With `tabMenu: true` only: **ContextMenu** (`components/contextmenu/contextmenu.js`) and **GestureRecognizer** (`components/gesturerecognizer/gesturerecognizer.js`), loaded before `tabbedpanel.js`.
 
 ## Quick Start
 
@@ -71,6 +72,7 @@ A dockable, collapsible, resizable tabbed panel component for grouping related c
 | `onTabSelect` | `function` | — | Tab selection callback |
 | `onTabDeselect` | `function` | — | Tab deselection callback |
 | `onTabClose` | `function` | — | Tab close callback (return false to cancel) |
+| `tabMenu` | `boolean` | `false` | A menu on each tab with Close, Close others and Close to the right. Needs `contextmenu.js` and `gesturerecognizer.js`, or creation throws |
 | `onCollapse` | `function` | — | Collapse/expand callback |
 | `onResize` | `function` | — | Resize complete callback |
 | `onModeChange` | `function` | — | Mode change callback |
@@ -188,6 +190,32 @@ When docked, the panel sets a CSS custom property on `<html>`:
 | `--tabbedpanel-bottom-height` | Docked bottom |
 
 Properties are cleared when the panel is hidden or undocked.
+
+## Pointer and touch
+
+- **Tap or click a tab** to select it. A one-finger drag on the tab bar scrolls it.
+- **A middle click** on a closable tab closes it, through `onTabClose` as the close button does.
+- **The tab menu**, with `tabMenu: true`: a long press on a tab opens it on touch, and a secondary click with a mouse or a pen. It has **Close**, **Close others** and **Close to the right**, and each acts on closable tabs only. **Close** is off on a tab that cannot close. A browser that also sends `contextmenu` for the long press opens no second menu.
+- **Drag the title bar** of a floating panel to move it, or onto a dock zone to dock it. The title bar takes the touch at once (`touch-action: none`).
+- **Drag a resize handle** to change the size. A floating panel resized from its left edge keeps its right edge still (#233).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A title bar drag puts the panel back where it was and does not dock. A resize puts the size back, and `onResize` hears nothing, as it hears only a finished resize.
+- **The close button on a tab** shows on hover, on focus, and always on a device with no hover.
+- **Hover colors** show only on a device with hover. A scroll that reaches the end of the tab bar or a panel stays there.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float(x, y)`, `dock()` and `setHeight()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The panel at its edge of the window, with its tab bar. |
+| Floating | The panel over the page, with a title bar to move it by. |
+| Collapsed | Only a strip with the panel's title. |
+| Active tab | The tab's indicator, and its panel's content. |
+| Disabled tab | The tab is dimmed, and a click does not select it. |
+| Dragging | The dock zones show while a title bar drag is under way. |
+| Empty | A tab bar with no tabs, and an empty content area. |
+
+The panel has no loading or read-only state. Each tab's content shows its own.
 
 ## Keyboard Accessibility
 

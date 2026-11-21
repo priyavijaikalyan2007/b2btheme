@@ -436,6 +436,25 @@ Set `overflowPriority` on each tool to control which tools collapse first:
 
 Disable overflow with `overflow: false` in toolbar options.
 
+## Pointer and touch
+
+- **Drag the grip** to move a floating toolbar, or to undock a docked one and move it. Drop it on a dock zone to dock it. The grip takes the touch at once (`touch-action: none`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A floating toolbar goes back where it was. A toolbar that the drag undocked docks again where it was. Nothing is persisted.
+- **Drag the resize handle** to change the length. A canceled resize puts the length back, and `onResize` hears nothing.
+- **Hover colors and the glow** on a tool show only on a device with hover, so a tap does not leave a tool looking selected.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `applyLayoutState()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The toolbar along an edge of the window. |
+| Floating | The toolbar over the page, with a grip to move it by. |
+| Active tool | A toggle tool that is on shows the active color. |
+| Disabled tool | The tool is dimmed and does nothing. |
+| Overflow | Tools that do not fit move into the overflow menu. |
+| Dragging | The dock zones show while a grip drag is under way. |
+
 ## Keyboard Accessibility
 
 | Key | Action |

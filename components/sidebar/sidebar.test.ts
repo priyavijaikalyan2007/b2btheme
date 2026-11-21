@@ -562,3 +562,70 @@ describe("surface (ADR-244)", () =>
         sidebar.destroy();
     });
 });
+
+// ============================================================================
+// POINTER — a cancelled drag or resize (TOUCH_EXPERIENCE.md section 9, item 5)
+// ============================================================================
+
+describe("Sidebar floating pointer", () =>
+{
+    beforeEach(() =>
+    {
+        // jsdom has no pointer capture.
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+    });
+
+    function press(el: Element, type: string, clientX: number, clientY = 10): void
+    {
+        el.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", button: 0, clientX, clientY,
+        }));
+    }
+
+    function floating(overrides?: Partial<SidebarOptions>): { sidebar: Sidebar; root: HTMLElement }
+    {
+        const sidebar = createSidebar(makeOptions({
+            contained: false, mode: "floating", floatX: 400, floatY: 200, width: 280, ...overrides,
+        }), container);
+        return { sidebar, root: sidebar.getRootElement()! };
+    }
+
+    test("titleBarDrag_pointercancel_PutsThePanelBack", () =>
+    {
+        const { sidebar, root } = floating();
+        const bar = root.querySelector(".sidebar-titlebar")!;
+
+        press(bar, "pointerdown", 450, 210);
+        press(bar, "pointermove", 600, 300);
+        expect(root.style.left).toBe("550px");
+
+        press(bar, "pointercancel", 600, 300);
+
+        expect(root.style.left).toBe("400px");
+        expect(root.style.top).toBe("200px");
+        press(bar, "pointermove", 700, 400);
+        expect(root.style.left).toBe("400px");
+        sidebar.destroy();
+    });
+
+    test("resize_pointercancel_PutsTheWidthBack_AndReportsNothing", () =>
+    {
+        const onResize = vi.fn();
+        const heard = vi.fn();
+        const { sidebar, root } = floating({ onResize });
+        sidebar.on("resize", heard);
+        const handle = root.querySelector(".sidebar-resize-handle-h")!;
+
+        press(handle, "pointerdown", 680);
+        press(handle, "pointermove", 720);
+        expect(sidebar.getWidth()).toBe(320);
+
+        press(handle, "pointercancel", 720);
+
+        expect(sidebar.getWidth()).toBe(280);
+        expect(onResize).not.toHaveBeenCalled();
+        expect(heard).not.toHaveBeenCalled();
+        sidebar.destroy();
+    });
+});

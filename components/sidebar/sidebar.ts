@@ -409,6 +409,7 @@ export class Sidebar implements SidebarHandle
     // Bound event handlers for cleanup
     private boundDragMove: ((e: PointerEvent) => void) | null = null;
     private boundDragEnd: ((e: PointerEvent) => void) | null = null;
+    private boundDragCancel: ((e: PointerEvent) => void) | null = null;
 
     constructor(options: SidebarOptions)
     {
@@ -573,6 +574,7 @@ export class Sidebar implements SidebarHandle
         this.resizeHandleCorner = null;
         this.boundDragMove = null;
         this.boundDragEnd = null;
+        this.boundDragCancel = null;
 
         logDebug("Destroyed:", this.instanceId);
     }
@@ -1605,9 +1607,14 @@ export class Sidebar implements SidebarHandle
         {
             this.handleDragEnd(ev, bar);
         };
+        this.boundDragCancel = (ev: PointerEvent) =>
+        {
+            this.handleDragCancel(ev, bar);
+        };
 
         bar.addEventListener("pointermove", this.boundDragMove);
         bar.addEventListener("pointerup", this.boundDragEnd);
+        bar.addEventListener("pointercancel", this.boundDragCancel);
 
         // Show dock zone indicators
         SidebarManager.getInstance().showDropZones();
@@ -1650,6 +1657,44 @@ export class Sidebar implements SidebarHandle
             return;
         }
 
+        this.stopDrag(e, bar);
+
+        // Check if we should dock
+        const dockTarget = SidebarManager.getInstance().getDockTarget(
+            e.clientX
+        );
+
+        SidebarManager.getInstance().hideDropZones();
+
+        if (dockTarget)
+        {
+            this.dock(dockTarget);
+        }
+    }
+
+    /**
+     * Aborts a drag and puts the panel back where it was. The browser sends
+     * pointercancel when it takes the gesture for a scroll or a call arrives
+     * (TOUCH_EXPERIENCE.md section 9, item 5). The panel does not dock.
+     */
+    private handleDragCancel(e: PointerEvent, bar: HTMLElement): void
+    {
+        if (!this.isDragging)
+        {
+            return;
+        }
+
+        this.stopDrag(e, bar);
+        this.floatX = this.dragOrigX;
+        this.floatY = this.dragOrigY;
+        this.applyPositionStyles();
+        SidebarManager.getInstance().hideDropZones();
+        logDebug("Drag canceled. The panel is back where it was:", this.instanceId);
+    }
+
+    /** Ends a title bar drag and removes its listeners. */
+    private stopDrag(e: PointerEvent, bar: HTMLElement): void
+    {
         this.isDragging = false;
         bar.releasePointerCapture(e.pointerId);
 
@@ -1663,16 +1708,9 @@ export class Sidebar implements SidebarHandle
             bar.removeEventListener("pointerup", this.boundDragEnd);
         }
 
-        // Check if we should dock
-        const dockTarget = SidebarManager.getInstance().getDockTarget(
-            e.clientX
-        );
-
-        SidebarManager.getInstance().hideDropZones();
-
-        if (dockTarget)
+        if (this.boundDragCancel)
         {
-            this.dock(dockTarget);
+            bar.removeEventListener("pointercancel", this.boundDragCancel);
         }
     }
 
@@ -1714,16 +1752,36 @@ export class Sidebar implements SidebarHandle
                 );
             };
 
-            const onUp = (ev: PointerEvent) =>
+            const stop = (ev: PointerEvent) =>
             {
                 handle.releasePointerCapture(ev.pointerId);
                 handle.removeEventListener("pointermove", onMove);
                 handle.removeEventListener("pointerup", onUp);
+                handle.removeEventListener("pointercancel", onCancel);
+            };
+
+            const onUp = (ev: PointerEvent) =>
+            {
+                stop(ev);
                 this.handleResizeEnd();
+            };
+
+            // TOUCH_EXPERIENCE.md section 9, item 5. The size goes back to
+            // where the resize began. onResize and the resize listeners
+            // hear only a finished resize, so they hear nothing.
+            const onCancel = (ev: PointerEvent) =>
+            {
+                stop(ev);
+                this.currentWidth = startWidth;
+                this.currentHeight = startHeight;
+                this.applyPositionStyles();
+                this.updateResizeHandleAria();
+                logDebug("Resize canceled. The size is back where it was:", this.instanceId);
             };
 
             handle.addEventListener("pointermove", onMove);
             handle.addEventListener("pointerup", onUp);
+            handle.addEventListener("pointercancel", onCancel);
         });
 
         // Keyboard resize for accessibility

@@ -760,3 +760,82 @@ describe("toolClick (ADR-245)", () =>
         tb.destroy();
     });
 });
+
+// ============================================================================
+// POINTER — a cancelled drag or resize (TOUCH_EXPERIENCE.md section 9, item 5)
+// ============================================================================
+
+describe("Toolbar pointer cancel", () =>
+{
+    beforeEach(() =>
+    {
+        // jsdom has no pointer capture.
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+    });
+
+    function press(el: Element, type: string, clientX: number, clientY = 10): void
+    {
+        el.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", button: 0, clientX, clientY,
+        }));
+    }
+
+    test("gripDrag_pointercancel_PutsAFloatingToolbarBack", () =>
+    {
+        const tb = new Toolbar(makeOptions({ contained: false, mode: "floating", floatX: 300, floatY: 150 }));
+        tb.show(container);
+        const root = tb.getElement()!;
+        const grip = root.querySelector(".toolbar-grip")!;
+
+        press(grip, "pointerdown", 310, 160);
+        press(grip, "pointermove", 410, 200);
+        expect(root.style.left).toBe("400px");
+
+        press(grip, "pointercancel", 410, 200);
+
+        expect(root.style.left).toBe("300px");
+        expect(root.style.top).toBe("150px");
+        expect(tb.getMode()).toBe("floating");
+        tb.destroy();
+    });
+
+    test("gripDrag_pointercancel_DocksAToolbarTheDragUndocked", () =>
+    {
+        const onModeChange = vi.fn();
+        const tb = new Toolbar(makeOptions({ contained: false, mode: "docked", dockPosition: "top", onModeChange }));
+        tb.show(container);
+        const grip = tb.getElement()!.querySelector(".toolbar-grip")!;
+
+        press(grip, "pointerdown", 30, 10);
+        expect(tb.getMode()).toBe("floating");
+        press(grip, "pointermove", 200, 300);
+
+        press(grip, "pointercancel", 200, 300);
+
+        expect(tb.getMode()).toBe("docked");
+        expect(tb.getDockPosition()).toBe("top");
+        expect(onModeChange).toHaveBeenLastCalledWith("docked");
+        tb.destroy();
+    });
+
+    test("resize_pointercancel_PutsTheSizeBack_AndReportsNothing", () =>
+    {
+        const onResize = vi.fn();
+        const tb = new Toolbar(makeOptions({ contained: false, mode: "floating", floatX: 300, floatY: 150, onResize }));
+        tb.show(container);
+        const root = tb.getElement()!;
+        tb.applyLayoutState({ ...tb.getLayoutState(), size: 400 });
+        const handle = root.querySelector(".toolbar-resize-handle")!;
+
+        press(handle, "pointerdown", 700);
+        press(handle, "pointermove", 760);
+        expect(root.style.width).toBe("460px");
+
+        press(handle, "pointercancel", 760);
+
+        expect(root.style.width).toBe("400px");
+        expect(onResize).not.toHaveBeenCalled();
+        tb.destroy();
+    });
+});

@@ -75,9 +75,14 @@
 {
     transition: box-shadow 150ms ease, border-color 150ms ease;
 
-    &:hover
+    // TOUCH_EXPERIENCE.md section 9, item 10 (#234). On a touch screen a tap
+    // would leave the glow on, so the control would look selected.
+    @media (hover: hover)
     {
-        box-shadow: 0 0 $radius var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            box-shadow: 0 0 $radius var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 }
 

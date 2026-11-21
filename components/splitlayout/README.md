@@ -124,6 +124,28 @@ Supports pixels (`200`), percentages (`"30%"`), and fractional units (`"1fr"`).
 | End | Collapse the right/bottom adjacent pane |
 | Enter | Toggle collapse on the smaller adjacent pane |
 
+## Pointer and touch
+
+- **Drag a divider** to resize the two panes beside it. The divider captures the pointer, so the drag goes on when the pointer leaves it. `onResize` reports the sizes when the pointer lifts.
+- **A swipe across the divider still scrolls.** A divider between side-by-side panes takes a horizontal drag, and a vertical swipe that starts on it scrolls the page (`touch-action: pan-y`). A divider between stacked panes takes a vertical drag (`pan-x`).
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. The panes go back to their sizes from before the drag, and neither `onResize` nor the persisted state hears of it.
+- **Double click or double tap a divider** to collapse or expand the pane beside it that is `collapsible`. When both are, it is the smaller pane. When neither is, nothing happens.
+- **Under a coarse pointer** the divider's target is 44 CSS pixels across. The visible line keeps its size.
+- **The hover color** shows only on a device with hover, so a tap does not leave it behind.
+- **Without a drag:** the arrow keys move a focused divider, and `setSizes`, `collapsePane` and `expandPane` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Idle | A thin divider between the panes. |
+| Hover | The divider darkens and glows, on a device with hover. |
+| Focused | A focus ring on the divider. |
+| Dragging | The divider in the primary color until the pointer lifts or the drag is canceled. |
+| Collapsed | The pane has no size, and the divider sits at the edge. |
+
+The layout has no loading, empty, disabled or read-only state. Each pane's content shows its own.
+
 ## Accessibility
 
 - Dividers have `role="separator"` with `aria-orientation`, `aria-valuenow/min/max`

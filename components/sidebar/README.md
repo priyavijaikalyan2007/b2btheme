@@ -185,6 +185,25 @@ In floating mode, dragging the sidebar near a viewport edge (within 40px) shows 
 | StatusBar | 1040 |
 | Bootstrap modals | 1050+ |
 
+## Pointer and touch
+
+- **Drag the title bar** of a floating sidebar to move it, or onto a dock zone to dock it. The title bar takes the touch at once (`touch-action: none`).
+- **Drag a resize handle** to change the width or the height.
+- **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A title bar drag puts the panel back where it was and does not dock. A resize puts the size back, and `onResize` hears nothing, as it hears only a finished resize.
+- **Hover colors** show only on a device with hover. A scroll that reaches the end of the content or the tab bar stays there and does not move the page.
+- **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `setWidth()` do it from code.
+
+## States
+
+| State | What a person sees |
+|---|---|
+| Docked | The sidebar at the left or right edge, beside the page. |
+| Floating | The sidebar over the page, with a title bar to move it by. |
+| Collapsed | A narrow strip with the sidebar's icon and title. |
+| Dragging | The dock zones show while a title bar drag is under way. |
+
+The sidebar has no loading, empty, disabled or read-only state. Its content shows its own.
+
 ## Accessibility
 
 - Root: `role="complementary"` with descriptive `aria-label`
