@@ -28,6 +28,12 @@
  * a `:hover` rule from TypeScript on 18 November 2026, so the hover count
  * reads SCSS only.
  *
+ * A MIXIN writes its rules into each component that includes it, and the
+ * per-directory file set cannot see them. hover-glow in src/scss/_chrome.scss
+ * kept its glow after a tap in six components for that reason (#234). So
+ * `mixinHoverRules` counts the `:hover` rules inside an `@mixin` in the
+ * tracked partials of `src/scss/`, outside a hover query.
+ *
  * THE PATTERNS. A listener is an event name in quotes followed by a comma,
  * as in `addEventListener("pointerdown", fn)` and `this.listen(el,
  * "pointerdown", fn)`, or an `on<name> =` property. A line whose trimmed
@@ -143,6 +149,45 @@ export function hoverOutsideHoverMedia(scss)
         {
             const insideHoverMedia = stack.some((p) => /@media[^{]*\((any-)?hover\s*:\s*hover\)/.test(p));
             if (!insideHoverMedia && prelude.includes(":hover")) { count += 1; }
+            stack.push(prelude);
+            prelude = "";
+        }
+        else if (c === "}")
+        {
+            stack.pop();
+            prelude = "";
+        }
+        else if (c === ";")
+        {
+            prelude = "";
+        }
+        else
+        {
+            prelude += c;
+        }
+    }
+    return count;
+}
+
+/**
+ * The `:hover` rules that an `@mixin` writes outside a hover media query
+ * (#234). A rule outside every mixin is the partial's own global style, and
+ * the per-component count does not cover those either way.
+ */
+export function mixinHoverOutsideHoverMedia(scss)
+{
+    const text = stripScssComments(scss);
+    const stack = [];
+    let prelude = "";
+    let count = 0;
+
+    for (const c of text)
+    {
+        if (c === "{")
+        {
+            const inMixin = stack.some((p) => /^\s*@mixin\b/.test(p));
+            const insideHoverMedia = stack.some((p) => /@media[^{]*\((any-)?hover\s*:\s*hover\)/.test(p));
+            if (inMixin && !insideHoverMedia && prelude.includes(":hover")) { count += 1; }
             stack.push(prelude);
             prelude = "";
         }
@@ -280,6 +325,10 @@ export function measureTouch()
         }
         result.hoverRules += c.hoverOutsideMediaRules;
     }
+
+    result.mixinHoverRules = execFileSync("git", ["ls-files", "src/scss/*.scss"], { encoding: "utf8" })
+        .split("\n").filter(Boolean)
+        .reduce((sum, f) => sum + mixinHoverOutsideHoverMedia(readFileSync(f, "utf8")), 0);
     return result;
 }
 
@@ -288,6 +337,7 @@ if (import.meta.url === `file://${process.argv[1]}`)
     const r = measureTouch();
     console.log(`component directories: ${r.directories}`);
     console.log(`:hover rules outside @media (hover: hover): ${r.hoverRules}`);
+    console.log(`:hover rules a src/scss mixin writes outside @media (hover: hover): ${r.mixinHoverRules}`);
     for (const [key, label] of COUNTS)
     {
         console.log(`\n${label}: ${r[key].length}`);

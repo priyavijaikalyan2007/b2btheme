@@ -768,6 +768,10 @@ export const BASELINES = {
     touchContextmenuOnly: 7,
     touchHtmlDrag: 6,
     touchDragNoTouchAction: 22,
+    // #234. A shared mixin writes its :hover rule into every component that
+    // includes it, where the per-component count cannot see it. hover-glow did,
+    // in six components. Zero, and it stays zero.
+    touchMixinHoverRules: 0,
     // DEBT-TEST-1, ADR-196. A test block with no expect() at all. It
     // passes unless the code under it throws, and every one of the 21
     // was named for a behaviour: setFilters_UpdatesFilterState,
@@ -1996,6 +2000,7 @@ function measure()
     counts.touchContextmenuOnly = touch.contextmenuOnly.length;
     counts.touchHtmlDrag = touch.htmlDrag.length;
     counts.touchDragNoTouchAction = touch.dragNoTouchAction.length;
+    counts.touchMixinHoverRules = touch.mixinHoverRules;
 
     return { counts, consoleLogKinds, windowCastKinds, callSites, nonConforming, unmarked, fileCount: files.length };
 }

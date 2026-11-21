@@ -459,6 +459,7 @@ export class TabbedPanel implements TabbedPanelHandle
     // Bound event handlers for cleanup
     private boundDragMove: ((e: PointerEvent) => void) | null = null;
     private boundDragEnd: ((e: PointerEvent) => void) | null = null;
+    private boundDragCancel: ((e: PointerEvent) => void) | null = null;
 
     constructor(options: TabbedPanelOptions)
     {
@@ -633,6 +634,7 @@ export class TabbedPanel implements TabbedPanelHandle
         this.resizeHandleCorner = null;
         this.boundDragMove = null;
         this.boundDragEnd = null;
+        this.boundDragCancel = null;
         this.tabButtonEls.clear();
         this.tabPanelEls.clear();
 
@@ -2517,9 +2519,12 @@ export class TabbedPanel implements TabbedPanelHandle
             this.handleDragMove(ev);
         this.boundDragEnd = (ev: PointerEvent) =>
             this.handleDragEnd(ev, bar);
+        this.boundDragCancel = (ev: PointerEvent) =>
+            this.handleDragCancel(ev, bar);
 
         bar.addEventListener("pointermove", this.boundDragMove);
         bar.addEventListener("pointerup", this.boundDragEnd);
+        bar.addEventListener("pointercancel", this.boundDragCancel);
 
         TabbedPanelManager.getInstance().showDropZones();
     }
@@ -2552,6 +2557,43 @@ export class TabbedPanel implements TabbedPanelHandle
             return;
         }
 
+        this.stopDrag(e, bar);
+
+        const dockTarget = TabbedPanelManager.getInstance().getDockTarget(
+            e.clientY
+        );
+
+        TabbedPanelManager.getInstance().hideDropZones();
+
+        if (dockTarget)
+        {
+            this.dock(dockTarget);
+        }
+    }
+
+    /**
+     * Aborts a drag and puts the panel back where it was. The browser sends
+     * pointercancel when it takes the gesture for a scroll or a call arrives
+     * (TOUCH_EXPERIENCE.md section 9, item 5). The panel does not dock.
+     */
+    private handleDragCancel(e: PointerEvent, bar: HTMLElement): void
+    {
+        if (!this.isDragging)
+        {
+            return;
+        }
+
+        this.stopDrag(e, bar);
+        this.floatX = this.dragOrigX;
+        this.floatY = this.dragOrigY;
+        this.applyPositionStyles();
+        TabbedPanelManager.getInstance().hideDropZones();
+        logDebug("Drag canceled. The panel is back where it was:", this.instanceId);
+    }
+
+    /** Ends a title bar drag and removes its listeners. */
+    private stopDrag(e: PointerEvent, bar: HTMLElement): void
+    {
         this.isDragging = false;
         bar.releasePointerCapture(e.pointerId);
 
@@ -2565,15 +2607,9 @@ export class TabbedPanel implements TabbedPanelHandle
             bar.removeEventListener("pointerup", this.boundDragEnd);
         }
 
-        const dockTarget = TabbedPanelManager.getInstance().getDockTarget(
-            e.clientY
-        );
-
-        TabbedPanelManager.getInstance().hideDropZones();
-
-        if (dockTarget)
+        if (this.boundDragCancel)
         {
-            this.dock(dockTarget);
+            bar.removeEventListener("pointercancel", this.boundDragCancel);
         }
     }
 
@@ -2603,25 +2639,48 @@ export class TabbedPanel implements TabbedPanelHandle
             const startY = e.clientY;
             const startWidth = this.currentWidth;
             const startHeight = this.currentHeight;
+            const startFloatX = this.floatX;
 
             const onMove = (ev: PointerEvent) =>
             {
                 this.handleResizeMove(
                     ev, direction, startX, startY,
-                    startWidth, startHeight
+                    startWidth, startHeight, startFloatX
                 );
             };
 
-            const onUp = (ev: PointerEvent) =>
+            const stop = (ev: PointerEvent) =>
             {
                 handle.releasePointerCapture(ev.pointerId);
                 handle.removeEventListener("pointermove", onMove);
                 handle.removeEventListener("pointerup", onUp);
+                handle.removeEventListener("pointercancel", onCancel);
+            };
+
+            const onUp = (ev: PointerEvent) =>
+            {
+                stop(ev);
                 this.handleResizeEnd();
+            };
+
+            // TOUCH_EXPERIENCE.md section 9, item 5. The size and the
+            // position go back to where the resize began. onResize and the
+            // resize listeners hear only a finished resize, so they hear
+            // nothing.
+            const onCancel = (ev: PointerEvent) =>
+            {
+                stop(ev);
+                this.currentWidth = startWidth;
+                this.currentHeight = startHeight;
+                this.floatX = startFloatX;
+                this.applyPositionStyles();
+                this.updateResizeHandleAria();
+                logDebug("Resize canceled. The size is back where it was:", this.instanceId);
             };
 
             handle.addEventListener("pointermove", onMove);
             handle.addEventListener("pointerup", onUp);
+            handle.addEventListener("pointercancel", onCancel);
         });
 
         handle.addEventListener("keydown", (e) =>
@@ -2637,7 +2696,8 @@ export class TabbedPanel implements TabbedPanelHandle
         startX: number,
         startY: number,
         startWidth: number,
-        startHeight: number
+        startHeight: number,
+        startFloatX: number
     ): void
     {
         logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
@@ -2666,10 +2726,9 @@ export class TabbedPanel implements TabbedPanelHandle
                 this.options.maxWidth
             );
 
-            // Adjust X position so right edge stays fixed
-            this.floatX = startX + dx - (startX - this.dragOrigX);
-            const widthDiff = startWidth - this.currentWidth;
-            this.floatX = this.dragOrigX + widthDiff;
+            // Keep the right edge where it was when the resize began
+            // (#233). dragOrigX belongs to the last title bar drag.
+            this.floatX = startFloatX + (startWidth - this.currentWidth);
         }
 
         this.applyPositionStyles();

@@ -530,3 +530,104 @@ describe("TabbedPanel surface", () =>
         panel.destroy();
     });
 });
+
+// ============================================================================
+// POINTER — a cancelled drag or resize (TOUCH_EXPERIENCE.md section 9, item 5)
+// ============================================================================
+
+describe("TabbedPanel floating pointer", () =>
+{
+    beforeEach(() =>
+    {
+        // jsdom has no pointer capture.
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+    });
+
+    function press(el: Element, type: string, clientX: number, clientY = 10): void
+    {
+        el.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", button: 0, clientX, clientY,
+        }));
+    }
+
+    function floating(overrides?: Partial<TabbedPanelOptions>): { panel: TabbedPanel; root: HTMLElement }
+    {
+        const panel = createTabbedPanel(makeOptions({
+            contained: false, mode: "floating", floatX: 400, floatY: 200, ...overrides,
+        }), container);
+        return { panel, root: panel.getRootElement()! };
+    }
+
+    test("titleBarDrag_pointercancel_PutsThePanelBack", () =>
+    {
+        const { panel, root } = floating();
+        const bar = root.querySelector(".tabbedpanel-titlebar")!;
+
+        press(bar, "pointerdown", 450, 210);
+        press(bar, "pointermove", 600, 300);
+        expect(root.style.left).toBe("550px");
+
+        press(bar, "pointercancel", 600, 300);
+
+        expect(root.style.left).toBe("400px");
+        expect(root.style.top).toBe("200px");
+        press(bar, "pointermove", 700, 400);
+        expect(root.style.left).toBe("400px");
+        panel.destroy();
+    });
+
+    test("resize_pointercancel_PutsTheSizeBack_AndReportsNothing", () =>
+    {
+        const onResize = vi.fn();
+        const { panel, root } = floating({ onResize });
+        const width = panel.getWidth();
+        const handle = root.querySelector(".tabbedpanel-resize-handle-h-right")!;
+
+        press(handle, "pointerdown", 700);
+        press(handle, "pointermove", 760);
+        expect(panel.getWidth()).toBe(width + 60);
+
+        press(handle, "pointercancel", 760);
+
+        expect(panel.getWidth()).toBe(width);
+        expect(root.style.width).toBe(`${width}px`);
+        expect(onResize).not.toHaveBeenCalled();
+        panel.destroy();
+    });
+
+    // #233. The left edge was placed from the last title bar drag, which
+    // for a panel never dragged is 0.
+    test("leftEdgeResize_KeepsTheRightEdgeWhereItWas_ForAPanelNeverDragged", () =>
+    {
+        const { panel, root } = floating();
+        const width = panel.getWidth();
+        const handle = root.querySelector(".tabbedpanel-resize-handle-h-left")!;
+
+        press(handle, "pointerdown", 400);
+        press(handle, "pointermove", 380);
+
+        expect(panel.getWidth()).toBe(width + 20);
+        expect(root.style.left).toBe("380px");
+        panel.destroy();
+    });
+
+    test("leftEdgeResize_AfterATitleBarDrag_StartsFromWhereThePanelIsNow", () =>
+    {
+        const { panel, root } = floating();
+        const bar = root.querySelector(".tabbedpanel-titlebar")!;
+        press(bar, "pointerdown", 450, 210);
+        press(bar, "pointermove", 650, 210);
+        press(bar, "pointerup", 650, 210);
+        expect(root.style.left).toBe("600px");
+
+        const handle = root.querySelector(".tabbedpanel-resize-handle-h-left")!;
+        press(handle, "pointerdown", 600);
+        press(handle, "pointermove", 590);
+
+        expect(root.style.left).toBe("590px");
+        press(handle, "pointercancel", 590);
+        expect(root.style.left).toBe("600px");
+        panel.destroy();
+    });
+});

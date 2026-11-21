@@ -136,11 +136,17 @@ $toolbar-transition-fade:   200ms;
 // ============================================================================
 
 // Dotted pattern strip indicating draggability
+// The grip is a drag handle, so it takes the touch at once. Without
+// touch-action the browser takes the drag for a page scroll
+// (TOUCH_EXPERIENCE.md section 9, the touch-action table).
 .toolbar-grip {
     flex-shrink: 0;
     background-image: radial-gradient(circle, $gray-400 1px, transparent 1px);
     background-size: 4px 4px;
     cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
     &:active { cursor: grabbing; }
 }
 
@@ -515,7 +521,7 @@ $toolbar-transition-fade:   200ms;
     position: relative;
     @include hover-glow(6px);
 
-    &:hover        { background-color: var(--theme-active-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-active-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -545,7 +551,7 @@ $toolbar-transition-fade:   200ms;
 .toolbar-tool-active {
     background-color: $blue-100;
     color: $blue-700;
-    &:hover { background-color: $blue-200; }
+    @media (hover: hover) { &:hover { background-color: $blue-200; } }
 }
 
 // Disabled — muted, no interaction
@@ -583,7 +589,7 @@ $toolbar-transition-fade:   200ms;
     flex-shrink: 0;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: var(--theme-active-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-active-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -615,7 +621,7 @@ $toolbar-transition-fade:   200ms;
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover         { background-color: var(--theme-hover-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-hover-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
     i { flex-shrink: 0; font-size: $toolbar-icon-size; color: var(--theme-text-secondary); }
 }
@@ -650,6 +656,9 @@ $toolbar-transition-fade:   200ms;
     z-index: $toolbar-z-dropdown;
     max-height: 240px;
     overflow-y: auto;
+    // A scroll that reaches the end stays here and does not move the page
+    // behind it (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .toolbar-gallery-grid {
@@ -675,7 +684,7 @@ $toolbar-transition-fade:   200ms;
     cursor: pointer;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: var(--theme-hover-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-hover-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -1px; }
 }
 
@@ -716,7 +725,7 @@ $toolbar-transition-fade:   200ms;
     flex-shrink: 0;
     transition: background-color $toolbar-transition-fast ease;
 
-    &:hover         { background-color: var(--theme-active-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-active-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
 }
 
@@ -749,7 +758,7 @@ $toolbar-transition-fade:   200ms;
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover         { background-color: var(--theme-hover-bg); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-hover-bg); } }
     &:focus-visible { outline: 2px solid $blue-400; outline-offset: -2px; }
     i { flex-shrink: 0; font-size: $toolbar-icon-size; color: var(--theme-text-secondary); }
 }
@@ -824,8 +833,9 @@ $toolbar-transition-fade:   200ms;
     background: transparent;
     flex-shrink: 0;
     touch-action: none;
+    -webkit-touch-callout: none;
 
-    &:hover        { background-color: $blue-400; opacity: 0.4; }
+    @media (hover: hover) { &:hover { background-color: $blue-400; opacity: 0.4; } }
     &:active       { background-color: $blue-500; opacity: 0.5; }
     &:focus-visible { background-color: $blue-400; opacity: 0.6; outline: none; }
 }

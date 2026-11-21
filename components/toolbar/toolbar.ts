@@ -1204,6 +1204,9 @@ export class Toolbar implements ToolbarHandle
     // Bound event handlers for cleanup
     private boundDragMove: ((e: PointerEvent) => void) | null = null;
     private boundDragEnd: ((e: PointerEvent) => void) | null = null;
+    private boundDragCancel: ((e: PointerEvent) => void) | null = null;
+    /** Where a grip drag undocked the toolbar from, for a cancel to dock it back. */
+    private dragUndockedFrom: { position: ToolbarDockPosition; size: number } | null = null;
     private boundClickOutside: ((e: PointerEvent) => void) | null = null;
     private boundKeyDown: ((e: KeyboardEvent) => void) | null = null;
 
@@ -1400,6 +1403,7 @@ export class Toolbar implements ToolbarHandle
         this.galleryPopupEls.clear();
         this.boundDragMove = null;
         this.boundDragEnd = null;
+        this.boundDragCancel = null;
 
         logDebug("Destroyed:", this.toolbarId);
     }
@@ -3939,6 +3943,7 @@ export class Toolbar implements ToolbarHandle
 
             if (this.currentMode === "docked")
             {
+                this.dragUndockedFrom = { position: this.currentDockPosition, size: this.currentSize };
                 this.undockAtPointer(e);
             }
 
@@ -4015,8 +4020,14 @@ export class Toolbar implements ToolbarHandle
             this.handleDragEnd(ev, grip);
         };
 
+        this.boundDragCancel = (ev: PointerEvent) =>
+        {
+            this.handleDragCancel(ev, grip);
+        };
+
         grip.addEventListener("pointermove", this.boundDragMove);
         grip.addEventListener("pointerup", this.boundDragEnd);
+        grip.addEventListener("pointercancel", this.boundDragCancel);
     }
 
     /**
@@ -4062,7 +4073,60 @@ export class Toolbar implements ToolbarHandle
             return;
         }
 
+        this.stopDrag(e, grip);
+
+        // Check for dock zone snap
+        const dockTarget = this.getDockTarget(e.clientX, e.clientY);
+        this.removeDockZones();
+
+        if (dockTarget)
+        {
+            this.dock(dockTarget);
+        }
+        else if (this.opts.persistLayout)
+        {
+            this.debouncedPersist();
+        }
+    }
+
+    /**
+     * Aborts a drag and puts the toolbar back where it was. The browser
+     * sends pointercancel when it takes the gesture for a scroll or a call
+     * arrives (TOUCH_EXPERIENCE.md section 9, item 5). A toolbar that the
+     * drag undocked docks again where it was, at its size. A floating one
+     * goes back to its position, and nothing is persisted.
+     */
+    private handleDragCancel(e: PointerEvent, grip: HTMLElement): void
+    {
+        if (!this.isDragging)
+        {
+            return;
+        }
+
+        const undocked = this.dragUndockedFrom;
+        this.stopDrag(e, grip);
+        this.removeDockZones();
+
+        if (undocked)
+        {
+            this.currentSize = undocked.size;
+            this.dock(undocked.position);
+        }
+        else
+        {
+            this.floatX = this.dragOrigX;
+            this.floatY = this.dragOrigY;
+            this.applyPositionStyles();
+        }
+
+        logDebug("Drag canceled. The toolbar is back where it was:", this.toolbarId);
+    }
+
+    /** Ends a grip drag and removes its listeners. */
+    private stopDrag(e: PointerEvent, grip: HTMLElement): void
+    {
         this.isDragging = false;
+        this.dragUndockedFrom = null;
         grip.releasePointerCapture(e.pointerId);
         grip.style.cursor = "";
 
@@ -4076,17 +4140,9 @@ export class Toolbar implements ToolbarHandle
             grip.removeEventListener("pointerup", this.boundDragEnd);
         }
 
-        // Check for dock zone snap
-        const dockTarget = this.getDockTarget(e.clientX, e.clientY);
-        this.removeDockZones();
-
-        if (dockTarget)
+        if (this.boundDragCancel)
         {
-            this.dock(dockTarget);
-        }
-        else if (this.opts.persistLayout)
-        {
-            this.debouncedPersist();
+            grip.removeEventListener("pointercancel", this.boundDragCancel);
         }
     }
 
@@ -4127,6 +4183,7 @@ export class Toolbar implements ToolbarHandle
     {
         const startPos = this.currentOrientation === "horizontal"
             ? down.clientX : down.clientY;
+        const sizeBefore = this.currentSize;
         const startSize = this.currentSize || this.getMeasuredSize();
 
         const onMove = (ev: PointerEvent): void =>
@@ -4136,16 +4193,52 @@ export class Toolbar implements ToolbarHandle
             this.resizeTo(startPos, startSize, ev);
         };
 
-        const onUp = (ev: PointerEvent): void =>
+        const stop = (ev: PointerEvent): void =>
         {
             handle.releasePointerCapture(ev.pointerId);
             handle.removeEventListener("pointermove", onMove);
             handle.removeEventListener("pointerup", onUp);
+            handle.removeEventListener("pointercancel", onCancel);
+        };
+
+        const onUp = (ev: PointerEvent): void =>
+        {
+            stop(ev);
             this.finishResize();
+        };
+
+        // TOUCH_EXPERIENCE.md section 9, item 5. The size goes back to
+        // where the resize began. A toolbar that had no set size gets its
+        // natural size back. onResize hears only a finished resize.
+        const onCancel = (ev: PointerEvent): void =>
+        {
+            stop(ev);
+            this.restoreSize(sizeBefore);
+            logDebug("Resize canceled. The size is back where it was:", this.toolbarId);
         };
 
         handle.addEventListener("pointermove", onMove);
         handle.addEventListener("pointerup", onUp);
+        handle.addEventListener("pointercancel", onCancel);
+    }
+
+    /** Puts back a size from before a resize, where 0 means no set size. */
+    private restoreSize(size: number): void
+    {
+        this.currentSize = size;
+
+        if (size > 0)
+        {
+            this.applySizeStyle();
+        }
+        else if (this.rootEl)
+        {
+            const prop = this.currentOrientation === "horizontal" ? "width" : "height";
+            this.rootEl.style[prop] = "";
+            this.resizeHandleEl?.removeAttribute("aria-valuenow");
+        }
+
+        this.recalculateOverflow();
     }
 
     /**

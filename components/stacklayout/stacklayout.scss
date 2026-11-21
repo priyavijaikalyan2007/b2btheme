@@ -114,6 +114,9 @@
 .stacklayout-content {
     flex: 1;
     overflow: auto;
+    // A scroll that reaches the end stays here and does not move the page
+    // behind it (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     background: var(--theme-surface-bg);
 }
 

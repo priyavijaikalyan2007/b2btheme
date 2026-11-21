@@ -37,6 +37,9 @@
 // Individual pane — scrollable content region
 .splitlayout-pane {
     overflow: auto;
+    // A scroll that reaches the end stays here and does not move the page
+    // behind it (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     position: relative;
 }
 

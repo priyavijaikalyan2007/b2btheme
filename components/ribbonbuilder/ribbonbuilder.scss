@@ -60,10 +60,12 @@
     white-space: nowrap;
     transition: background-color 0.15s, border-color 0.15s;
 
-    &:hover {
-        background: var(--theme-hover-bg);
-        border-color: var(--theme-border-color);
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+            border-color: var(--theme-border-color);
+            color: var(--theme-text-primary);
+        }
     }
 
     &:active {
@@ -152,6 +154,9 @@
 .ribbonbuilder-tree-body {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here and does not move the page
+    // behind it (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: 4px 0;
 }
 
@@ -165,8 +170,10 @@
     transition: background-color 0.1s;
     position: relative;
 
-    &:hover {
-        background: var(--theme-selected-bg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-selected-bg);
+        }
     }
 
     &--selected {
@@ -234,8 +241,10 @@
     flex-shrink: 0;
     transition: background-color 0.15s;
 
-    &:hover {
-        background: var(--theme-focus-border);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-focus-border);
+        }
     }
 }
 
@@ -258,6 +267,7 @@
 .ribbonbuilder-props {
     flex: 1;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 8px;
 }
 
@@ -369,9 +379,11 @@
     flex-shrink: 0;
     transition: background-color 0.15s;
 
-    &:hover {
-        background: var(--theme-active-bg);
-        border-radius: $border-radius;
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-active-bg);
+            border-radius: $border-radius;
+        }
     }
 
     i {
@@ -406,6 +418,7 @@
     max-width: 90vw;
     max-height: 70vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     .symbolpicker
     {
@@ -446,6 +459,7 @@
     min-width: 160px;
     max-height: 300px;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .ribbonbuilder-control-menu-item {
@@ -460,10 +474,12 @@
     cursor: pointer;
     transition: background-color 0.1s;
 
-    &:hover {
-        background: var(--theme-selected-bg);
-        border-radius: $border-radius-sm;
-        color: var(--theme-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-selected-bg);
+            border-radius: $border-radius-sm;
+            color: var(--theme-primary);
+        }
     }
 }
 
@@ -536,8 +552,10 @@
     line-height: 1;
     padding: 0 4px;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 }
 
@@ -569,9 +587,11 @@
     align-self: flex-end;
     transition: background-color 0.15s;
 
-    &:hover {
-        background: var(--theme-primary-hover);
-        border-color: var(--theme-primary-hover);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-primary-hover);
+            border-color: var(--theme-primary-hover);
+        }
     }
 }
 

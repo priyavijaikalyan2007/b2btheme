@@ -192,10 +192,12 @@ $tp-titlebar-height: $control-height-md;
     line-height: 1;
     transition: box-shadow 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-primary);
-        background-color: var(--theme-active-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+            background-color: var(--theme-active-bg);
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible {
@@ -205,13 +207,19 @@ $tp-titlebar-height: $control-height-md;
 }
 
 // Close button hover — red tint
-.tabbedpanel-close-btn:hover {
-    background-color: rgba($danger, 0.3);
+@media (hover: hover) {
+    .tabbedpanel-close-btn:hover {
+        background-color: rgba($danger, 0.3);
+    }
 }
 
-// Floating mode — title bar acts as drag handle
+// Floating mode — title bar acts as drag handle. A drag handle takes the
+// touch at once, or the browser takes the drag for a page scroll
+// (TOUCH_EXPERIENCE.md section 9, the touch-action table).
 .tabbedpanel-floating .tabbedpanel-titlebar {
     cursor: grab;
+    touch-action: none;
+    -webkit-touch-callout: none;
 
     &:active {
         cursor: grabbing;
@@ -230,6 +238,9 @@ $tp-titlebar-height: $control-height-md;
     flex-shrink: 0;
     min-height: $tp-tabbar-size;
     overflow-x: auto;
+    // A scroll that reaches the end stays here and does not move the page
+    // behind it (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     overflow-y: hidden;
     @include auto-edge-shadow();
 }
@@ -268,9 +279,11 @@ $tp-titlebar-height: $control-height-md;
         @include hover-glow(6px);
     }
 
-    &:hover {
-        color: var(--theme-text-primary);
-        background-color: var(--theme-hover-bg);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+            background-color: var(--theme-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -330,9 +343,11 @@ $tp-titlebar-height: $control-height-md;
     opacity: 0;
     transition: opacity 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-primary);
-        background-color: rgba(var(--theme-text-primary-rgb), 0.1);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+            background-color: rgba(var(--theme-text-primary-rgb), 0.1);
+        }
     }
 
     &:focus-visible {
@@ -343,9 +358,13 @@ $tp-titlebar-height: $control-height-md;
 }
 
 // Show close button on tab hover or tab focus
-.tabbedpanel-tab:hover .tabbedpanel-tab-close,
 .tabbedpanel-tab:focus-within .tabbedpanel-tab-close {
     opacity: 1;
+}
+@media (hover: hover) {
+    .tabbedpanel-tab:hover .tabbedpanel-tab-close {
+        opacity: 1;
+    }
 }
 
 // Tab bar actions area (collapse button when no title bar)
@@ -361,9 +380,11 @@ $tp-titlebar-height: $control-height-md;
 .tabbedpanel-tabbar-actions .tabbedpanel-collapse-btn {
     color: var(--theme-text-secondary);
 
-    &:hover {
-        color: var(--theme-text-primary);
-        background-color: rgba(var(--theme-text-primary-rgb), 0.08);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+            background-color: rgba(var(--theme-text-primary-rgb), 0.08);
+        }
     }
 }
 
@@ -406,6 +427,7 @@ $tp-titlebar-height: $control-height-md;
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
     min-height: unset;
     min-width: $tp-tabbar-size;
     border-bottom: none;
@@ -442,6 +464,7 @@ $tp-titlebar-height: $control-height-md;
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
     min-height: unset;
     min-width: $tp-tabbar-size;
     border-bottom: none;
@@ -518,6 +541,7 @@ $tp-titlebar-height: $control-height-md;
     right: 0;
     bottom: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     overflow-x: hidden;
     padding: 0;
 
@@ -539,9 +563,11 @@ $tp-titlebar-height: $control-height-md;
     background: transparent;
     z-index: 1;
 
-    &:hover {
-        background-color: $blue-400;
-        opacity: 0.4;
+    @media (hover: hover) {
+        &:hover {
+            background-color: $blue-400;
+            opacity: 0.4;
+        }
     }
 
     &:active {
@@ -563,6 +589,7 @@ $tp-titlebar-height: $control-height-md;
     height: $tp-handle-size;
     cursor: row-resize;
     touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 // Bottom-docked: resize handle on top edge
@@ -582,6 +609,7 @@ $tp-titlebar-height: $control-height-md;
     width: $tp-handle-size;
     cursor: col-resize;
     touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 .tabbedpanel-resize-handle-h-left {
@@ -601,12 +629,15 @@ $tp-titlebar-height: $control-height-md;
     right: 0;
     cursor: nwse-resize;
     touch-action: none;
+    -webkit-touch-callout: none;
     background: transparent;
     z-index: 2;
 
-    &:hover {
-        background-color: $blue-400;
-        opacity: 0.4;
+    @media (hover: hover) {
+        &:hover {
+            background-color: $blue-400;
+            opacity: 0.4;
+        }
     }
 
     &:active {
@@ -640,8 +671,10 @@ $tp-titlebar-height: $control-height-md;
     cursor: pointer;
     user-select: none;
 
-    &:hover {
-        background-color: var(--theme-active-bg);
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--theme-active-bg);
+        }
     }
 
     &:focus-visible {
