@@ -258,6 +258,10 @@ $tp-titlebar-height: $control-height-md;
     font-size: $font-size-sm;
     white-space: nowrap;
     cursor: pointer;
+    // A long press opens the tab menu, so iOS must not select the label or
+    // open its callout (TOUCH_EXPERIENCE.md section 9, item 15).
+    user-select: none;
+    -webkit-touch-callout: none;
 
     // The indicator is present on every tab and revealed by opacity on the
     // active one, so switching tabs cross-fades instead of jumping. Drawn as a

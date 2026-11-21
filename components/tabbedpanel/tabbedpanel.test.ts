@@ -16,6 +16,11 @@ import
     TabbedPanel,
     createTabbedPanel,
 } from "./tabbedpanel";
+// The tab menu draws with ContextMenu and takes its long press from
+// GestureRecognizer. Importing the real ones registers them on window and
+// keeps this suite out of the stand-in census (ADR-203).
+import "../contextmenu/contextmenu";
+import "../gesturerecognizer/gesturerecognizer";
 import type
 {
     TabbedPanelOptions,
@@ -628,6 +633,143 @@ describe("TabbedPanel floating pointer", () =>
         expect(root.style.left).toBe("590px");
         press(handle, "pointercancel", 590);
         expect(root.style.left).toBe("600px");
+        panel.destroy();
+    });
+});
+
+// ============================================================================
+// TAB ACTIONS — middle click and the tab menu (TOUCH_EXPERIENCE.md 6.1)
+// ============================================================================
+
+describe("TabbedPanel tab actions", () =>
+{
+    afterEach(() =>
+    {
+        document.querySelectorAll(".contextmenu").forEach((m) => m.remove());
+        vi.useRealTimers();
+    });
+
+    function tabButton(panel: TabbedPanel, id: string): HTMLElement
+    {
+        return panel.getRootElement()!.querySelector<HTMLElement>(`[id$='-tab-${id}']`)!;
+    }
+
+    function menuItems(): HTMLElement[]
+    {
+        return [...document.querySelectorAll<HTMLElement>(".contextmenu .contextmenu-item")];
+    }
+
+    function closableTabs(): TabDefinition[]
+    {
+        return [
+            { id: "a", title: "A", closable: true },
+            { id: "b", title: "B" },
+            { id: "c", title: "C", closable: true },
+            { id: "d", title: "D", closable: true },
+        ];
+    }
+
+    const ids = (panel: TabbedPanel) => ["a", "b", "c", "d"].filter((id) => panel.getTabDefinition(id) !== undefined);
+
+    test("middleClick_ClosesAClosableTab_ThroughOnTabClose", () =>
+    {
+        const onTabClose = vi.fn();
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs(), onTabClose }), container);
+
+        tabButton(panel, "a").dispatchEvent(new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }));
+        tabButton(panel, "b").dispatchEvent(new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }));
+
+        expect(onTabClose).toHaveBeenCalledWith("a", panel);
+        expect(ids(panel)).toEqual(["b", "c", "d"]);
+        panel.destroy();
+    });
+
+    test("middleClick_ARefusingOnTabClose_KeepsTheTab", () =>
+    {
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs(), onTabClose: () => false }), container);
+
+        tabButton(panel, "a").dispatchEvent(new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }));
+
+        expect(ids(panel)).toEqual(["a", "b", "c", "d"]);
+        panel.destroy();
+    });
+
+    test("withoutTabMenu_ASecondaryClickOpensNoMenu", () =>
+    {
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs() }), container);
+        const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+
+        tabButton(panel, "a").dispatchEvent(e);
+
+        expect(e.defaultPrevented).toBe(false);
+        expect(menuItems()).toEqual([]);
+        panel.destroy();
+    });
+
+    test("tabMenu_WithoutGestureRecognizer_ThrowsAtCreation_NamingTheScript", () =>
+    {
+        const saved = window.createGestureRecognizer;
+        delete window.createGestureRecognizer;
+        try
+        {
+            expect(() => createTabbedPanel(makeOptions({ tabMenu: true }), container))
+                .toThrow(/gesturerecognizer\.js/);
+        }
+        finally
+        {
+            window.createGestureRecognizer = saved;
+        }
+    });
+
+    test("tabMenu_SecondaryClick_OpensCloseOthersAndCloseToTheRight", () =>
+    {
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs(), tabMenu: true }), container);
+        tabButton(panel, "b").dispatchEvent(new PointerEvent("pointerdown", { pointerType: "mouse", bubbles: true }));
+        const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 50, clientY: 20 });
+
+        tabButton(panel, "b").dispatchEvent(e);
+
+        expect(e.defaultPrevented).toBe(true);
+        const [close, , right] = menuItems();
+        expect(menuItems().map((m) => m.textContent?.trim())).toEqual(["Close", "Close others", "Close to the right"]);
+        // B is not closable, so Close is off and the others still act.
+        expect(close.classList.contains("contextmenu-item-disabled")).toBe(true);
+        right.click();
+        expect(ids(panel)).toEqual(["a", "b"]);
+        panel.destroy();
+    });
+
+    test("tabMenu_CloseOthers_ClosesOnlyTheClosableOthers", () =>
+    {
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs(), tabMenu: true }), container);
+        tabButton(panel, "c").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
+
+        menuItems()[1].click();
+
+        expect(ids(panel)).toEqual(["b", "c"]);
+        panel.destroy();
+    });
+
+    test("tabMenu_LongPress_OpensTheMenu_AndTheTouchContextmenuOpensNoSecond", () =>
+    {
+        vi.useFakeTimers();
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        const panel = createTabbedPanel(makeOptions({ tabs: closableTabs(), tabMenu: true }), container);
+        const tab = tabButton(panel, "d");
+
+        tab.dispatchEvent(new PointerEvent("pointerdown", {
+            pointerType: "touch", pointerId: 3, isPrimary: true, button: 0, clientX: 40, clientY: 10, bubbles: true,
+        }));
+        vi.advanceTimersByTime(600);
+        expect(menuItems().map((m) => m.textContent?.trim())).toEqual(["Close", "Close others", "Close to the right"]);
+
+        // A browser that also sends contextmenu for the long press opens no second menu.
+        const opened = vi.spyOn(window as unknown as { createContextMenu: () => unknown }, "createContextMenu");
+        const e = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+        tab.dispatchEvent(e);
+        expect(e.defaultPrevented).toBe(true);
+        expect(opened).not.toHaveBeenCalled();
+        opened.mockRestore();
         panel.destroy();
     });
 });
