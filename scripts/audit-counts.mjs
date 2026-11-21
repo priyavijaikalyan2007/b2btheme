@@ -762,12 +762,15 @@ export const BASELINES = {
     //   touchDragNoTouchAction holds ContextMenu's long press, which must leave
     //   the scroll to the browser, and GestureRecognizer, which leaves the
     //   property to its host. Neither needs `touch-action`.
-    touchHoverRules: 410,
+    // Part 1 of #181 (shell dividers and drags) lowered three: hover rules
+    // 410 -> 378, drags without pointercancel 25 -> 19, and drags without
+    // touch-action 22 -> 21.
+    touchHoverRules: 378,
     touchMousedownOnly: 25,
-    touchDragNoCancel: 25,
+    touchDragNoCancel: 19,
     touchContextmenuOnly: 7,
     touchHtmlDrag: 6,
-    touchDragNoTouchAction: 22,
+    touchDragNoTouchAction: 21,
     // #234. A shared mixin writes its :hover rule into every component that
     // includes it, where the per-component count cannot see it. hover-glow did,
     // in six components. Zero, and it stays zero.

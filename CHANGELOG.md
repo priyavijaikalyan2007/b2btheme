@@ -13,6 +13,10 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Fixed
+- **A StackLayout divider can be moved from the keyboard** (#232). It took focus and no key. The arrow keys along it move it 10px, and it reports `aria-valuenow`.
+- **A floating TabbedPanel resized from its left edge stays put** (#233). It was placed from its last title bar drag, which for a panel never moved is the left of the window.
+- **The `hover-glow` mixin no longer leaves its glow after a tap** (#234). Six components include it: ActionItems, ExplorerPicker, NotificationCenter, Ribbon, TabbedPanel and Toolbar.
+- **A RibbonBuilder drag down within a parent lands in the right place** (#235). A, B, C with A dropped after B gave B, C, A.
 - **A slow search answer no longer replaces a newer one** (#225). SearchBox, FacetSearch and RelationshipManager each drew whatever answer came back last. So on a slow connection, the answer for `ab` could arrive after the answer for `abc`, and the list showed suggestions for text no longer in the field. Each search now has a number, and only the latest one is drawn. An answer that arrives after the list closed, or after the person cleared the field, is dropped too. In FacetSearch, a value load that was waiting to start no longer starts after the person moves on to the keys (`UI_EXPERIENCE.md` section 2.8).
 - **The DiagramEngine demo said "scroll to zoom"** (#221). Since #183 the wheel pans, and `Ctrl` + wheel zooms. The page now says so, and shows `zoomControls`. The demo pages for the query language work also show what they cover: a new QueryLanguage page that colors a query, the compact form on the TimezonePicker page, and `tests/demo-query-pages.spec.ts`, which checks each of these pages in a browser.
 - **TimezonePicker finds a zone by its current name** (#213). Chrome and Node list 18 zones by an old IANA name, such as Asia/Calcutta for Asia/Kolkata and Europe/Kiev for Europe/Kyiv, so a search for `kolkata` or `kyiv` found nothing. The search now reads each old name as its current name too. The list and the values keep the browser's names, so a page that stores Asia/Calcutta works as before. A city's name also matches with a space or a hyphen, so `los angeles` finds America/Los_Angeles.
@@ -29,6 +33,14 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - A bump of a package inside a bundle, such as `@codemirror/lint`, would have frozen old bytes under the same URL as the new ones. `lib:deprecate` now refuses it and names the package to bump, and the build refuses a URL that is both current and deprecated.
 
 ### Added
+- **The shell dividers and drags work on a touch screen** (#181, part 1 of 3). SplitLayout, StackLayout, Sidebar, TabbedPanel, Toolbar and RibbonBuilder:
+  - A drag that the browser cancels, because it took the gesture for a scroll or a call arrived, now changes nothing. A panel goes back where it was, a size goes back to what it was, and a Toolbar that the drag undocked docks again (`TOUCH_EXPERIENCE.md` section 9, item 5).
+  - Each divider takes a finger 22 CSS pixels either side of its middle, and its line stays thin. A swipe across a divider still scrolls the page (`touch-action: pan-y` or `pan-x`). The floating title bars and the Toolbar grip take the touch at once, so a drag there is no longer a page scroll.
+  - Hover colors show only on a device with hover, so a tap does not leave them behind. A scroll that reaches the end of an inner area stays there.
+  - StackLayout's divider collapses or expands a panel on a double tap or a double click, as SplitLayout's does. `TOUCH_EXPERIENCE.md` section 6.1 now says that is what a double tap on a divider does.
+  - A middle click closes a closable TabbedPanel tab. With the new `tabMenu: true`, a long press or a secondary click on a tab opens Close, Close others and Close to the right. It needs `contextmenu.js` and `gesturerecognizer.js`, so it is off unless a host asks for it.
+  - RibbonBuilder has **Move Up** and **Move Down**, and `Alt + ArrowUp` and `Alt + ArrowDown`, so a node can move without a drag.
+  - Each README has a pointer and touch section and a states section.
 - **ExpressionBuilder edits searches inside, link conditions and variables** (#207, part 2 of 2). A facet with `relationship: true` is a key that links to an item or a person.
   - **"has one where"** opens a search inside the item at the other end, with its own rows.
   - **Link** adds conditions on the link, from the facet's `link` fields, and writes `link ( … )`.
