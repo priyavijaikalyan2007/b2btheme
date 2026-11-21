@@ -68,8 +68,12 @@
     color: var(--theme-text-primary);
     transition: background-color 150ms ease;
 
-    &:hover {
-        background: var(--theme-hover-bg);
+    // TOUCH_EXPERIENCE.md section 9, item 10. A tap must not leave the
+    // hover color after the finger lifts.
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -124,12 +128,18 @@
     background: var(--theme-border-color);
     position: relative;
     z-index: 1;
-    touch-action: none;
+    // Stacked panels: the divider takes a vertical drag, so a horizontal
+    // swipe that starts on it still scrolls (TOUCH_EXPERIENCE.md section 9,
+    // the touch-action table). The horizontal variant below takes pan-y.
+    touch-action: pan-x;
     user-select: none;
+    -webkit-touch-callout: none;
     transition: background-color 150ms ease;
 
-    &:hover {
-        background: var(--theme-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-primary);
+        }
     }
 
     &:focus-visible {
@@ -197,6 +207,39 @@
         min-height: 100%;
         cursor: col-resize;
         flex-direction: column;
+        touch-action: pan-y;
+    }
+}
+
+// ============================================================================
+// TOUCH TARGET
+// ============================================================================
+
+$stacklayout-touch-target: 44px;
+
+// A finger gets a target 44 CSS pixels across the divider, and the visible
+// line stays 4px (TOUCH_EXPERIENCE.md section 6.1). The target is a
+// transparent ::after centered on the divider, as in SplitLayout.
+@media (pointer: coarse) {
+    .stacklayout-divider::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: $stacklayout-touch-target;
+        margin-top: calc(#{$stacklayout-touch-target} / -2);
+    }
+
+    .stacklayout--horizontal .stacklayout-divider::after {
+        left: 50%;
+        right: auto;
+        top: 0;
+        bottom: 0;
+        width: $stacklayout-touch-target;
+        height: auto;
+        margin-top: 0;
+        margin-left: calc(#{$stacklayout-touch-target} / -2);
     }
 }
 

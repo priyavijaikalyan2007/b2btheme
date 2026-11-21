@@ -63,13 +63,17 @@
     background-color: var(--theme-border-color);
     position: relative;
     z-index: 1;
-    touch-action: none;
     user-select: none;
+    -webkit-touch-callout: none;
     transition: background-color 150ms ease, box-shadow 150ms ease;
 
-    &:hover {
-        background-color: $gray-400;
-        box-shadow: 0 0 8px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+    // TOUCH_EXPERIENCE.md section 9, item 10. A tap must not leave the
+    // hover color on the divider after the finger lifts.
+    @media (hover: hover) {
+        &:hover {
+            background-color: $gray-400;
+            box-shadow: 0 0 8px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible {
@@ -78,16 +82,21 @@
     }
 }
 
-// Horizontal divider — vertical strip, col-resize cursor
+// Horizontal divider — vertical strip, col-resize cursor. The divider takes
+// a horizontal drag, so a vertical swipe that starts on it still scrolls the
+// page (TOUCH_EXPERIENCE.md section 9, the touch-action table).
 .splitlayout-divider-horizontal {
     cursor: col-resize;
+    touch-action: pan-y;
     // Pad for easier targeting — visual width set inline
     padding: 0 $sp-2;
 }
 
-// Vertical divider — horizontal strip, row-resize cursor
+// Vertical divider — horizontal strip, row-resize cursor. It takes a
+// vertical drag, so a horizontal swipe still scrolls the page.
 .splitlayout-divider-vertical {
     cursor: row-resize;
+    touch-action: pan-x;
     padding: $sp-2 0;
 }
 
@@ -142,17 +151,36 @@
 // TOUCH TARGET SIZING
 // ============================================================================
 
-// Enlarge divider hit area on touch devices
+$splitlayout-touch-target: 44px;
+
+// A finger gets a target 44 CSS pixels across the divider, and the visible
+// line stays thin (TOUCH_EXPERIENCE.md section 6.1). The target is a
+// transparent ::after centered on the divider. ::before draws the dots and
+// the handle styles.
 @media (pointer: coarse)
 {
-    .splitlayout-divider-horizontal
+    .splitlayout-divider::after
     {
-        padding: 0 $sp-8;
+        content: "";
+        position: absolute;
     }
 
-    .splitlayout-divider-vertical
+    .splitlayout-divider-horizontal::after
     {
-        padding: $sp-8 0;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: $splitlayout-touch-target;
+        margin-left: calc(#{$splitlayout-touch-target} / -2);
+    }
+
+    .splitlayout-divider-vertical::after
+    {
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: $splitlayout-touch-target;
+        margin-top: calc(#{$splitlayout-touch-target} / -2);
     }
 }
 

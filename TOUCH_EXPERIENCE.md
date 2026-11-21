@@ -175,7 +175,7 @@ These rules apply to `DockLayout`, `Sidebar`, `TabbedPanel`, `Breadcrumb`, `Comm
 | Long press or secondary click on a tab | Open the tab context menu. | [[TabbedPanel]] |
 | Middle click on a tab | Close the tab. | [[TabbedPanel]] |
 | Drag on a divider | Change the size of the panes. | [[SplitLayout]], [[DockLayout]] |
-| Double tap or double click on a divider | Restore the default size of the panes. | [[SplitLayout]], [[DockLayout]] |
+| Double tap or double click on a divider | Collapse or expand the pane beside it that can collapse. When both can, collapse or expand the smaller one. | [[SplitLayout]], [[StackLayout]], [[DockLayout]] |
 | Tap on the search button | Open the command palette. | [[CommandPalette]] |
 | Tap outside a dialog | Close the dialog only when the dialog has no changes that are not saved. | Dialogs |
 

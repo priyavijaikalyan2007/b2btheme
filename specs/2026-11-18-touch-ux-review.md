@@ -126,7 +126,7 @@ From reading:
 | ContextMenu | 6.1 | No bottom sheet on a compact viewport. The menu opens at the pointer. | On a phone, a long menu opens beside the finger and runs off the screen. |
 | TabbedPanel | 6.1 | A closable tab has no middle-click close. No long press or secondary click opens a tab menu. No tab moves. | A mouse user cannot close a tab with the middle button, as in a browser. |
 | SplitLayout, StackLayout | 9, `touch-action` table | Dividers set `touch-action: none`. The table says `pan-y` between side-by-side panes and `pan-x` between stacked panes. | A vertical swipe that starts on a divider does not scroll the page. |
-| StackLayout | 6.1 | No double-tap to restore the default size. No wider touch target on a coarse pointer. SplitLayout has both. | On a tablet, the thin divider is hard to grab. |
+| StackLayout | 6.1 | No double tap on a divider. No wider touch target on a coarse pointer. SplitLayout's double click collapses a pane, which is not what 6.1 said, and its coarse target was 8px of padding on each side, not 44px. | On a tablet, the thin divider is hard to grab. |
 | RibbonBuilder | 8 | Items move only by HTML drag. There is no "Move to" command or keyboard move. | On a phone, a person cannot change the ribbon's order. |
 
 ### 5.2 Dialogs and forms
@@ -289,6 +289,8 @@ The owner made these decisions on 18 November 2026, after #226 merged.
   2. Popups and menus: ContextMenu, AppLauncher, UserMenu, TenantSwitcher, NotificationCenter and CommandPalette.
   3. The other ten components. They need only the work in section 4.
 - **ContextMenu opens as a sheet on a phone by default.** Below the compact width, the menu shows as a sheet at the bottom of the screen. A host option keeps today's menu at the pointer. Larger screens do not change.
+- **A double tap on a divider collapses a pane.** The 6.1 row said it restores the default size, and SplitLayout has always collapsed the pane that can collapse. The row now says what SplitLayout does, and StackLayout does the same. DockLayout has no double click yet.
+- **The tab menu is an option.** It needs ContextMenu to draw it and GestureRecognizer for the long press. No app page loads gesturerecognizer.js, and two pages with TabbedPanel do not load contextmenu.js. So `tabMenu: true` turns the menu on, and TabbedPanel then throws at creation when either script is missing. Without the option nothing changes.
 - **TabbedPanel gets a close and a tab menu in part 1.** A middle click closes a closable tab, through `onTabClose` as a close button does today. A long press or a secondary click opens a menu with Close, Close others and Close to the right, for closable tabs only. Moving a tab waits for its own issue, because it needs an order option and a callback.
 
 ---

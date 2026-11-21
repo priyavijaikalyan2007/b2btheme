@@ -735,3 +735,196 @@ describe("StackLayout surface contract", () =>
         layout.destroy();
     });
 });
+
+// ============================================================================
+// POINTER — a cancelled drag and the double click (TOUCH_EXPERIENCE.md 9.5, 6.1)
+// ============================================================================
+
+describe("StackLayout divider pointer", () =>
+{
+    beforeEach(() =>
+    {
+        // jsdom has no pointer capture and no layout.
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+    });
+
+    function press(el: Element, type: string, clientY: number): void
+    {
+        el.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", clientX: 10, clientY,
+        }));
+    }
+
+    function laidOut(overrides?: Partial<StackLayoutOptions>): { layout: StackLayout; divider: HTMLElement }
+    {
+        const layout = createStackLayout(makeOptions(overrides));
+        const rect = (height: number) => ({ width: 400, height } as DOMRect);
+        vi.spyOn(layout.getElement(), "getBoundingClientRect").mockReturnValue(rect(600));
+        layout.getElement().querySelectorAll<HTMLElement>(".stacklayout-panel")
+            .forEach((p) => vi.spyOn(p, "getBoundingClientRect").mockReturnValue(rect(298)));
+        return { layout, divider: layout.getElement().querySelector<HTMLElement>(".stacklayout-divider")! };
+    }
+
+    test("pointerup_KeepsTheNewSizes", () =>
+    {
+        const { layout, divider } = laidOut();
+        const before = layout.getState().sizes;
+
+        press(divider, "pointerdown", 300);
+        press(divider, "pointermove", 360);
+        press(divider, "pointerup", 360);
+
+        expect(layout.getState().sizes).not.toEqual(before);
+        layout.destroy();
+    });
+
+    test("pointercancel_RestoresTheSizesFromBeforeTheDrag_AndReportsThemOnce", () =>
+    {
+        const onResize = vi.fn();
+        const { layout, divider } = laidOut({ onResize });
+        const before = layout.getState().sizes;
+
+        press(divider, "pointerdown", 300);
+        press(divider, "pointermove", 360);
+        onResize.mockClear();
+        press(divider, "pointercancel", 360);
+
+        expect(layout.getState().sizes).toEqual(before);
+        expect(onResize).toHaveBeenCalledTimes(1);
+        expect(onResize).toHaveBeenCalledWith(before);
+        expect(divider.classList.contains("stacklayout-divider-active")).toBe(false);
+        layout.destroy();
+    });
+
+    test("pointermove_AfterACancel_MovesNothing", () =>
+    {
+        const { layout, divider } = laidOut();
+        const before = layout.getState().sizes;
+
+        press(divider, "pointerdown", 300);
+        press(divider, "pointercancel", 300);
+        press(divider, "pointermove", 400);
+
+        expect(layout.getState().sizes).toEqual(before);
+        layout.destroy();
+    });
+
+    test("dblclick_CollapsesTheOnePanelThatCan", () =>
+    {
+        const panels = makePanels();
+        panels[0].collapsible = false;
+        const { layout, divider } = laidOut({ panels });
+
+        divider.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(layout.getState().collapsed).toEqual(["rels"]);
+        layout.destroy();
+    });
+
+    test("dblclick_WhenBothCan_CollapsesTheSmaller_ThenExpandsIt", () =>
+    {
+        const { layout, divider } = laidOut();
+        layout.setSizes([70, 30]);
+
+        divider.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+        expect(layout.getState().collapsed).toEqual(["rels"]);
+
+        divider.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+        expect(layout.getState().collapsed).toEqual([]);
+        layout.destroy();
+    });
+
+    test("dblclick_WhenNeitherCan_ChangesNothing", () =>
+    {
+        const panels = makePanels().map((p) => ({ ...p, collapsible: false }));
+        const { layout, divider } = laidOut({ panels });
+
+        divider.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+
+        expect(layout.getState().collapsed).toEqual([]);
+        layout.destroy();
+    });
+});
+
+// ============================================================================
+// KEYBOARD — the divider moves without a drag (#232)
+// ============================================================================
+
+describe("StackLayout divider keyboard", () =>
+{
+    function laidOut(overrides?: Partial<StackLayoutOptions>): { layout: StackLayout; divider: HTMLElement }
+    {
+        const layout = createStackLayout(makeOptions(overrides));
+        const rect = (size: number) => ({ width: size, height: size } as DOMRect);
+        vi.spyOn(layout.getElement(), "getBoundingClientRect").mockReturnValue(rect(604));
+        layout.getElement().querySelectorAll<HTMLElement>(".stacklayout-panel")
+            .forEach((p) => vi.spyOn(p, "getBoundingClientRect").mockReturnValue(rect(300)));
+        return { layout, divider: layout.getElement().querySelector<HTMLElement>(".stacklayout-divider")! };
+    }
+
+    function key(el: HTMLElement, k: string): KeyboardEvent
+    {
+        const e = new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true });
+        el.dispatchEvent(e);
+        return e;
+    }
+
+    test("ArrowDown_MovesTheDividerTenPixelsDown_AndReportsTheSizes", () =>
+    {
+        const onResize = vi.fn();
+        const { layout, divider } = laidOut({ onResize });
+
+        expect(key(divider, "ArrowDown").defaultPrevented).toBe(true);
+
+        const [above, below] = layout.getState().sizes as number[];
+        expect(above).toBeCloseTo((310 / 600) * 100);
+        expect(below).toBeCloseTo((290 / 600) * 100);
+        expect(onResize).toHaveBeenCalledTimes(1);
+        layout.destroy();
+    });
+
+    test("ArrowUp_MovesTheDividerUp", () =>
+    {
+        const { layout, divider } = laidOut();
+
+        key(divider, "ArrowUp");
+
+        expect((layout.getState().sizes as number[])[0]).toBeCloseTo((290 / 600) * 100);
+        layout.destroy();
+    });
+
+    test("ArrowRight_InAVerticalStack_DoesNothing", () =>
+    {
+        const { layout, divider } = laidOut();
+        const before = layout.getState().sizes;
+
+        expect(key(divider, "ArrowRight").defaultPrevented).toBe(false);
+
+        expect(layout.getState().sizes).toEqual(before);
+        layout.destroy();
+    });
+
+    test("ArrowRight_InAHorizontalStack_MovesTheDivider", () =>
+    {
+        const { layout, divider } = laidOut({ orientation: "horizontal" });
+
+        key(divider, "ArrowRight");
+
+        expect((layout.getState().sizes as number[])[0]).toBeGreaterThan(50);
+        layout.destroy();
+    });
+
+    test("Divider_ReportsThePanelBeforeItAsAValue", () =>
+    {
+        const { layout, divider } = laidOut();
+
+        expect(divider.getAttribute("aria-valuenow")).toBe("50");
+        expect(divider.getAttribute("aria-valuemin")).toBe("0");
+        expect(divider.getAttribute("aria-valuemax")).toBe("100");
+
+        key(divider, "ArrowDown");
+        expect(divider.getAttribute("aria-valuenow")).toBe("52");
+        layout.destroy();
+    });
+});

@@ -74,6 +74,9 @@ const DEFAULT_MIN_HEIGHT = 50;
 /** Default divider height in pixels. */
 const DIVIDER_HEIGHT = 4;
 
+/** Pixels a divider moves on one arrow key, as in SplitLayout. */
+const KEYBOARD_STEP = 10;
+
 /** Width of a collapsed vertical strip in horizontal mode. */
 const COLLAPSED_STRIP_WIDTH = 32;
 
@@ -462,6 +465,24 @@ function applyPanelStyles(panels: PanelState[], isHorizontal = false): void
             applyExpandedStyle(p, isHorizontal);
         }
     });
+
+    updateDividerValues(panels);
+}
+
+/**
+ * A focusable separator must say where it is (#232). Each divider reports
+ * the size of the panel before it, as a percentage of the layout.
+ */
+function updateDividerValues(panels: PanelState[]): void
+{
+    const root = panels[0]?.wrapperEl.parentElement;
+
+    root?.querySelectorAll<HTMLElement>(":scope > .stacklayout-divider[tabindex]").forEach((divider, i) =>
+    {
+        setAttr(divider, "aria-valuemin", "0");
+        setAttr(divider, "aria-valuemax", "100");
+        setAttr(divider, "aria-valuenow", String(Math.round(panels[i].collapsed ? 0 : panels[i].sizePct)));
+    });
 }
 
 /** Applies collapsed styles — vertical strip in horizontal mode. */
@@ -646,6 +667,8 @@ interface DividerDragState
     startPos: number;
     startSizeAbove: number;
     startSizeBelow: number;
+    /** Every panel's sizePct when the drag began, for a cancel to restore. */
+    startPcts: number[];
 }
 
 /** Binds drag behaviour to a single divider element. */
@@ -657,7 +680,7 @@ function bindSingleDivider(
     options: StackLayoutOptions,
     isHorizontal: boolean): void
 {
-    const drag: DividerDragState = { startPos: 0, startSizeAbove: 0, startSizeBelow: 0 };
+    const drag: DividerDragState = { startPos: 0, startSizeAbove: 0, startSizeBelow: 0, startPcts: [] };
 
     const onPointerMove = (e: PointerEvent): void =>
     {
@@ -667,12 +690,36 @@ function bindSingleDivider(
         );
     };
 
-    const onPointerUp = (e: PointerEvent): void =>
+    const endDrag = (e: PointerEvent): void =>
     {
         divider.releasePointerCapture(e.pointerId);
         divider.classList.remove("stacklayout-divider-active");
         document.removeEventListener("pointermove", onPointerMove);
         document.removeEventListener("pointerup", onPointerUp);
+        document.removeEventListener("pointercancel", onPointerCancel);
+    };
+
+    const onPointerUp = (e: PointerEvent): void =>
+    {
+        endDrag(e);
+    };
+
+    // TOUCH_EXPERIENCE.md section 9, item 5. The browser sends pointercancel
+    // when it takes the gesture for a scroll or a call arrives. The sizes go
+    // back to where the drag began. Each move already reported a size, so
+    // onResize hears the restored sizes once.
+    const onPointerCancel = (e: PointerEvent): void =>
+    {
+        endDrag(e);
+        const changed = panels.some((p, i) => p.sizePct !== drag.startPcts[i]);
+        panels.forEach((p, i) => { p.sizePct = drag.startPcts[i]; });
+        applyPanelStyles(panels, isHorizontal);
+        logDebug("Divider drag canceled. The sizes from before it are back:", { divIdx });
+
+        if (changed && options.onResize)
+        {
+            options.onResize(panels.map(p => p.sizePct));
+        }
     };
 
     divider.addEventListener("pointerdown", (e: PointerEvent) =>
@@ -681,7 +728,72 @@ function bindSingleDivider(
         beginDividerDrag(divider, e, drag, panels, divIdx, isHorizontal);
         document.addEventListener("pointermove", onPointerMove);
         document.addEventListener("pointerup", onPointerUp);
+        document.addEventListener("pointercancel", onPointerCancel);
     });
+
+    divider.addEventListener("dblclick", () =>
+    {
+        toggleFromDivider(panels, divIdx, options);
+    });
+
+    // #232. The arrow keys along the divider's axis are the way to resize
+    // without a drag (UI_EXPERIENCE.md section 22, the non-drag alternative).
+    divider.addEventListener("keydown", (e: KeyboardEvent) =>
+    {
+        const back = isHorizontal ? "ArrowLeft" : "ArrowUp";
+        const forward = isHorizontal ? "ArrowRight" : "ArrowDown";
+
+        if (e.key !== back && e.key !== forward)
+        {
+            return;
+        }
+
+        e.preventDefault();
+        stepDivider(divIdx, e.key === back ? -KEYBOARD_STEP : KEYBOARD_STEP, panels, root, options, isHorizontal);
+    });
+}
+
+/** Moves a divider by a number of pixels from where it is now. */
+function stepDivider(
+    divIdx: number,
+    delta: number,
+    panels: PanelState[],
+    root: HTMLElement,
+    options: StackLayoutOptions,
+    isHorizontal: boolean): void
+{
+    const above = findExpandedAbove(panels, divIdx);
+    const below = findExpandedBelow(panels, divIdx);
+    const sizeOf = (p: PanelState | null): number =>
+    {
+        const rect = p ? p.wrapperEl.getBoundingClientRect() : null;
+        return isHorizontal ? (rect?.width ?? 0) : (rect?.height ?? 0);
+    };
+
+    resizePair(divIdx, sizeOf(above) + delta, sizeOf(below) - delta, panels, root, options, isHorizontal);
+}
+
+/**
+ * A double click or double tap on a divider collapses or expands a panel
+ * beside it, as SplitLayout's divider does (TOUCH_EXPERIENCE.md section 6.1).
+ * When one of the two panels can collapse, it is that one. When both can, it
+ * is the smaller one, and a collapsed panel counts as the smallest.
+ */
+function toggleFromDivider(panels: PanelState[], divIdx: number, options: StackLayoutOptions): void
+{
+    const above = panels[divIdx];
+    const below = panels[divIdx + 1];
+    const canAbove = above.config.collapsible !== false;
+    const canBelow = below.config.collapsible !== false;
+
+    if (!canAbove && !canBelow)
+    {
+        return;
+    }
+
+    const size = (p: PanelState): number => (p.collapsed ? 0 : p.sizePct);
+    const target = canAbove && (!canBelow || size(above) <= size(below)) ? divIdx : divIdx + 1;
+    togglePanel(panels, target, options);
 }
 
 /** Initialise divider drag state on pointer down. */
@@ -695,6 +807,7 @@ function beginDividerDrag(
 {
     divider.setPointerCapture(e.pointerId);
     divider.classList.add("stacklayout-divider-active");
+    drag.startPcts = panels.map(p => p.sizePct);
 
     drag.startPos = isHorizontal ? e.clientX : e.clientY;
     const above = findExpandedAbove(panels, divIdx);
@@ -719,6 +832,23 @@ function handleDividerMove(
 {
     logTrace("pointermove handler:", { x: e.clientX, y: e.clientY });
     const delta = (isHorizontal ? e.clientX : e.clientY) - startPos;
+
+    resizePair(divIdx, startSizeAbove + delta, startSizeBelow - delta, panels, root, options, isHorizontal);
+}
+
+/**
+ * Gives the expanded panels on each side of a divider new pixel sizes, each
+ * at least its minimum, and reports them to onResize.
+ */
+function resizePair(
+    divIdx: number,
+    wantAbove: number,
+    wantBelow: number,
+    panels: PanelState[],
+    root: HTMLElement,
+    options: StackLayoutOptions,
+    isHorizontal: boolean): void
+{
     const above = findExpandedAbove(panels, divIdx);
     const below = findExpandedBelow(panels, divIdx);
 
@@ -730,8 +860,8 @@ function handleDividerMove(
     const minAbove = above.config.minHeight ?? DEFAULT_MIN_HEIGHT;
     const minBelow = below.config.minHeight ?? DEFAULT_MIN_HEIGHT;
 
-    const newAbove = Math.max(minAbove, startSizeAbove + delta);
-    const newBelow = Math.max(minBelow, startSizeBelow - delta);
+    const newAbove = Math.max(minAbove, wantAbove);
+    const newBelow = Math.max(minBelow, wantBelow);
 
     const totalSize = getAvailableSize(panels, root, isHorizontal);
 
