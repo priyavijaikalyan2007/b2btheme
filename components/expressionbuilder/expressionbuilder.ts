@@ -887,6 +887,190 @@ export function parseItemPath(text: string): ItemPath
 }
 
 // ============================================================================
+// LEVEL EDITS (pure, on the model, spec sections 4.5 and 5)
+// ============================================================================
+//
+// Each edit reads a level, changes its items, and writes it back through
+// `edited`, so each group a person changes keeps its bracket (spec 4.3).
+
+/** Writes a level a person changed. A group, not the root, takes the mark, so it stays a group (spec 4.3). */
+function edited(root: GroupRow, group: GroupRow, items: Item[]): void
+{
+    if (group !== root) { group.bracket = true; }
+    setLevel(group, items);
+}
+
+/** Changes one item's join. */
+export function setJoin(root: GroupRow, path: ItemPath, join: Join): void
+{
+    const { level, items, index } = itemAt(root, path);
+    items[index].join = join;
+    edited(root, level, items);
+}
+
+/** Sets the join of every item inside a group but its first. */
+export function setGroupJoins(root: GroupRow, path: ItemPath, join: Join): void
+{
+    const group = itemAt(root, path).item.row as GroupRow;
+    const inner = levelOf(group);
+    inner.forEach((it, i) => { if (i > 0) { it.join = join; } });
+    edited(root, group, inner);
+}
+
+/** Puts items next to each other in a marked group, which takes the first one's join. Returns its path. */
+export function groupItems(root: GroupRow, level: ItemPath, start: number, end: number): ItemPath
+{
+    const parent = levelAt(root, level);
+    const items = levelOf(parent);
+    const inner = items.slice(start, end + 1);
+    const group: GroupRow = { kind: "group", op: "and", nots: 0, children: [], bracket: true,
+        ...(parent.linkOf ? { linkOf: parent.linkOf } : {}) };
+    setLevel(group, inner);
+    items.splice(start, inner.length, { row: group, join: inner[0].join });
+    edited(root, parent, items);
+    return itemPathOf(root, group)!;
+}
+
+/** Puts a group's items in its place, its join on the first. A group with `not` keeps it, so this refuses one. */
+export function ungroupItem(root: GroupRow, path: ItemPath): boolean
+{
+    const { level, items, index, item } = itemAt(root, path);
+    if (item.row.kind !== "group" || item.row.nots > 0) { return false; }
+
+    const inner = levelOf(item.row);
+    if (inner.length > 0) { inner[0].join = item.join; }
+    items.splice(index, 1, ...inner);
+    edited(root, level, items);
+    return true;
+}
+
+/** Adds a row at a place, joined with `and`. Above the first item, the old first takes the `and`. */
+export function insertItem(root: GroupRow, at: Place, row: Row): ItemPath
+{
+    const level = levelAt(root, at.level);
+    const items = levelOf(level);
+    if (at.index === 0 && items.length > 0) { items[0].join = "and"; }
+    items.splice(at.index, 0, { row, join: "and" });
+    edited(root, level, items);
+    return itemPathOf(root, row)!;
+}
+
+/**
+ * After a move or a remove: a group left with no items goes, and one left with one item and no `not` is
+ * ungrouped, because a bracket around one row means nothing. Its parent is then tidied the same way.
+ */
+function tidy(root: GroupRow, group: GroupRow): void
+{
+    if (group === root) { return; }
+    const path = itemPathOf(root, group)!;
+    const { level, items, index } = itemAt(root, path);
+    const inner = levelOf(group);
+
+    if (inner.length === 0) { items.splice(index, 1); }
+    else if (inner.length === 1 && group.nots === 0) { items[index] = { row: inner[0].row, join: items[index].join }; }
+    else { return; }
+    edited(root, level, items);
+    tidy(root, level);
+}
+
+/** Removes rows and groups, a group with its rows, and tidies each level they leave. */
+export function removeItems(root: GroupRow, rows: Row[]): void
+{
+    const left = new Set<GroupRow>();
+    for (const row of rows)
+    {
+        // A row inside a group removed before it went with that group.
+        const path = itemPathOf(root, row);
+        if (!path) { continue; }
+        const { level, items, index } = itemAt(root, path);
+        items.splice(index, 1);
+        edited(root, level, items);
+        left.add(level);
+    }
+    // A level that a later remove took with its group needs no tidy.
+    left.forEach((g) => { if (g === root || itemPathOf(root, g)) { tidy(root, g); } });
+}
+
+/** Whether a move cannot go to a place: into itself or a group inside it, across a link's edge, or nowhere. */
+export function refuses(root: GroupRow, level: ItemPath, start: number, end: number, to: Place): boolean
+{
+    const from = levelAt(root, level);
+    const into = levelAt(root, to.level);
+    const moved = levelOf(from).slice(start, end + 1);
+    const inside = moved.some((m) => m.row.kind === "group"
+        && Array.from(allRows(m.row)).some((r) => r.row === into));
+
+    return inside || (from.linkOf ?? "") !== (into.linkOf ?? "")
+        || (from === into && to.index >= start && to.index <= end + 1);
+}
+
+/**
+ * Moves items next to each other in a level to a place, by spec 4.5, and returns the first one's new path, or
+ * null when the move is refused. `to.index` is the place in its level as it stands before the move.
+ */
+export function moveItems(root: GroupRow, level: ItemPath, start: number, end: number, to: Place): ItemPath | null
+{
+    if (refuses(root, level, start, end, to)) { return null; }
+
+    const from = levelAt(root, level);
+    const into = levelAt(root, to.level);
+    const items = levelOf(from);
+    const moved = items.slice(start, end + 1);
+    const rest = items.filter((_it, i) => i < start || i > end);
+    // The groups a person sees stay groups, so the indices of `to` hold while the items move (spec 4.3).
+    for (const g of [from, into, ...moved.map((m) => m.row)])
+    {
+        if (g.kind === "group" && g !== root) { g.bracket = true; }
+    }
+
+    if (from === into)
+    {
+        const before = items[to.index];
+        rest.splice(before ? rest.indexOf(before) : rest.length, 0, ...moved);
+        if (rest[0] !== items[0])
+        {
+            items[0].join = rest[0].join;
+            rest[0].join = "and";
+        }
+        edited(root, from, rest);
+        return itemPathOf(root, moved[0].row);
+    }
+
+    edited(root, from, rest);
+    const target = levelOf(into);
+    if (to.index === 0)
+    {
+        if (target.length > 0) { target[0].join = target[1]?.join ?? "and"; }
+        moved[0].join = "and";
+    }
+    else { moved[0].join = (target[to.index] ?? target[target.length - 1]).join; }
+    target.splice(to.index, 0, ...moved);
+    edited(root, into, target);
+    tidy(root, from);
+    return itemPathOf(root, moved[0].row);
+}
+
+/**
+ * Where Move up or Move down takes items, one place in the grid (spec 5.3): past the item beside them, into a
+ * group beside them, or out at a group's edge. Null at the top or the bottom of the grid.
+ */
+export function moveTarget(root: GroupRow, level: ItemPath, start: number, end: number, by: -1 | 1): Place | null
+{
+    const items = levelOf(levelAt(root, level));
+    const next = (by < 0) ? start - 1 : end + 1;
+    const beside = items[next];
+    if (beside && beside.row.kind === "group")
+    {
+        return { level: [...level, next], index: (by < 0) ? levelOf(beside.row).length : 0 };
+    }
+    if (beside) { return { level, index: (by < 0) ? next : next + 1 }; }
+    if (level.length === 0) { return null; }
+
+    const out = level[level.length - 1];
+    return { level: level.slice(0, -1), index: (by < 0) ? out : out + 1 };
+}
+
+// ============================================================================
 // EDITS (pure, on the model)
 // ============================================================================
 

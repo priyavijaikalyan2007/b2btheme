@@ -11,9 +11,10 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import
 {
-    allRows, createExpressionBuilder, facetMap, facetOps, itemAt, itemPathOf, levelAt, levelDepth, levelOf, meaning,
-    moveRow, moveRowTo, newVariable, nodeOf, opName, opWord, parseItemPath, parsePath, removeRow, rootOf, rowAt,
-    runsOf, setLevel, setOp, treeOf, unwrapRow, variableUses, wrapRow,
+    allRows, createExpressionBuilder, facetMap, facetOps, groupItems, insertItem, itemAt, itemPathOf, levelAt,
+    levelDepth, levelOf, meaning, moveItems, moveRow, moveRowTo, moveTarget, newVariable, nodeOf, opName, opWord,
+    parseItemPath, parsePath, refuses, removeItems, removeRow, rootOf, rowAt, runsOf, setGroupJoins, setJoin,
+    setLevel, setOp, treeOf, ungroupItem, unwrapRow, variableUses, wrapRow,
 } from "./expressionbuilder";
 import type
 {
@@ -1022,5 +1023,162 @@ describe("levels", () =>
         expect(levelDepth(root)).toBe(2);
         expect(parseItemPath("1.0")).toEqual([1, 0]);
         expect(parseItemPath("")).toEqual([]);
+    });
+});
+
+describe("level edits", () =>
+{
+    test("setJoin changes one item's join", () =>
+    {
+        const root = and(t("a"), t("b"), t("c"));
+        setJoin(root, [2], "or");
+
+        expect(show(root)).toBe("a and b or c");
+    });
+
+    test("setGroupJoins sets every join inside but the first, and the group stays", () =>
+    {
+        const root = and(t("a"), or(t("b"), t("c")));
+        setGroupJoins(root, [1], "and");
+        expect(show(root)).toBe("a and [b and c]");
+
+        // A row's join inside a group keeps the group too.
+        const inner = and(t("a"), or(t("b"), t("c")));
+        setJoin(inner, [1, 1], "and");
+        expect(show(inner)).toBe("a and [b and c]");
+    });
+
+    test("groupItems makes a marked group that takes the first item's join, and changes no meaning", () =>
+    {
+        const root = or(t("a"), t("b"), t("c"));
+        const before = meaning(nodeOf(root, NONE)!);
+
+        expect(groupItems(root, [], 1, 2)).toEqual([1]);
+        expect(show(root)).toBe("a or [b or c]");
+        expect(meaning(nodeOf(root, NONE)!)).toEqual(before);
+    });
+
+    test("ungroupItem puts the items back, its join on the first, and refuses a group with not", () =>
+    {
+        const root = and(t("a"), or(t("b"), t("c")));
+        expect(ungroupItem(root, [1])).toBe(true);
+        expect(show(root)).toBe("a and b or c");
+
+        const negated = and(t("a"), not(or(t("b"), t("c"))));
+        expect(ungroupItem(negated, [1])).toBe(false);
+        expect(show(negated)).toBe("a and not [b or c]");
+    });
+
+    test("insertItem joins with and, and above the first item gives the old first and", () =>
+    {
+        const root = or(t("a"), t("b"));
+        insertItem(root, { level: [], index: 2 }, t("c"));
+        expect(show(root)).toBe("a or b and c");
+
+        insertItem(root, { level: [], index: 0 }, t("z"));
+        expect(show(root)).toBe("z and a or b and c");
+    });
+
+    test("removeItems takes a group with its rows, and tidies the level it leaves", () =>
+    {
+        const root = and(t("a"), or(t("b"), t("c")));
+        removeItems(root, [levelAt(root, [1]).children[0]]);
+        // A group left with one item and no not is ungrouped.
+        expect(show(root)).toBe("a and c");
+
+        const negated = and(t("a"), not(or(t("b"), t("c"))));
+        removeItems(negated, [levelAt(negated, [1]).children[0]]);
+        expect(show(negated)).toBe("a and not [c]");
+
+        const first = or(t("a"), and(t("b"), t("c")));
+        removeItems(first, [first.children[0]]);
+        expect(show(first)).toBe("b and c");
+
+        const group = and(t("a"), or(t("b"), t("c")));
+        const inner = levelAt(group, [1]);
+        removeItems(group, [inner, inner.children[0]]);
+        expect(show(group)).toBe("a");
+    });
+
+    describe("moveItems (spec 4.5)", () =>
+    {
+        test("within a level each keeps its join, and a new first gives its join to the old first", () =>
+        {
+            const up = or(t("a"), t("b"));
+            expect(moveItems(up, [], 1, 1, { level: [], index: 0 })).toEqual([0]);
+            expect(show(up)).toBe("b or a");
+
+            const down = or(t("a"), t("b"));
+            moveItems(down, [], 0, 0, { level: [], index: 2 });
+            expect(show(down)).toBe("b or a");
+        });
+
+        test("into another level, before an item or at its end, it takes that join", () =>
+        {
+            const end = and(t("a"), or(t("b"), t("c")), t("d"));
+            expect(moveItems(end, [], 2, 2, { level: [1], index: 2 })).toEqual([1, 2]);
+            expect(show(end)).toBe("a and [b or c or d]");
+
+            const before = and(t("a"), or(t("b"), t("c")), t("d"));
+            moveItems(before, [], 2, 2, { level: [1], index: 1 });
+            expect(show(before)).toBe("a and [b or d or c]");
+        });
+
+        test("first in another level it shows no join, and the old first takes the join after it", () =>
+        {
+            const root = and(t("a"), or(t("b"), t("c")), t("d"));
+            // The group is item 1 as the level stands before the move.
+            moveItems(root, [], 0, 0, { level: [1], index: 0 });
+
+            expect(show(root)).toBe("[a or b or c] and d");
+        });
+
+        test("out of a group, and the group it leaves with one item is ungrouped", () =>
+        {
+            const root = and(t("a"), or(t("b"), t("c")));
+            moveItems(root, [1], 0, 0, { level: [], index: 1 });
+
+            expect(show(root)).toBe("a and b and c");
+        });
+
+        test("a moved group keeps its bracket where it would read the same as its new level", () =>
+        {
+            const root = and(t("a"), or(t("b"), t("c")), or(t("d"), t("e")));
+            moveItems(root, [], 1, 1, { level: [2], index: 2 });
+
+            expect(show(root)).toBe("a and [d or e or [b or c]]");
+        });
+
+        test("several items move together, the first by 4.5 and the rest keep their joins", () =>
+        {
+            const root = and(t("a"), t("b"), t("c"), or(t("x"), t("y")));
+            moveItems(root, [], 1, 2, { level: [3], index: 0 });
+
+            expect(show(root)).toBe("a and [b and c or x or y]");
+        });
+
+        test("refuses a group into itself, and a place beside the items, and changes nothing", () =>
+        {
+            const root = and(t("a"), or(t("b"), t("c")));
+
+            expect(refuses(root, [], 1, 1, { level: [1], index: 0 })).toBe(true);
+            expect(moveItems(root, [], 1, 1, { level: [1], index: 0 })).toBeNull();
+            expect(refuses(root, [], 0, 0, { level: [], index: 1 })).toBe(true);
+            expect(show(root)).toBe("a and [b or c]");
+            expect(levelAt(root, [1]).bracket).toBeUndefined();
+        });
+    });
+
+    test("moveTarget goes one place, into a group beside it, and out at a group's edge", () =>
+    {
+        const root = and(t("a"), or(t("b"), t("c")), t("d"));
+
+        expect(moveTarget(root, [], 2, 2, -1)).toEqual({ level: [1], index: 2 });
+        expect(moveTarget(root, [], 0, 0, 1)).toEqual({ level: [1], index: 0 });
+        expect(moveTarget(root, [1], 0, 0, -1)).toEqual({ level: [], index: 1 });
+        expect(moveTarget(root, [1], 1, 1, 1)).toEqual({ level: [], index: 2 });
+        expect(moveTarget(root, [], 0, 0, -1)).toBeNull();
+        expect(moveTarget(root, [], 2, 2, 1)).toBeNull();
+        expect(moveTarget(and(t("a"), t("b")), [], 0, 0, 1)).toEqual({ level: [], index: 2 });
     });
 });
