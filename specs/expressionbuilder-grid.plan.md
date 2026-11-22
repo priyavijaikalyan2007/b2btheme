@@ -53,7 +53,7 @@ GH_TOKEN="$(gh auth token --user priyavijaikalyan2007)" gh issue create \
 
 ### Task 1: Spec amendments
 
-The plan found seven gaps in the spec. Each is a small rule, and none changes a decision the owner made.
+The plan found eleven gaps in the spec. Each is a small rule, and none changes a decision the owner made.
 
 **Files:** Modify `specs/expressionbuilder-grid.prd.md`.
 
@@ -66,6 +66,9 @@ The plan found seven gaps in the spec. Each is a small rule, and none changes a 
   6. **7.3, row numbers.** Row numbers count every line of the grid, a group's line too.
   7. **8, problems.** A problem goes on the deepest line that the grid shows whose text holds it. A problem inside a search inside goes on that condition's line in part 1.
   8. **7.2, narrow screens.** On a narrow screen the grid scrolls sideways inside the builder.
+  9. **5.4, Insert above the first row.** The new row is first, so it shows no join, and the row that was first takes And.
+  10. **10, the browser drag test.** It runs on a test page with its own tree, not on the demo page, so the test controls what it drags.
+  11. **5.3, Group and the checks.** After **Group**, the new group is checked in place of the rows it took, so the next action acts on the group.
 
 - [ ] **Step 2:** Check the spec for semicolons and contractions: `grep -n ";\|n't" specs/expressionbuilder-grid.prd.md` prints nothing.
 
@@ -755,7 +758,17 @@ interface LineContext
 
 **Row numbers and labels.** Lines are numbered from 1 in the order drawn, group lines too. A line's `li` has `aria-label` such as `"Row 3: or not, Assigned to is me"`. A row in a run, not its first, adds `", read together with row N"`. A group's `ol` has `aria-label` such as `"Group of 2 rows, joined with or"`, from its inner joins, or `"…, joined with and and or"` when they differ.
 
-**Read-only rows (spec 5.5).** Add an exported helper beside the model, and draw its text across the key, operator and value columns as `` `${why}. Edit this in the search bar.` ``:
+**Read-only rows (spec 5.5).** A read-only row keeps the three columns, with text in place of controls:
+
+| Row | Key | Operator | Value |
+| :--- | :--- | :--- | :--- |
+| "has one where" | the facet's label | has one where | a search inside |
+| a link condition | the facet's label | the operator's label | the values, then "with conditions on its link" |
+| "the same item as" | the facet's label | is | the same item as ?name |
+| a comparison | ?left | the comparison's label | ?right |
+| a kept row | its `what` across the three columns | | |
+
+After the value, each adds "Edit this in the search bar." The line's label, and the title of the value cell, say why the row is read-only, from this helper beside the model:
 
 ```ts
 /** Why the grid shows a row read-only in part 1, or null when it edits it (spec 5.5). */
@@ -812,7 +825,7 @@ With no target, it keeps the focus on the same control of the same row, read fro
 
 The join select calls `setJoin`. **Not** keeps its rule and adds `if (row.kind === "group") { row.bracket = true; }`. The group control's select calls `setGroupJoins`. It lists **Mixed** as a disabled option only while the joins inside differ. **Ungroup** calls `ungroupItem` and focuses the first item the group held. It is off for a group with `not`, with the title "A group with Not cannot be ungrouped, because that would change what it means". **Make a group** calls `groupItems` on the run and focuses the new group's check box. **✕** calls `removeItems` and focuses the next line's row, or the line before, or **Add condition** (spec 6). **Add condition** and **Add words** call `insertItem` at the end of the top level with a draft, and focus its key select or its words.
 
-**The ⋯ menu.** A button with `aria-haspopup="menu"` and `aria-expanded`. It opens a `div[role=menu]` in the actions cell, with `button[role=menuitem]` items: **Insert condition above** (`insert-filter`), **Insert words above** (`insert-text`), **Move up** (`up`) and **Move down** (`down`). Move up and Move down are off where `moveTarget` gives null. Opening focuses the first item. `↑` and `↓` move between items. Choosing one, Escape, or a `pointerdown` outside the menu closes it. Escape and a choice return the focus to ⋯. The class keeps the open menu in `private menu: { el: HTMLElement; button: HTMLElement; off: () => void } | null`, and `render()` closes it first.
+**The ⋯ menu.** A button with `aria-haspopup="menu"` and `aria-expanded`. It opens a `div[role=menu]` in the actions cell, with `button[role=menuitem]` items: **Insert condition above** (`insert-filter`), **Insert words above** (`insert-text`), **Move up** (`up`) and **Move down** (`down`). Move up and Move down are off where `moveTarget` gives null. Opening focuses the first item. `↑` and `↓` move between items. Choosing one, Escape, or a `pointerdown` outside the menu closes it. Escape and a choice return the focus to ⋯. The class keeps the open menu in `private menu: { el: HTMLElement; button: HTMLElement; off: () => void } | null`. `off` removes the document's `pointerdown` listener. `render()` and `destroy()` close the menu first.
 
 - [ ] **Step 1: Write the failing tests.** Replace the helpers at the top of `describe("ExpressionBuilder")`:
 
@@ -967,10 +980,13 @@ In `describe("ExpressionBuilder, part 2")` (line 737 on), change `row` and `cont
     test("in part 1, a search inside, a link, the same item as, and a comparison are read-only", () =>
     {
         make(EXAMPLES[3][1]);
-        const text = container.textContent ?? "";
 
-        expect(text).toContain("Signed off by has one where. Edit this in the search bar.");
-        expect(text).toContain("Org unit is the same item as another row. Edit this in the search bar.");
+        expect(line("1").querySelector(".expressionbuilder-op")!.textContent).toBe("has one where");
+        expect(line("1").querySelector(".expressionbuilder-value")!.textContent)
+            .toBe("a search inside. Edit this in the search bar.");
+        expect(line("0").querySelector(".expressionbuilder-value")!.textContent)
+            .toBe("the same item as ?org. Edit this in the search bar.");
+        expect(line("0").closest("li")!.getAttribute("aria-label")).toContain("is the same item as another row");
         expect(container.querySelector('[data-role=op] option[value="where"]')).toBeNull();
         expect(container.querySelector("[data-role=add-link], [data-role=same], [data-role=add-compare]")).toBeNull();
     });
@@ -1024,7 +1040,7 @@ In `describe("ExpressionBuilder, part 2")` (line 737 on), change `row` and `cont
 | Move down | `tool-down` | the same with `+1` | the same, or "The rows are at the bottom" |
 | Remove | `tool-remove` | one or more checked | "Check the rows to remove" |
 
-A button that is on has the title of its action and key, such as "Group (Alt+G)", from the bindings in force. A moved item is announced as "Moved to row N", from the line number of its first item after the redraw. After a toolbar Move, the focus stays on the button while it is on, else it goes to the first moved item's check box. After Group, it goes to the new group's check box. Remove focuses as ✕ does.
+A button that is on has the title of its action and key, such as "Group (Alt+G)", from the bindings in force. After **Group**, the rows it took leave `checked` and the new group joins it. A moved item is announced as "Moved to row N", from the line number of its first item after the redraw. After a toolbar Move, the focus stays on the button while it is on, else it goes to the first moved item's check box. After Group, it goes to the new group's check box. Remove focuses as ✕ does.
 
 - [ ] **Step 1: Write the failing tests.**
 
@@ -1074,6 +1090,10 @@ describe("ExpressionBuilder, the toolbar", () =>
         expect(container.querySelector('[data-item="0"]')!.classList.contains("expressionbuilder-line-group"))
             .toBe(true);
         expect(document.activeElement).toBe(container.querySelector('[data-item="0"] [data-role=check]'));
+        // The group is checked in place of its rows, so Ungroup acts on it.
+        expect(container.querySelector<HTMLInputElement>('[data-item="0"] [data-role=check]')!.checked).toBe(true);
+        expect(container.querySelector<HTMLInputElement>('[data-item="0.0"] [data-role=check]')!.checked).toBe(false);
+        expect(tool("tool-ungroup").disabled).toBe(false);
         expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "or", children: [tx("a"), tx("b"), tx("c")] }));
     });
 
@@ -1264,6 +1284,8 @@ Delete the old test "Alt+ArrowDown moves the row and keeps the focus" (line 459)
 
 `dragStart` logs the item path, marks its line `-dragging`, and sets `dragging`. `dragMove` logs the place at trace level. `dragEnd` calls `moveItems`, announces "Moved to row N" and focuses the moved item's check box. `onDragCancel` and Escape call `dragClear`, which removes every mark and moves nothing. Escape during a drag calls `this.gestures!.cancel()`, then stops the event.
 
+The recognizer listens for `pointerdown`, `pointermove`, `pointerup` and `pointercancel` on the builder's element (`gesturerecognizer.ts` line 623), so events fired on a handle reach it by bubbling.
+
 - [ ] **Step 1: Write the failing tests.**
 
 ```ts
@@ -1376,7 +1398,7 @@ describe("ExpressionBuilder, the drag", () =>
 
 **Rules.**
 
-- `.expressionbuilder-grid` is a CSS grid with the columns `auto auto repeat(var(--eb-depth), 24px) auto minmax(8rem, auto) auto minmax(8rem, 1fr) auto`, for handle, check, brackets, join, key, operator, value and actions. Each `ol`, `li` and line takes `display: grid`, `grid-template-columns: subgrid` and `grid-column: 1 / -1`, so the columns line up at every depth. A problem line spans `1 / -1`.
+- `.expressionbuilder-grid` is a CSS grid with the columns `auto auto repeat(var(--eb-depth), 24px) auto minmax(8rem, auto) auto minmax(8rem, 1fr) auto`, for handle, check, brackets, join, key, operator, value and actions. Each `ol`, `li` and line takes `display: grid`, `grid-template-columns: subgrid` and `grid-column: 1 / -1`, so the columns line up at every depth. Each `ol` also has `list-style: none`, `margin: 0` and `padding: 0`, or its indent breaks the columns. A problem line spans `1 / -1`.
 - The grid has `overflow-x: auto` and `overscroll-behavior: contain` (`TOUCH_EXPERIENCE.md` section 9, item 16), so a narrow screen scrolls it inside the builder.
 - The read-only text spans the key, operator and value columns. So does the group control.
 - `-bracket-solid` draws a 2px line on the cell's left in `--theme-input-border`. `-bracket-start` and `-bracket-end` turn it toward the line's content at the top or the bottom. `-run` draws a 1px dashed line in `--theme-border-color` on the cell's right, with the same turns for `-run-start` and `-run-end`. The run's **Make a group** button sits in the `-run-start` cell.
