@@ -2119,17 +2119,28 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
             menu.appendChild(item);
         }
 
-        // A press outside the menu closes it. The ⋯ button's own click toggles it.
+        // A press outside the menu closes it. The ⋯ button's own click toggles it. The grid scrolls sideways on a
+        // narrow screen, so the menu is fixed under its button, and a scroll closes it.
         const outside = (e: PointerEvent): void =>
         {
             const target = e.target as Node;
             if (!menu.contains(target) && !button.contains(target)) { this.closeMenu(false); }
         };
+        const scrolled = (): void => this.closeMenu(false);
         document.addEventListener("pointerdown", outside, true);
+        const at = button.getBoundingClientRect();
+        menu.style.top = at.bottom + "px";
+        menu.style.left = at.right + "px";
         button.parentElement!.appendChild(menu);
         setAttr(button, "aria-expanded", "true");
-        this.menu = { el: menu, button, off: () => document.removeEventListener("pointerdown", outside, true) };
-        menu.querySelector<HTMLButtonElement>("button:not([disabled])")!.focus();
+        this.menu = { el: menu, button, off: () =>
+        {
+            document.removeEventListener("pointerdown", outside, true);
+            window.removeEventListener("scroll", scrolled, true);
+        } };
+        menu.querySelector<HTMLButtonElement>("button:not([disabled])")!.focus({ preventScroll: true });
+        // After the focus, so the focus itself never closes the menu.
+        window.addEventListener("scroll", scrolled, true);
         logDebug("Menu opened at", path.join("."));
     }
 

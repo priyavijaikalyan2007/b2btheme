@@ -4,9 +4,11 @@
  */
 /*
  * ⚓ COMPONENT: ExpressionBuilderStyles
- * 📜 PURPOSE: Styles for the ExpressionBuilder (#207): nested groups that
- *    stand apart in both themes, rows of key, operator and value, drafts,
- *    problems from Parse, and the drag handle and drop marks.
+ * 📜 PURPOSE: Styles for the ExpressionBuilder (#207) as a grid of rows (#237):
+ *    columns that line up at every depth, solid brackets for groups and
+ *    dashed ones for what the precedence reads, the ⋯ menu, the footer and
+ *    its toolbar, drafts, problems from Parse, and the drag handle and drop
+ *    line.
  * 🔗 RELATES: [[ExpressionBuilder]], [[FacetSearch]], [[EnterpriseTheme]]
  */
 
@@ -15,7 +17,12 @@
 // @dependency: ../../src/scss/chrome
 @import '../../src/scss/chrome';
 
+// The width of one bracket column, and of the drop line's start at a depth.
+$eb-bracket: 24px;
+$eb-bracket-coarse: 44px;
+
 .expressionbuilder {
+    --eb-bracket: #{$eb-bracket};
     display: flex;
     flex-direction: column;
     gap: $sp-6;
@@ -24,56 +31,70 @@
 }
 
 // ============================================================================
-// GROUPS: each level takes the other surface, with a border on its left, so
-// the nesting shows in both themes.
+// THE GRID: one set of columns for every line, at every depth (subgrid).
+// Handle, check box, a column for each level of brackets, join, key,
+// operator, value, and the row's actions.
 // ============================================================================
 
-.expressionbuilder-group {
-    display: flex;
-    flex-direction: column;
-    gap: $sp-6;
-    padding: $sp-6 $sp-8;
-    background-color: var(--theme-surface-bg);
-    border: $border-width solid var(--theme-border-color);
-    border-left: 3px solid var(--theme-input-border);
+.expressionbuilder-grid {
+    display: grid;
+    grid-template-columns:
+        auto auto repeat(var(--eb-depth, 1), var(--eb-bracket))
+        auto minmax(8rem, auto) auto minmax(8rem, 1fr) auto;
+    // A narrow screen scrolls the grid sideways inside the builder (spec 7.2).
+    overflow-x: auto;
+    overscroll-behavior: contain;
+}
+
+.expressionbuilder-level,
+.expressionbuilder-item,
+.expressionbuilder-line {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+}
+
+// A list's own indent would break the columns.
+.expressionbuilder-level {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.expressionbuilder-line {
+    position: relative;
+    align-items: center;
+    column-gap: $sp-4;
+    min-height: $control-height-sm + 2 * $sp-2;
     border-radius: $border-radius;
 }
 
-.expressionbuilder-group-odd {
+.expressionbuilder-line-group {
     background-color: var(--theme-surface-sunken-bg);
 }
 
-// A condition's search inside (`where`) and its link conditions sit under
-// the condition, across the whole row. The link's border is dashed, because
-// its keys are the link's own fields, not the item's.
-.expressionbuilder-group-where,
-.expressionbuilder-group-link {
-    flex-basis: 100%;
-    margin-left: $sp-12;
-}
-
-.expressionbuilder-group-link {
-    border-left-style: dashed;
-}
-
-.expressionbuilder-group-head,
-.expressionbuilder-row {
-    display: flex;
+.expressionbuilder-join,
+.expressionbuilder-cell,
+.expressionbuilder-values,
+.expressionbuilder-value-item,
+.expressionbuilder-actions,
+.expressionbuilder-group-control {
+    display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: $sp-4;
+    gap: $sp-2;
+    min-width: 0;
 }
 
-.expressionbuilder-rows {
-    display: flex;
-    flex-direction: column;
-    gap: $sp-4;
-    min-height: $control-height-sm;
+// A kept row's text, and a group's control, run across key, operator and value.
+.expressionbuilder-readonly,
+.expressionbuilder-group-control {
+    grid-column: span 3;
 }
 
-.expressionbuilder-row {
-    padding: $sp-2 $sp-4;
-    border-radius: $border-radius;
+.expressionbuilder-actions {
+    position: relative;
+    justify-content: flex-end;
 }
 
 .expressionbuilder-select {
@@ -86,34 +107,162 @@
     min-width: 8rem;
 }
 
-.expressionbuilder-values,
-.expressionbuilder-value-item,
-.expressionbuilder-tools {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: $sp-2;
-}
-
-.expressionbuilder-tools {
-    margin-left: auto;
-}
-
 .expressionbuilder-button {
     display: inline-flex;
     align-items: center;
     gap: $sp-2;
 }
 
-.expressionbuilder-label,
-.expressionbuilder-empty {
+.expressionbuilder-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 0;
+    cursor: pointer;
+
+    .form-check-input {
+        margin: 0;
+    }
+}
+
+.expressionbuilder-label {
     color: var(--theme-text-secondary);
 }
 
 // A part this version cannot edit: read as text, with what it is.
-.expressionbuilder-kept {
+.expressionbuilder-kept,
+.expressionbuilder-cell-key:not(:has(select)),
+.expressionbuilder-cell-op:not(:has(select)),
+.expressionbuilder-cell-value[title] {
     color: var(--theme-text-secondary);
+}
+
+.expressionbuilder-kept,
+.expressionbuilder-cell-value[title] {
     font-style: italic;
+}
+
+// ============================================================================
+// BRACKETS: a solid line for a group, down the column of its rows' level,
+// and a dashed one for a run of And rows inside an Or (spec 4.1, 5.2).
+// ============================================================================
+
+.expressionbuilder-bracket {
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.expressionbuilder-bracket-solid::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 6px;
+    border-left: 2px solid var(--theme-input-border);
+}
+
+.expressionbuilder-bracket-start::before {
+    top: 50%;
+    border-top: 2px solid var(--theme-input-border);
+    border-top-left-radius: $border-radius;
+    right: 0;
+}
+
+.expressionbuilder-bracket-end::before {
+    bottom: 50%;
+    border-bottom: 2px solid var(--theme-input-border);
+    border-bottom-left-radius: $border-radius;
+    right: 0;
+}
+
+.expressionbuilder-run::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 4px;
+    border-right: $border-width dashed var(--theme-border-color);
+}
+
+.expressionbuilder-run-start::after {
+    top: 50%;
+}
+
+.expressionbuilder-run-end::after {
+    bottom: 50%;
+}
+
+// Make a group sits at the top of its dashed bracket.
+.expressionbuilder-run-start .expressionbuilder-button {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    padding: 0 $sp-2;
+    border-style: dashed;
+}
+
+// ============================================================================
+// THE ⋯ MENU: fixed under its button, so a grid that scrolls sideways does
+// not clip it.
+// ============================================================================
+
+.expressionbuilder-menu {
+    position: fixed;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    min-width: 12rem;
+    padding: $sp-2 0;
+    transform: translateX(-100%);
+    background-color: var(--theme-surface-bg);
+    border: $border-width solid var(--theme-border-color);
+    border-radius: $border-radius;
+    box-shadow: var(--theme-shadow-sm);
+}
+
+.expressionbuilder-menu-item {
+    padding: $sp-4 $sp-8;
+    text-align: left;
+    color: var(--theme-text-primary);
+    background: none;
+    border: 0;
+
+    &:focus-visible {
+        outline: none;
+        background-color: var(--theme-hover-bg);
+    }
+
+    &:disabled {
+        color: var(--theme-text-secondary);
+    }
+}
+
+@media (hover: hover) {
+    .expressionbuilder-menu-item:not(:disabled):hover {
+        background-color: var(--theme-hover-bg);
+    }
+}
+
+// ============================================================================
+// THE FOOTER: Add condition and Add words, and the toolbar for checked rows.
+// ============================================================================
+
+.expressionbuilder-footer,
+.expressionbuilder-adds,
+.expressionbuilder-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $sp-4;
+}
+
+.expressionbuilder-footer {
+    justify-content: space-between;
 }
 
 // ============================================================================
@@ -139,9 +288,10 @@
 
 .expressionbuilder-problem {
     display: flex;
-    flex-basis: 100%;
+    grid-column: 1 / -1;
     align-items: baseline;
     gap: $sp-4;
+    padding: 0 $sp-4 $sp-2;
 }
 
 .expressionbuilder-problem-error .expressionbuilder-problem-icon {
@@ -157,10 +307,11 @@
 }
 
 // ============================================================================
-// DRAG: a pointer accelerator. Every move also has buttons.
+// DRAG: a pointer accelerator. Move up and Move down make every move too.
 // ============================================================================
 
-// The handle starts a drag at once (TOUCH_EXPERIENCE.md, values for touch-action).
+// The handle starts a drag at once, and a long press on it opens no callout
+// (TOUCH_EXPERIENCE.md section 9, items 7 and 15).
 .expressionbuilder-drag {
     display: inline-flex;
     align-items: center;
@@ -170,28 +321,53 @@
     color: var(--theme-text-secondary);
     cursor: grab;
     touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .expressionbuilder-dragging {
     opacity: 0.5;
 }
 
-.expressionbuilder-drop-before {
-    box-shadow: 0 -3px 0 0 var(--theme-primary);
+// The drop line starts at the bracket column of the level the item lands in.
+.expressionbuilder-drop-before::after,
+.expressionbuilder-drop-after::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    left: calc(var(--eb-handle-check, 56px) + var(--eb-drop-depth, 0) * var(--eb-bracket));
+    border-top: 3px solid var(--theme-primary);
+    pointer-events: none;
 }
 
-.expressionbuilder-drop-after {
+.expressionbuilder-drop-before::after {
+    top: -2px;
+}
+
+.expressionbuilder-drop-after::after {
+    bottom: -2px;
+}
+
+.expressionbuilder-drop-end {
     box-shadow: 0 3px 0 0 var(--theme-primary);
 }
 
-.expressionbuilder-drop-into {
-    outline: 2px dashed var(--theme-primary);
-}
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
+// ============================================================================
 
-// A finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
 @media (any-pointer: coarse) {
+    .expressionbuilder {
+        --eb-bracket: #{$eb-bracket-coarse};
+        --eb-handle-check: 96px;
+    }
+
     .expressionbuilder-drag,
-    .expressionbuilder-button {
+    .expressionbuilder-check,
+    .expressionbuilder-button,
+    .expressionbuilder-select,
+    .expressionbuilder-menu-item,
+    .expressionbuilder-run-start .expressionbuilder-button {
         min-width: 44px;
         min-height: 44px;
     }
