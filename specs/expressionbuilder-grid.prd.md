@@ -63,7 +63,7 @@ So the tree from 4.2, read back by 4.1, gives the same level. Each edit changes 
 
 ### 4.3 The bracket mark
 
-`GroupRow` gains an optional `bracket: true`. It marks an And group that a person made with **Group**, or turned solid with **Make a group**, where the precedence already gives the same reading. Such a group draws a solid bracket. The mark does not change the tree that `getTree()` returns, because the reading is the same without it.
+`GroupRow` gains an optional `bracket: true`. Each edit a person makes gives the mark to each group it changes: a group made with **Group** or **Make a group**, a group moved, a group changed by its join, **Not** or group control, and a group whose level a join, an insert, a remove or a move changes. A group with the mark draws a solid bracket, even where the precedence already gives the same reading. Without it, a group would vanish from the grid when an edit made it read the same as its parent, such as **Not** turned off on `a or not (b or c)`, or the joins of `(b or c)` set to And inside an And. The mark does not change the tree that `getTree()` returns, because the reading is the same without it.
 
 A query that comes back through the bar loses the mark, because Print writes no parentheses that the reading does not need. The group then shows a dashed bracket again, with the same meaning.
 
@@ -99,7 +99,7 @@ A draft moves like any other row. It stays out of the tree until it is complete,
     ☐ │ │ Join        │ Key         │ Operator │ Value  │ ✕ ⋯
  ⠿  ☐ │┆│             │ Type        │ is       │ Bug    │ ✕ ⋯
  ⠿  ☐ │┆│ And  [Not]  │ State       │ is       │ Active │ ✕ ⋯
- ⠿  ☐ │┌ Or  [Not]  ⟨group: And · Or · Mixed  [Not]  Ungroup⟩
+ ⠿  ☐ │┌ Or  [Not]  ⟨group: And · Or · Mixed   Ungroup⟩
  ⠿  ☐ ││  │ Or [Not] │ Assigned to │ is       │ me     │ ✕ ⋯
  ⠿  ☐ ││  │ And [Not]│ Priority    │ is       │ 1      │ ✕ ⋯
  + Add condition   + Add words      [Group] [Ungroup] [Move up] [Move down] [Remove]
@@ -133,7 +133,7 @@ The toolbar acts on the checked items. A checked group counts as one item, and c
 
 | Button | Acts when | Does |
 | :--- | :--- | :--- |
-| **Group** | Two or more checked items, next to each other, in one level | Wraps them in a group with the bracket mark. The group takes the first item's join, and that item's join is no longer shown. |
+| **Group** | Two or more checked items, next to each other, in one level | Wraps them in a group with the bracket mark. The group takes the first item's join, and that item's join is no longer shown. The new group is checked in place of the items it took, so the next action acts on the group. |
 | **Ungroup** | One checked group with no `not` | As in 5.2 |
 | **Move up**, **Move down** | Checked items next to each other in one level, except at the top of the grid for **Move up** and at its bottom for **Move down** | Moves them one place in the grid, by the rules in 4.5. Within a level, they change places with the item beside them. Above them, a group takes them in at its end. At the top of a group, they leave it and go before it. **Move down** is the mirror: a group below takes them in at its start, and at the bottom of a group they leave it and go after it. A dashed bracket is not a group, so they pass through it within their level. |
 | **Remove** | One or more checked items | Removes them. A group goes with its rows. |
@@ -145,7 +145,7 @@ With several checked items, the first of them takes the join that 4.5 gives, and
 ### 5.4 Adding rows
 
 - **Add condition** and **Add words** add a row at the end of the top level, joined with **And**, as Azure's **Add new clause** does.
-- **Insert condition above** and **Insert words above** add a row at that place, in that row's level, joined with **And**.
+- **Insert condition above** and **Insert words above** add a row at that place, in that row's level, joined with **And**. Above the first row of a level, the new row shows no join, and the row that was first takes **And**.
 - A new condition is a draft until its key and value are set. A draft stays out of the tree, so the tree always prints, as today.
 
 ### 5.5 Other rows
@@ -157,7 +157,7 @@ A row of words, a comparison of two variables and a kept row use the same column
 - A condition whose value is "the same item as" another row.
 - A comparison.
 
-Their part of the tree is kept as it came, so `getTree()` returns it unchanged. They can still be moved, checked, grouped and removed like any row. Part 2 makes them editable (section 9).
+In part 1 the builder does not offer "has one where", **Link**, "the same item as" or a comparison, so these rows come only from a parse. Their part of the tree is kept as it came, so `getTree()` returns it unchanged. They can still be moved, checked, grouped and removed like any row. Part 2 makes them editable (section 9).
 
 ### 5.6 Drag
 
@@ -179,6 +179,8 @@ Their part of the tree is kept as it came, so `getTree()` returns it unchanged. 
 | `Alt + Shift + G` | **Ungroup** | `ungroup` |
 | `Alt + ↑` / `Alt + ↓` | **Move up** / **Move down**, into and out of groups as 5.3 says | `moveUp`, `moveDown` |
 
+- `↑`, `↓`, `Shift + ↑` and `Shift + ↓` act when the focus is on a check box, because a select uses the arrow keys itself.
+- `Alt + G`, `Alt + Shift + G` and `Alt + ↑` / `Alt + ↓` act on the checked items, or on the item that holds the focus when none is checked. The toolbar buttons act on the checked items only.
 - Focus never leaves the builder's container. After **Remove**, it goes to the check box of the next item, or of the item before it, or to **Add condition** when no row is left. After **Group**, it goes to the new group's check box. After **Ungroup**, it goes to the first item that the group held.
 - KEYBOARD.md lists the keys under ExpressionBuilder.
 
@@ -188,7 +190,7 @@ Their part of the tree is kept as it came, so `getTree()` returns it unchanged. 
 
 The apps show the builder in a modal on the search page, where a person edits a copy and chooses Apply or Cancel.
 
-- **Escape** ends a drag, or closes an open ⋯ menu or a value suggestion list, and the builder stops that Escape there.
+- **Escape** ends a drag, or closes an open ⋯ menu, and the builder stops that Escape there. The value suggestions are the browser's own `datalist`, and the browser closes it.
 - With nothing open, the builder does not handle Escape, so it reaches the dialog.
 - The builder does not trap focus.
 
@@ -199,17 +201,18 @@ The apps show the builder in a modal on the search page, where a person edits a 
 - Drags go through the shared gesture recognizer, as today (`TOUCH_EXPERIENCE.md` section 9, item 3). The handle has `touch-action: none` and `-webkit-touch-callout: none`. Elsewhere a swipe scrolls the page.
 - `pointercancel` restores the grid from before the drag.
 - Hover styles are in `@media (hover: hover)`.
+- On a narrow screen the grid scrolls sideways inside the builder.
 
 ### 7.3 Accessibility
 
-- Each level is a list. Each row is a list item whose label reads its meaning, such as "Row 3: or, Assigned to is me".
+- Each level is a list. Each row is a list item whose label reads its meaning, such as "Row 3: or, Assigned to is me". Row numbers count every line of the grid, a group's line too.
 - A group is a region with a label, such as "Group of 2 rows, joined with or".
 - A dashed bracket has a text equivalent for a screen reader, such as "read together with row 1".
 - Each edit is announced in the builder's live region, as today.
 
 ## 8. Problems, contracts and logging
 
-- An error or a warning from Parse or Print shows on the row whose text it covers, or above the grid, as today.
+- An error or a warning from Parse or Print shows on the deepest line the grid shows whose text it covers, or above the grid, as today. In part 1, a problem inside a search inside goes on that condition's line.
 - `ExpressionBuilderOptions`, `ExpressionBuilderHandle`, `getTree()`, `setParsed()` and `onChange` keep their contracts. A tree that means what the builder holds keeps the rows, their checked state and their bracket marks.
 - The builder still requires `gesturerecognizer.js`, for the drag.
 - Each edit logs at debug level with its kind and the item's path. A drag logs its start, its place and its drop or cancel.
@@ -226,7 +229,7 @@ The apps show the builder in a modal on the search page, where a person edits a 
 - **Unit, moves (4.5):** the join within a level and at its first place, into another level before an item, at its end and at its first place, the level it leaves, a group left with one item with and without `not`, a group into itself, and several checked items.
 - **Unit, DOM:** each join, Not, Group, Ungroup and its refusal, the group control and Mixed, Make a group, Move up and Move down within a level and into and out of a group, Insert, Remove, the toolbar refusals and their titles, each key, focus after each action, and the three kinds of Escape.
 - **Unit, drag:** through the stubbed recognizer, as the tests do today: each place in 5.6, the bracket column at a line where levels end, a refused place, a drop, Escape and `pointercancel`.
-- **Browser:** a touch spec that measures the targets in 7.2 and reads the handle's `touch-action`, and a drag of a row into a group on the demo page.
+- **Browser:** a touch spec that measures the targets in 7.2 and reads the handle's `touch-action`, and a drag of a row into a group, on a test page with its own tree, so the test controls what it drags.
 - Each new test fails without the change it covers.
 
 ## 11. Answers to the apps' questions
