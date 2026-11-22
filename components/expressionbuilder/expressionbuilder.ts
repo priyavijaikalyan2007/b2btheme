@@ -1602,6 +1602,8 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
                 "Returns " + this.ret.map((r) => "?" + r).join(", ") + EDIT_IN_BAR));
         }
         const grid = createElement("div", [`${CLS}-grid`]);
+        // It scrolls sideways on a narrow screen, so it has a stable name (ADR-162).
+        setAttr(grid, "data-dui-region", "expressionbuilder:grid");
         grid.style.setProperty("--eb-depth", String(this.depth));
         grid.appendChild(this.renderLevel(this.root, { path: [], ends: [], runs: [] }));
         this.body.append(grid, this.renderFooter());
