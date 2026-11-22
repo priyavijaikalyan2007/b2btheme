@@ -4,9 +4,10 @@
 -->
 <!--
   COMPONENT: DemoPage-ExpressionBuilder
-  PURPOSE: Standalone demo page for the ExpressionBuilder component (#207). A
-           query built by groups and conditions, with the tree it makes and
-           a sample warning placed on a row.
+  PURPOSE: Standalone demo page for the ExpressionBuilder component (#207),
+           shown as a grid of rows (#237). A query with a group, a dashed
+           run that the precedence reads, and a read-only search inside, with
+           the tree it makes and a sample warning placed on a row.
   RELATES: [[ExpressionBuilder]], [[GestureRecognizer]], [[DemoShell]]
 -->
 <!DOCTYPE html>
@@ -54,11 +55,16 @@
         <div class="demo-section">
             <h2>Build a query</h2>
             <p class="text-muted">
-                Add conditions, words and groups, and join a group by all or any. On a relationship key,
-                choose "the same item as" another condition, "has one where" for a search inside, or
-                <strong>Link</strong> for conditions on the link. Drag a row by its grip, or use its buttons,
-                or <kbd>Alt</kbd> with an arrow key. The API decides what a query means, so this page has no
-                Parse or Print call. It shows the tree the builder reports.
+                Each row joins the row above with <strong>And</strong> or <strong>Or</strong>, and
+                <strong>Not</strong>. A solid bracket is a group, with its own <strong>And</strong> or
+                <strong>Or</strong> and <strong>Ungroup</strong>. A dashed bracket shows rows that the query
+                reads together, since it reads <code>and</code> before <code>or</code>, and
+                <strong>Make a group</strong> turns it solid. Check rows to group, ungroup, move or remove them
+                from the toolbar. Drag a row or a group by its handle into, out of or between groups, or use
+                <strong>Move up</strong> and <strong>Move down</strong>, or <kbd>Alt</kbd> with an arrow key.
+                <kbd>Alt</kbd>+<kbd>G</kbd> groups and <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> ungroups.
+                The search inside on the last row is read-only in this version. The API decides what a query
+                means, so this page has no Parse or Print call. It shows the tree the builder reports.
             </p>
             <div id="eb-demo"></div>
             <div class="d-flex gap-2 mt-2">
@@ -81,37 +87,33 @@
     (function()
     {
         var out = document.getElementById("eb-demo-tree");
-        // spec section 9: a checklist signed off, by hand, after 1 November, by someone outside its org unit,
-        // and created by the same person who completed it.
-        var tree = { root: { kind: "and", children: [
-            { kind: "filter", key: "type", op: "Equals", value: { text: "checklists.instance" } },
-            { kind: "filter", key: "rel.belongs_to_org_unit", op: "Equals", value: { var: "org" } },
-            { kind: "nested", key: "rel.signed_off_by",
-              link: { kind: "and", children: [
-                  { kind: "filter", key: "provenance", op: "Equals", value: { text: "manual" } },
-                  { kind: "filter", key: "at", op: "After", value: { date: "2026-11-01", zone: "Asia/Kolkata" },
-                    span: { start: 80, end: 104 } }] },
-              where: { kind: "not", child: { kind: "filter", key: "rel.member_of", op: "Equals",
-                  value: { var: "org" } } } },
-            { kind: "filter", key: "rel.created_by", op: "Equals", value: { var: "p" } },
-            { kind: "filter", key: "rel.completed_by", op: "Equals", value: { var: "p" } }
+        var f = function(key, value, span)
+        {
+            var node = { kind: "filter", key: key, op: "Equals", value: { text: value } };
+            if (span) { node.span = span; }
+            return node;
+        };
+        // Two runs of And rows inside an Or, so two dashed brackets, a group inside the first, and a
+        // search inside that this version shows read-only.
+        var tree = { root: { kind: "or", children: [
+            { kind: "and", children: [
+                f("type", "bug"),
+                f("state", "active"),
+                { kind: "or", children: [f("assigned", "me", { start: 40, end: 51 }), f("priority", "1")] }
+            ] },
+            { kind: "and", children: [
+                f("type", "task"),
+                { kind: "nested", key: "rel.signed_off_by", where: f("state", "active") }
+            ] }
         ] } };
 
         var builder = createExpressionBuilder("eb-demo", {
             facets: [
-                { key: "type", label: "Type", valueType: "enum",
-                  values: [{ value: "note", label: "Note" }, "task", "checklists.instance"] },
-                { key: "created_at", label: "Created", valueType: "date" },
-                { key: "title", label: "Title", valueType: "text" },
-                { key: "rel.created_by", label: "Created by", valueType: "text", relationship: true },
-                { key: "rel.completed_by", label: "Completed by", valueType: "text", relationship: true },
-                { key: "rel.belongs_to_org_unit", label: "Org unit", valueType: "text", relationship: true },
-                { key: "rel.member_of", label: "Member of", valueType: "text", relationship: true },
-                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true,
-                  link: [
-                      { key: "provenance", label: "Provenance", valueType: "enum", values: ["manual", "ai"] },
-                      { key: "at", label: "Made", valueType: "date" }
-                  ] }
+                { key: "type", label: "Type", valueType: "enum", values: ["bug", "task", "story"] },
+                { key: "state", label: "State", valueType: "enum", values: ["active", "resolved", "closed"] },
+                { key: "assigned", label: "Assigned to", valueType: "text", values: ["me"] },
+                { key: "priority", label: "Priority", valueType: "enum", values: ["1", "2", "3"] },
+                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true }
             ],
             tree: tree,
             onChange: function(t) { out.textContent = JSON.stringify(t, null, 2); }
@@ -122,7 +124,7 @@
         document.getElementById("eb-demo-warning").addEventListener("click", function()
         {
             builder.setParsed({ tree: tree, warnings: [{ code: "QL_SAMPLE", title: "A sample warning",
-                detail: "This warning's place is in the link's date condition.", start: 85, end: 95 }] });
+                detail: "This warning's place is in the condition on who it is assigned to.", start: 42, end: 50 }] });
         });
     })();
     </script>

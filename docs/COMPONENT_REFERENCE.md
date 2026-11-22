@@ -6705,7 +6705,7 @@ npx vitest run components/explorerpicker/explorerpicker.test.ts
 
 # ExpressionBuilder
 
-A visual editor for a query in the apps' query language, for people who would rather not type one (#207). It edits the tree that the API's Parse call returns: groups joined by **all** (`and`) or **any** (`or`), **not**, conditions on a key, words, searches inside a relationship (`where`), conditions on a link (`link`), variables ("the same item as"), and comparisons of variables. [FacetSearch](../facetsearch/README.md) edits the same query as text, and the host keeps the two in step with the API's Parse and Print calls.
+A visual editor for a query in the apps' query language, for people who would rather not type one (#207). It shows the query as a grid of rows, like the query editor in Azure Boards (#237). Each condition is one row, each row joins the row above it with **And** or **Or**, and a group is a bracket beside its rows. It edits the tree that the API's Parse call returns: groups joined by **all** (`and`) or **any** (`or`), **not**, conditions on a key, words, searches inside a relationship (`where`), conditions on a link (`link`), variables ("the same item as"), and comparisons of variables. [FacetSearch](../facetsearch/README.md) edits the same query as text, and the host keeps the two in step with the API's Parse and Print calls.
 
 **The API decides what a query means.** The builder never reads text. It reports a tree that Print accepts.
 
@@ -6766,7 +6766,7 @@ async function parse(text)
 
 Each facet is a key a condition can use: `key`, `label`, `valueType` (`text`, `enum`, `date`, `number` or `boolean`), and `values` or `loadValues` to suggest values.
 
-**Relationship keys** (spec section 9). A facet with `relationship: true` is a key that links to an item or a person, such as `rel.created_by`, or a column key that holds the same fact, such as `created_by`. A condition on it offers three more things:
+**Relationship keys** (spec section 9). A facet with `relationship: true` is a key that links to an item or a person, such as `rel.created_by`, or a column key that holds the same fact, such as `created_by`. A condition on it can hold three more things. **In part 1 of the grid, the grid shows each of them read-only, and offers none of them.** Part 2 makes them editable again:
 
 - **"the same item as"** another condition, which writes a variable (below);
 - **"has one where"**, a search inside the item at the other end, with its own rows;
@@ -6813,48 +6813,72 @@ When the builder changes the query, the host prints it and puts the text in the 
 
 **Errors and warnings.** Each one with a place shows on the deepest row whose text holds it, and the others show above the rows. A problem with no place, such as one from Print, shows above the rows. With no tree, the bar's text has errors, so they show above the rows, and the rows stay as they were. Any edit in the builder removes them. A screen reader hears a new set once.
 
-## Rows
+## The grid
 
-| Row | Controls |
-|-----|----------|
-| A group | **Not**, **All of these** or **Any of these**, and buttons to add a condition, words or a group |
-| A condition | **Not**, a key, an operator, and its value, or values for **is one of**. On a relationship key, also the choice of a value or "the same item as", **has one where** with its rows below, and **Link** for conditions on the link |
-| Words | **Not**, and the words to search for |
-| A comparison | **Not**, two variables, and **is the same item as** or **is not the same item as**. **Comparison** is on offer once the query has two variables |
+Each line of the grid has these columns, from left to right (`specs/expressionbuilder-grid.prd.md` section 5):
 
-Each row and each group but the outermost also has **Move up**, **Move down**, **Put in a group** and **Remove**. A group has **Take the rows out of this group**, which a group with **Not** cannot do, because that would change what it means.
+| Column | What it holds |
+|--------|---------------|
+| Handle | Drags the row, or on a group's line the whole group |
+| Check box | Checks the row for the toolbar |
+| Brackets | One narrow column for each level of groups. A group draws a solid bracket. A run of **And** rows inside an **Or** draws a dashed one |
+| Join | **And** or **Or**, which joins the row to the row above it, and **Not**. The first row of a level has only **Not** |
+| Key, operator, value | The condition, as before. Words show "Has the words" and their input |
+| Actions | **✕** removes the row. **⋯** opens **Insert condition above**, **Insert words above**, **Move up** and **Move down** |
 
-**Drafts.** A new condition is a draft until it has a key, an operator and the value its operator needs. A draft is shown with a dashed line and "Needs a value", and left out of `getTree()` and `onChange`. So the tree always prints. So are empty words and an empty group.
+**How rows without a group read.** The language reads `not` first, then `and`, then `or`. So the rows `a`, **And** `b`, **Or** `c` mean `(a and b) or c`. The grid shows that reading with a dashed bracket around `a` and `b`. **Make a group**, at the top of a dashed bracket, turns it into a group, which changes nothing it means.
 
-**When `onChange` fires.** A choice from a list, a toggle and a move report at once. A typed value reports when the input commits, on `Enter` or when the focus leaves it. A change that means nothing new, such as a draft, a group around one row, or switching a group of one between all and any, reports nothing.
+**Groups.** A group's line has its own check box, join and **Not**, a list with **And** and **Or** that sets every join inside it but the first, and **Ungroup**. The list shows **Mixed** while the joins inside differ. **Ungroup** puts the rows back in place, and is off for a group with **Not**, because that would change what it means. A group a person makes or changes stays a group, even where the precedence would read it the same without one. A query back from the bar shows it dashed again, with the same meaning.
 
-**Variables.** A person seldom types a variable, so the builder makes them. On a condition with **is** on a relationship key, choose "the same item as" another such condition. If that one has no variable yet, the builder names one from its key, such as `?created_by`, and gives it to both. A variable is used at least twice (the binder's rule 1, spec section 9), and `return` counts as a use. So a condition whose variable is used once is a draft, "Needs a second use of ?created_by", and is left out of the tree. The binder's other rules, such as a variable under **Not** needing a use outside it, are the API's to check. Its errors show on the rows.
+**The footer.** **Add condition** and **Add words** add a row at the end, joined with **And**. The toolbar acts on the checked rows:
 
-**Changing an operator keeps what was inside.** Switching **has one where** to another operator, and back, keeps the rows of the search inside. While another operator is chosen, they are not in the tree, and their variables do not count.
+| Button | On when |
+|--------|---------|
+| **Group** | Two or more checked rows next to each other in one level. The new group is checked in place of its rows |
+| **Ungroup** | One checked group with no **Not** |
+| **Move up**, **Move down** | Checked rows next to each other in one level, and not at the top or the bottom of the grid |
+| **Remove** | One or more checked rows. A group goes with its rows |
 
-**What it cannot edit, it keeps** (`UI_EXPERIENCE.md` section 5.7). These show as read-only rows, which say what they are and "Edit this in the search bar":
+A button that is off says why in its title.
 
-- a parameter, a relative date, a date with a time, or an instant as a value;
-- a variable, a search inside or a link condition on a key that is not a relationship;
-- a key with no facet, or an operator the language does not have;
-- `return`.
+**Moves.** **Move up** and **Move down** move one place in the grid. Past a group, they move the rows into it: at its end going up, at its start going down. At a group's edge, they move the rows out of it. Within a level each row keeps its join. Into another level, a row takes the join of the row it lands before, so a row added at the end and moved into an **Or** group joins it with **Or**. A group left with one row and no **Not** is ungrouped. A group cannot move into itself.
 
-A kept row moves and goes like any other, and `getTree()` reports it exactly as it came. Two `not`s stay two.
+**Drafts.** A new condition is a draft until it has a key, an operator and the value its operator needs. A draft is shown with a dashed line and "Needs a value", and left out of `getTree()` and `onChange`. So the tree always prints. So are empty words.
+
+**When `onChange` fires.** A choice from a list, a toggle and a move report at once. A typed value reports when the input commits, on `Enter` or when the focus leaves it. A change that means nothing new, such as a draft or a new group, reports nothing.
+
+**What it cannot edit, it keeps** (`UI_EXPERIENCE.md` section 5.7). These show as read-only rows, which say what they hold and "Edit this in the search bar":
+
+- a search inside ("has one where"), a link condition, "the same item as" another row, and a comparison, in part 1 of the grid
+- a parameter, a relative date, a date with a time, or an instant as a value
+- a variable, a search inside or a link condition on a key that is not a relationship
+- a key with no facet, or an operator the language does not have
+- `return`
+
+A read-only row checks, moves and goes like any other, and `getTree()` reports it exactly as it came. Two `not`s stay two.
 
 ## Keyboard
 
-Every control is a native button, list or input, so `Tab` reaches each one in order. The **Not** buttons are toggles with `aria-pressed`.
+Every control is a native button, list, check box or input, so `Tab` reaches each one in order. The **Not** buttons are toggles with `aria-pressed`.
 
 | Shortcut | Action | Name |
 |----------|--------|------|
-| `Alt + ↑` | Moves the row that holds the focus up | `moveUp` |
-| `Alt + ↓` | Moves it down | `moveDown` |
+| `↑` / `↓` | On a check box, to the check box of the line above or below | |
+| `Space` | Checks or unchecks the focused row | |
+| `Shift + ↑` / `Shift + ↓` | On a check box, checks the row above or below in the same level too | |
+| `Alt + G` | **Group** | `group` |
+| `Alt + Shift + G` | **Ungroup** | `ungroup` |
+| `Alt + ↑` / `Alt + ↓` | **Move up** / **Move down**, into and out of groups | `moveUp`, `moveDown` |
 
-After an action, the focus stays on the same control of the same row. After an add, it goes to the new row's first choice. After a remove, it goes to the row that took its place.
+The keys with a name act on the checked rows, or on the row that holds the focus when none is checked. A letter is read by the key's place, so `Alt + G` works on macOS too. After an edit, the focus stays on the same control of the same row. After an add, it goes to the new row's first choice. After **Group**, to the group's check box. After **Ungroup**, to the first row it held. After a remove, to the next line, or the line before, or **Add condition**.
+
+**In a dialog.** `Escape` closes the ⋯ menu, or ends a drag, and stops there. With nothing open, the builder leaves `Escape` alone, so it reaches the dialog. The value suggestions are the browser's own list, which the browser closes. The builder does not trap the focus.
 
 ## Pointer and touch
 
-A row's grip on its left drags it to another place, in its group or in another one, including into a search inside. A row in a link's conditions moves only among link conditions, because their keys are the link's own fields. A line shows where it will go. The grip is a pointer accelerator. Every move is also a button, so no move needs a drag (`TOUCH_EXPERIENCE.md` rule 4). Under a coarse pointer, the grip and the buttons are 44 px.
+A row's handle drags it, and a group's handle drags the group, to any place in the grid: within its level, into a group, out of one, or between groups. A line shows where it will land. Over the top half of a line, the place is before it. Over the bottom half of a row, it is after it, and where groups end on that line, the bracket column under the pointer picks the level. Over the bottom half of a group's line, it is first in the group. `Escape` or a canceled touch moves nothing. The joins follow the rules of **Moves** above.
+
+The handle is a pointer accelerator. **Move up** and **Move down** make every move a drag makes, so no move needs a drag (`TOUCH_EXPERIENCE.md` rule 4). Under a coarse pointer, the handle, the check boxes, the lists, the buttons and the menu items are 44 px. On a narrow screen, the grid scrolls sideways inside the builder.
 
 ## Dependencies
 
