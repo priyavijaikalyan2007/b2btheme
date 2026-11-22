@@ -11,10 +11,14 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import
 {
-    allRows, createExpressionBuilder, facetMap, facetOps, meaning, moveRow, moveRowTo, newVariable, opName, opWord,
-    parsePath, removeRow, rootOf, rowAt, setOp, treeOf, unwrapRow, variableUses, wrapRow,
+    allRows, createExpressionBuilder, facetMap, facetOps, itemAt, itemPathOf, levelAt, levelDepth, levelOf, meaning,
+    moveRow, moveRowTo, newVariable, nodeOf, opName, opWord, parseItemPath, parsePath, removeRow, rootOf, rowAt,
+    runsOf, setLevel, setOp, treeOf, unwrapRow, variableUses, wrapRow,
 } from "./expressionbuilder";
-import type { ExpressionBuilderFacet, FilterRow, GroupRow, QueryNode, QueryTree } from "./expressionbuilder";
+import type
+{
+    ExpressionBuilderFacet, FilterRow, GroupRow, QueryNode, QueryTree, Row, TextRow,
+} from "./expressionbuilder";
 // The builder drags rows through the shared recognizer, which this publishes.
 import "../gesturerecognizer/gesturerecognizer";
 
@@ -927,5 +931,96 @@ describe("ExpressionBuilder, part 2", () =>
 
         expect(control("1", "op")).toBe(op);
         expect(document.activeElement).toBe(op);
+    });
+});
+
+// ============================================================================
+// LEVELS: THE GRID'S VIEW OF THE TREE (#237, spec section 4)
+// ============================================================================
+
+const t = (phrase: string, nots = 0): TextRow => ({ kind: "text", phrase, nots });
+const and = (...children: Row[]): GroupRow => ({ kind: "group", op: "and", nots: 0, children });
+const or = (...children: Row[]): GroupRow => ({ kind: "group", op: "or", nots: 0, children });
+const not = (g: GroupRow): GroupRow => ({ ...g, nots: 1 });
+const marked = (g: GroupRow): GroupRow => ({ ...g, bracket: true });
+const NONE = new Map<string, ExpressionBuilderFacet>();
+
+/** A level as text: each item's join, `not`, and a group in brackets. */
+function show(group: GroupRow): string
+{
+    return levelOf(group).map((it, i) => (i ? it.join + " " : "") + (it.row.nots % 2 ? "not " : "")
+        + (it.row.kind === "group" ? "[" + show(it.row) + "]" : (it.row as TextRow).phrase)).join(" ");
+}
+
+describe("levels", () =>
+{
+    test.each([
+        ["and in and joins its parent", and(t("a"), and(t("b"), t("c"))), "a and b and c"],
+        ["or in or joins its parent", or(t("a"), or(t("b"), t("c"))), "a or b or c"],
+        ["an and inside an or is a run", or(and(t("a"), t("b")), t("c")), "a and b or c"],
+        ["the Azure docs, example 1", or(and(t("bug"), t("active")), t("me")), "bug and active or me"],
+        ["the Azure docs, example 2", and(t("bug"), or(t("active"), t("me"))), "bug and [active or me]"],
+        ["the Azure docs, example 3, after a parse", or(t("bug"), and(t("active"), t("me"))), "bug or active and me"],
+        ["a group with the mark stays a group", or(t("bug"), marked(and(t("active"), t("me")))),
+            "bug or [active and me]"],
+        ["a group with not stays a group", and(t("a"), not(or(t("b"), t("c")))), "a and not [b or c]"],
+        ["an and with not inside an or", or(t("a"), not(and(t("b"), t("c")))), "a or not [b and c]"],
+        ["an or inside a run stays a group", or(and(t("a"), or(t("b"), t("c"))), t("d")), "a and [b or c] or d"],
+        ["two nots on a row show as none", and(t("a", 2), t("b")), "a and b"],
+    ])("%s", (_name, group, text) =>
+    {
+        const before = meaning(nodeOf(group, NONE)!);
+        expect(show(group)).toBe(text);
+
+        // 4.2 then 4.1 gives the same level, and the tree means the same.
+        setLevel(group, levelOf(group));
+        expect(show(group)).toBe(text);
+        expect(meaning(nodeOf(group, NONE)!)).toEqual(before);
+    });
+
+    test("a root with not shows as one group with Not on", () =>
+    {
+        const root = rootOf({ root: { kind: "not", child: { kind: "or", children: [
+            { kind: "text", phrase: "a" }, { kind: "text", phrase: "b" }] } } }, MAP);
+
+        expect(show(root)).toBe("not [a or b]");
+    });
+
+    test("two nots on a row are kept as two", () =>
+    {
+        const group = and(t("a", 2), t("b"));
+        setLevel(group, levelOf(group));
+
+        expect((group.children[0] as TextRow).nots).toBe(2);
+    });
+
+    test.each([["the apps' tree", APPS_TREE], ...EXAMPLES])("%s: 4.2 then 4.1 gives the same tree", (_n, tree) =>
+    {
+        const facets = (tree === APPS_TREE) ? MAP : RMAP;
+        const root = rootOf(tree, facets);
+        const before = treeOf(root, facets, tree.return);
+
+        setLevel(root, levelOf(root));
+        expect(meaning(treeOf(root, facets, tree.return).root)).toEqual(meaning(before.root));
+    });
+
+    test("runsOf splits a level at each or", () =>
+    {
+        expect(runsOf(levelOf(or(and(t("a"), t("b")), t("c"))))).toEqual([{ start: 0, end: 1 }, { start: 2, end: 2 }]);
+        expect(runsOf(levelOf(and(t("a"), t("b"))))).toEqual([{ start: 0, end: 1 }]);
+    });
+
+    test("an item path goes through the levels, and back from the row", () =>
+    {
+        const inner = or(t("b"), t("c"));
+        const root = and(t("a"), inner);
+
+        expect(levelAt(root, [1])).toBe(inner);
+        expect(itemAt(root, [1, 1]).item.row).toBe(inner.children[1]);
+        expect(itemPathOf(root, inner.children[1])).toEqual([1, 1]);
+        expect(itemPathOf(root, t("x"))).toBeNull();
+        expect(levelDepth(root)).toBe(2);
+        expect(parseItemPath("1.0")).toEqual([1, 0]);
+        expect(parseItemPath("")).toEqual([]);
     });
 });

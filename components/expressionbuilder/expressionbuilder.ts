@@ -310,6 +310,11 @@ export interface GroupRow extends RowBase
     children: Row[];
     /** Set inside `link ( … )`: the relationship key whose link fields its rows use. */
     linkOf?: string;
+    /**
+     * A group a person made or changed. It draws a solid bracket where the precedence already gives the same
+     * reading, so a group the person sees does not vanish (spec 4.3). The tree is the same without it.
+     */
+    bracket?: true;
 }
 
 export interface FilterRow extends RowBase
@@ -755,6 +760,130 @@ function spanGroups(row: Row): Span | undefined
 function clearSpans(root: Row): void
 {
     for (const { row } of allRows(root)) { row.span = undefined; }
+}
+
+// ============================================================================
+// LEVELS: the grid's view of the tree (spec section 4)
+// ============================================================================
+//
+// A level is a group's items, in order: rows, and groups drawn with a solid
+// bracket. Each item joins the one above it with `and` or `or`. The first
+// item's join is not shown and does not count. A group that reads the same
+// as its parent's level joins that level, so the grid shows only the groups
+// the meaning needs, and the ones a person made.
+
+/** How an item joins the item above it. */
+export type Join = "and" | "or";
+
+/** A row, or a group with a solid bracket, in a level. */
+export interface Item { row: Row; join: Join }
+
+/** An item's index in each level, from the top. A group's level is inside its item. */
+export type ItemPath = number[];
+
+/** Where items can go: before the item at `index` of a level, or at its end. */
+export interface Place { level: ItemPath; index: number }
+
+/** Items next to each other, by their first and last index. */
+export interface Run { start: number; end: number }
+
+/** A group whose items join its parent's level: same op, or an `and` run in an `or`, with no `not` or mark. */
+function joinsLevel(child: Row, parent: GroupRow): child is GroupRow
+{
+    return child.kind === "group" && child.nots === 0 && !child.bracket
+        && (child.op === parent.op || (parent.op === "or" && child.op === "and"));
+}
+
+/** A group's level, by spec 4.1. */
+export function levelOf(group: GroupRow): Item[]
+{
+    const items: Item[] = [];
+    const visit = (g: GroupRow, first: Join): void =>
+    {
+        g.children.forEach((c, i) =>
+        {
+            const join = (i === 0) ? first : g.op;
+            if (joinsLevel(c, g)) { visit(c, join); }
+            else { items.push({ row: c, join: (items.length === 0) ? "and" : join }); }
+        });
+    };
+    visit(group, "and");
+    return items;
+}
+
+/** Each run of a level: split at each item joined with `or`. */
+export function runsOf(items: Item[]): Run[]
+{
+    const runs: Run[] = [];
+    items.forEach((it, i) =>
+    {
+        if (i === 0 || it.join === "or") { runs.push({ start: i, end: i }); }
+        else { runs[runs.length - 1].end = i; }
+    });
+    return runs;
+}
+
+/**
+ * Writes a level back into its group, by spec 4.2: one run is an `and` group, more are an `or` of runs, and a
+ * run of two or more is an `and` group of its own. The group keeps its `not`s, mark, link key and span.
+ */
+export function setLevel(group: GroupRow, items: Item[]): void
+{
+    const runs = runsOf(items).map((r) => items.slice(r.start, r.end + 1).map((it) => it.row));
+    if (runs.length <= 1)
+    {
+        group.op = "and";
+        group.children = runs[0] ?? [];
+        return;
+    }
+    group.op = "or";
+    group.children = runs.map((rows): Row => (rows.length === 1) ? rows[0] : { kind: "group", op: "and", nots: 0,
+        children: rows, ...(group.linkOf ? { linkOf: group.linkOf } : {}) });
+}
+
+/** The group of the level at an item path. The root's level is at []. */
+export function levelAt(root: GroupRow, level: ItemPath): GroupRow
+{
+    let group = root;
+    for (const i of level) { group = levelOf(group)[i].row as GroupRow; }
+    return group;
+}
+
+/** The item at a path, with its level, the level's items and its index there. */
+export function itemAt(root: GroupRow, path: ItemPath): { level: GroupRow; items: Item[]; index: number; item: Item }
+{
+    const level = levelAt(root, path.slice(0, -1));
+    const items = levelOf(level);
+    const index = path[path.length - 1];
+    return { level, items, index, item: items[index] };
+}
+
+/** The item path of a row or a group, found by the row itself, or null when the grid does not show it. */
+export function itemPathOf(root: GroupRow, row: Row, at: ItemPath = []): ItemPath | null
+{
+    const items = levelOf(root);
+    for (let i = 0; i < items.length; i += 1)
+    {
+        const here = [...at, i];
+        if (items[i].row === row) { return here; }
+        const inner = items[i].row;
+        const found = (inner.kind === "group") ? itemPathOf(inner, row, here) : null;
+        if (found) { return found; }
+    }
+    return null;
+}
+
+/** How many bracket columns a group's grid needs: one for its level, and one for each level of groups in it. */
+export function levelDepth(group: GroupRow): number
+{
+    const inner = levelOf(group).map((it) => (it.row.kind === "group" ? levelDepth(it.row) : 0));
+    return 1 + Math.max(0, ...inner);
+}
+
+/** An item path from its text in the page, such as "2.0". */
+export function parseItemPath(text: string): ItemPath
+{
+    return (text === "") ? [] : text.split(".").map(Number);
 }
 
 // ============================================================================
