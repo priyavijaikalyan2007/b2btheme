@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: MIT
  */
 /**
- * TESTS: ExpressionBuilder (#207)
- * The rows and the tree, the edits, what is kept as it came, drafts, the echo of a change back from the bar,
- * and errors placed on rows.
+ * TESTS: ExpressionBuilder (#207, and the grid of #237)
+ * The rows and the tree, the levels the grid draws and their edits, what is kept as it came, drafts, the echo
+ * of a change back from the bar, errors placed on lines, and the grid's toolbar, keys and drag.
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
@@ -305,10 +305,12 @@ describe("ExpressionBuilder", () =>
 
     const make = (tree?: QueryTree, onChange = vi.fn()) =>
         ({ eb: createExpressionBuilder("eb", { facets: FACETS, tree, onChange }), onChange });
-    const row = (path: string): HTMLElement => container.querySelector(`[data-path="${path}"]`)!;
-    const control = (path: string, role: string): HTMLInputElement =>
-        Array.from(row(path).querySelectorAll<HTMLInputElement>(`[data-role="${role}"]`))
-            .find((e) => e.closest("[data-path]") === row(path))!;
+    /** A line of the grid by its item path, and a control on it. */
+    const row = (item: string): HTMLElement => container.querySelector(`[data-item="${item}"]`)!;
+    const control = (item: string, role: string): HTMLInputElement =>
+        row(item).querySelector<HTMLInputElement>(`[data-role="${role}"]`)!;
+    const tool = (role: string): HTMLButtonElement =>
+        container.querySelector<HTMLButtonElement>(`.expressionbuilder-footer [data-role="${role}"]`)!;
     const choose = (el: HTMLInputElement, value: string): void =>
     {
         el.value = value;
@@ -353,7 +355,7 @@ describe("ExpressionBuilder", () =>
     {
         const { eb, onChange } = make(APPS_TREE);
 
-        control("", "add-filter").click();
+        tool("add-filter").click();
         expect(document.activeElement).toBe(control("2", "key"));
         expect(row("2").classList.contains("expressionbuilder-row-draft")).toBe(true);
         expect(live()).toBe("");
@@ -461,25 +463,6 @@ describe("ExpressionBuilder", () =>
         expect(container.querySelector<HTMLElement>(".expressionbuilder-message")!.hidden).toBe(true);
     });
 
-    test("Alt+ArrowDown moves the row and keeps the focus on the same control, and the buttons do the same", () =>
-    {
-        const { onChange } = make(APPS_TREE);
-        control("0", "op").focus();
-
-        control("0", "op")
-            .dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", altKey: true, bubbles: true }));
-
-        expect(control("1", "key").value).toBe("type");
-        expect(document.activeElement).toBe(control("1", "op"));
-        expect(onChange).toHaveBeenCalledTimes(1);
-
-        control("1", "up").click();
-        expect(control("0", "key").value).toBe("type");
-        // Move up is off at the top, so the focus stays in the row, on its first control.
-        expect(control("0", "up").disabled).toBe(true);
-        expect(document.activeElement!.closest("[data-path]")).toBe(row("0"));
-    });
-
     test("Not toggles a `not` around the row", () =>
     {
         const { onChange } = make(APPS_TREE);
@@ -495,42 +478,168 @@ describe("ExpressionBuilder", () =>
         expect(onChange.mock.calls[1][0].root.children[0]).toMatchObject({ kind: "filter", key: "type" });
     });
 
-    test("a group joins its rows by any or all, and can be taken apart", () =>
+    const tx = (phrase: string): QueryNode => ({ kind: "text", phrase });
+    const textTree = (root: QueryNode): QueryTree => ({ root });
+    const words = (): string[] => Array.from(container.querySelectorAll<HTMLInputElement>("[data-role=phrase]"))
+        .map((i) => i.value);
+
+    test("each line has a join but the first, and the dashed run shows what the precedence reads", () =>
     {
-        const { eb, onChange } = make(APPS_TREE);
+        make(textTree({ kind: "or", children: [{ kind: "and", children: [tx("a"), tx("b")] }, tx("c")] }));
 
-        control("0", "wrap").click();
-        expect(row("0").classList.contains("expressionbuilder-group")).toBe(true);
-        choose(control("0", "op"), "or");
-        expect(eb.getTree().root!.children![0])
-            .toMatchObject({ kind: "or", children: [{ kind: "filter", key: "type" }] });
-        // A group of one means what its row means, so the query did not change.
-        expect(onChange).not.toHaveBeenCalled();
-
-        control("0", "unwrap").click();
-        expect(row("0").classList.contains("expressionbuilder-row-filter")).toBe(true);
+        expect(control("0", "join")).toBeNull();
+        expect(control("1", "join").value).toBe("and");
+        expect(control("2", "join").value).toBe("or");
+        expect(row("0").querySelector(".expressionbuilder-run-start [data-role=make-group]")).not.toBeNull();
+        expect(row("1").querySelector(".expressionbuilder-run-end")).not.toBeNull();
+        expect(row("2").querySelector(".expressionbuilder-run")).toBeNull();
+        expect(row("1").closest("li")!.getAttribute("aria-label"))
+            .toBe("Row 2: and, has the words b, read together with row 1");
     });
 
-    test("removing a row moves the focus to the row that took its place", () =>
+    test("a join changes what the query means, and reports it", () =>
+    {
+        const { onChange } = make(textTree({ kind: "and", children: [tx("a"), tx("b"), tx("c")] }));
+        control("2", "join").focus();
+
+        choose(control("2", "join"), "or");
+
+        expect(meaning(onChange.mock.calls[0][0].root)).toEqual(meaning({ kind: "or", children: [
+            { kind: "and", children: [tx("a"), tx("b")] }, tx("c")] }));
+        expect(document.activeElement).toBe(control("2", "join"));
+    });
+
+    test("a group draws a solid bracket and its control, and Mixed shows while its joins differ", () =>
+    {
+        make(textTree({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c"), tx("e")] }] }));
+
+        expect(row("1").classList.contains("expressionbuilder-line-group")).toBe(true);
+        expect(control("1", "group-op").value).toBe("or");
+        expect(row("1.2").querySelector(".expressionbuilder-bracket-end")).not.toBeNull();
+        expect(container.querySelector('[data-level="1"]')!.getAttribute("aria-label"))
+            .toBe("Group of 3 rows, joined with or");
+
+        choose(control("1.1", "join"), "and");
+        expect(control("1", "group-op").value).toBe("mixed");
+        expect(control("1", "group-op").querySelector<HTMLOptionElement>('[value="mixed"]')!.disabled).toBe(true);
+    });
+
+    test("Ungroup puts the rows back, and is off for a group with Not, saying why", () =>
+    {
+        const { eb } = make(textTree({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] },
+            { kind: "not", child: { kind: "or", children: [tx("d"), tx("e")] } }] }));
+
+        expect(control("2", "ungroup").disabled).toBe(true);
+        expect(control("2", "ungroup").title).toMatch(/would change what it means/);
+
+        control("1", "ungroup").click();
+        expect(words()).toEqual(["a", "b", "c", "d", "e"]);
+        expect(document.activeElement).toBe(control("1", "check"));
+        // a and b or c and not (d or e): the precedence reads it as (a and b) or (c and not (d or e)).
+        expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "or", children: [
+            { kind: "and", children: [tx("a"), tx("b")] },
+            { kind: "and", children: [tx("c"), { kind: "not", child: { kind: "or", children: [tx("d"), tx("e")] } }] },
+        ] }));
+    });
+
+    test("Make a group turns a dashed run solid, and the query means the same", () =>
+    {
+        const { onChange } = make(textTree({ kind: "or", children: [tx("a"), { kind: "and", children: [tx("b"),
+            tx("c")] }] }));
+
+        row("1").querySelector<HTMLButtonElement>("[data-role=make-group]")!.click();
+
+        expect(row("1").classList.contains("expressionbuilder-line-group")).toBe(true);
+        expect(document.activeElement).toBe(control("1", "check"));
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
+    test("Not turned off on a group keeps the group, where it would read the same as its level", () =>
+    {
+        const { onChange } = make(textTree({ kind: "or", children: [tx("a"),
+            { kind: "not", child: { kind: "or", children: [tx("b"), tx("c")] } }] }));
+
+        control("1", "not").click();
+
+        expect(row("1").classList.contains("expressionbuilder-line-group")).toBe(true);
+        expect(meaning(onChange.mock.calls[0][0].root)).toEqual(meaning({ kind: "or", children: [tx("a"),
+            tx("b"), tx("c")] }));
+    });
+
+    test("Add condition adds a draft at the end with And, and Insert above adds one at that row", () =>
+    {
+        make(textTree({ kind: "or", children: [tx("a"), tx("b")] }));
+
+        tool("add-filter").click();
+        expect(control("2", "join").value).toBe("and");
+        expect(document.activeElement).toBe(control("2", "key"));
+
+        control("1", "more").click();
+        container.querySelector<HTMLButtonElement>('[role=menu] [data-role="insert-text"]')!.click();
+        expect(words()).toEqual(["a", "", "b"]);
+        expect(document.activeElement).toBe(control("1", "phrase"));
+    });
+
+    test("the ⋯ menu opens on its first item, closes on Escape back to ⋯, and stops that Escape", () =>
+    {
+        make(textTree({ kind: "and", children: [tx("a"), tx("b")] }));
+        const outside = vi.fn();
+        document.addEventListener("keydown", outside);
+
+        control("0", "more").click();
+        const menu = container.querySelector<HTMLElement>("[role=menu]")!;
+        expect(document.activeElement).toBe(menu.querySelector("[role=menuitem]"));
+        expect(control("0", "more").getAttribute("aria-expanded")).toBe("true");
+        expect(menu.querySelector<HTMLButtonElement>('[data-role="up"]')!.disabled).toBe(true);
+
+        document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(container.querySelector("[role=menu]")).toBeNull();
+        expect(document.activeElement).toBe(control("0", "more"));
+        expect(outside).not.toHaveBeenCalled();
+
+        // With nothing open, Escape reaches the dialog the builder sits in.
+        control("0", "more").dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        expect(outside).toHaveBeenCalledTimes(1);
+        document.removeEventListener("keydown", outside);
+    });
+
+    test("a press outside the ⋯ menu closes it, and Move down there moves the row", () =>
+    {
+        make(textTree({ kind: "and", children: [tx("a"), tx("b")] }));
+
+        control("0", "more").click();
+        document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(container.querySelector("[role=menu]")).toBeNull();
+
+        control("0", "more").click();
+        container.querySelector<HTMLButtonElement>('[role=menu] [data-role="down"]')!.click();
+        expect(words()).toEqual(["b", "a"]);
+        expect(document.activeElement).toBe(control("1", "more"));
+    });
+
+    test("✕ removes the row, and the focus goes to the next line, or Add condition when none is left", () =>
     {
         const { eb } = make(APPS_TREE);
 
         control("0", "remove").click();
-
         expect(eb.getTree()).toEqual({ root: f("created_at", "On", { date: "2026-11-15", zone: "Asia/Kolkata" }) });
-        expect(document.activeElement!.closest("[data-path]")).toBe(row("0"));
+        expect(document.activeElement).toBe(control("0", "check"));
+
+        control("0", "remove").click();
+        expect(document.activeElement).toBe(tool("add-filter"));
     });
 
-    test("a kept part is read-only, says what it is, and still moves and goes", () =>
+    test("a row the grid cannot edit yet is read-only, says why, and still checks and goes", () =>
     {
         const nested: QueryNode = { kind: "nested", key: "rel.parent_of", where: f("type", "Equals", { text: "x" }) };
         const { eb } = make({ root: { kind: "and", children: [f("title", "Contains", { text: "a" }), nested] } });
 
         expect(row("1").textContent)
             .toContain("A search inside rel.parent_of, which is not a relationship key. Edit this in the search bar.");
-        expect(row("1").querySelector("input, select")).toBeNull();
-        control("1", "up").click();
-        expect(eb.getTree().root!.children![0]).toEqual(nested);
+        expect(row("1").querySelector("[data-role=key], [data-role=op]")).toBeNull();
+        control("1", "check").click();
+        tool("tool-remove").click();
+        expect(eb.getTree()).toEqual({ root: f("title", "Contains", { text: "a" }) });
     });
 
     test("disable turns off every control, and enable turns them on", () =>
@@ -758,104 +867,40 @@ describe("ExpressionBuilder, part 2", () =>
 
     const make = (tree?: QueryTree, onChange = vi.fn()) =>
         ({ eb: createExpressionBuilder("eb", { facets: REL, tree, onChange }), onChange });
-    const row = (path: string): HTMLElement => container.querySelector(`[data-path="${path}"]`)!;
-    const control = (path: string, role: string): HTMLInputElement =>
-        Array.from(row(path).querySelectorAll<HTMLInputElement>(`[data-role="${role}"]`))
-            .find((e) => e.closest("[data-path]") === row(path))!;
-    const choose = (el: HTMLInputElement, value: string): void =>
+    /** A line of the grid by its item path, and a control on it. */
+    const row = (item: string): HTMLElement => container.querySelector(`[data-item="${item}"]`)!;
+    const control = (item: string, role: string): HTMLInputElement =>
+        row(item).querySelector<HTMLInputElement>(`[data-role="${role}"]`)!;
+
+    test("in part 1, a search inside, a link, the same item as, and a comparison are read-only", () =>
     {
-        el.value = value;
-        el.dispatchEvent(new Event("change", { bubbles: true }));
-    };
-    const optionTexts = (el: HTMLInputElement): string[] =>
-        Array.from((el as unknown as HTMLSelectElement).options).map((o) => o.textContent ?? "");
+        make(EXAMPLES[2][1]);
 
-    test("\"the same item as\" makes one variable for both conditions, and removing one makes the other a draft", () =>
-    {
-        const { eb, onChange } = make();
-
-        control("", "add-filter").click();
-        choose(control("0", "key"), "rel.created_by");
-        control("", "add-filter").click();
-        choose(control("1", "key"), "rel.completed_by");
-        expect(optionTexts(control("1", "same"))).toEqual(["a value", "the same item as Created by"]);
-
-        choose(control("1", "same"), "row:0");
-
-        expect(onChange.mock.calls.at(-1)![0]).toEqual({ root: { kind: "and", children: [
-            rel("rel.created_by", v("created_by")), rel("rel.completed_by", v("created_by"))] } });
-        expect(control("0", "same").value).toBe("var:created_by");
-        expect(row("1").querySelector("[data-role='value-0']")).toBeNull();
-
-        control("0", "remove").click();
-
-        expect(row("0").textContent).toContain("Needs a second use of ?created_by");
-        expect(eb.getTree()).toEqual({});
+        expect(row("1").querySelector(".expressionbuilder-cell-op")!.textContent).toBe("has one where");
+        expect(row("1").querySelector(".expressionbuilder-cell-value")!.textContent)
+            .toBe("a search inside. Edit this in the search bar.");
+        expect(row("0").querySelector(".expressionbuilder-cell-value")!.textContent)
+            .toBe("the same item as ?org. Edit this in the search bar.");
+        expect(row("0").closest("li")!.getAttribute("aria-label")).toContain("is the same item as another row");
+        expect(container.querySelector('[data-role=op] option[value="where"]')).toBeNull();
+        expect(container.querySelector("[data-role=add-link], [data-role=same], [data-role=add-compare]")).toBeNull();
     });
 
-    test("\"has one where\" opens a search inside, and a condition there makes a nested search", () =>
+    test("a link condition and a comparison show what they hold, read-only", () =>
     {
-        const { onChange } = make({ root: rel("rel.belongs_to_org_unit", v("org")) });
+        make(EXAMPLES[3][1]);
+        expect(row("1").querySelector(".expressionbuilder-cell-value")!.textContent)
+            .toBe("a search inside, with conditions on its link. Edit this in the search bar.");
 
-        control("", "add-filter").click();
-        choose(control("1", "key"), "rel.signed_off_by");
-        choose(control("1", "op"), "where");
-        expect(row("1").textContent).toContain("Needs a condition inside");
-        expect(row("1.where")).not.toBeNull();
-
-        control("1.where", "add-filter").click();
-        choose(control("1.where.0", "key"), "rel.member_of");
-        control("1.where.0", "not").click();
-        choose(control("1.where.0", "same"), "var:org");
-
-        // A search inside of one condition is that condition, as Print writes it.
-        expect(onChange.mock.calls.at(-1)![0]).toEqual({ root: { kind: "and", children: [
-            rel("rel.belongs_to_org_unit", v("org")),
-            { kind: "nested", key: "rel.signed_off_by",
-                where: { kind: "not", child: rel("rel.member_of", v("org")) } }] } });
+        container.textContent = "";
+        make(EXAMPLES[1][1]);
+        expect(row("2").querySelector(".expressionbuilder-cell-key")!.textContent).toBe("?approver");
+        expect(row("2").querySelector(".expressionbuilder-cell-op")!.textContent).toBe("is not the same item as");
+        expect(row("2").querySelector(".expressionbuilder-cell-value")!.textContent)
+            .toBe("?doer. Edit this in the search bar.");
     });
 
-    test("link conditions use the link's fields, and go with their own button", () =>
-    {
-        const { eb } = make();
-
-        control("", "add-filter").click();
-        choose(control("0", "key"), "rel.signed_off_by");
-        control("0", "add-link").click();
-        expect(document.activeElement).toBe(control("0.link", "add-filter"));
-        expect(control("0.link", "add-text")).toBeUndefined();
-
-        control("0.link", "add-filter").click();
-        expect(optionTexts(control("0.link.0", "key"))).toEqual(["Choose a key", "Provenance", "Made"]);
-        choose(control("0.link.0", "key"), "provenance");
-        choose(control("0.link.0", "value-0"), "manual");
-        choose(control("0", "value-0"), "6f1c");
-
-        expect(eb.getTree()).toEqual({ root: { ...rel("rel.signed_off_by", { resource: "6f1c" }),
-            link: rel("provenance", { text: "manual" }) } });
-
-        control("0.link", "remove-link").click();
-        expect(eb.getTree()).toEqual({ root: rel("rel.signed_off_by", { resource: "6f1c" }) });
-    });
-
-    test("a comparison is offered once the query has two variables, and compares them", () =>
-    {
-        const tree = EXAMPLES[1][1];
-        const { eb } = make(EXAMPLES[0][1]);
-
-        // One variable, ?p: nothing to compare it with.
-        expect(control("", "add-compare")).toBeUndefined();
-        eb.setParsed({ tree: { root: { kind: "and", children: [...tree.root!.children!.slice(0, 2),
-            rel("rel.created_by", v("doer")), rel("rel.member_of", v("approver"))] } } });
-        control("", "add-compare").click();
-        choose(control("4", "left"), "approver");
-        choose(control("4", "right"), "doer");
-
-        expect(eb.getTree().root!.children![4])
-            .toEqual({ kind: "compare", left: v("approver"), op: "NotEquals", right: v("doer") });
-    });
-
-    test("a warning lands on the row inside a where or a link whose text holds it", () =>
+    test("a warning inside a where or a link lands on its condition's line in part 1", () =>
     {
         const { eb } = make();
         const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual ) "
@@ -875,63 +920,23 @@ describe("ExpressionBuilder, part 2", () =>
             { code: "QL_B", title: "Inside", detail: "B.", start: at("member_of")[0], end: at("member_of")[1] },
         ] });
 
-        expect(row("1.link.0").classList.contains("expressionbuilder-has-warning")).toBe(true);
-        expect(row("1.where.0").classList.contains("expressionbuilder-has-warning")).toBe(true);
+        // Part 1 shows no line inside the search inside or the link, so both go on the condition's line.
+        expect(row("1").classList.contains("expressionbuilder-has-warning")).toBe(true);
         expect(row("1").querySelectorAll(".expressionbuilder-problem")).toHaveLength(2);
-    });
-
-    test("the same tree back with spans gives them to the rows in text order, a draft's link rows left out", () =>
-    {
-        const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual at after 2026-11-01 ) "
-            + "where ( -rel.member_of:?org ) title";
-        const span = (s: string) => ({ start: text.indexOf(s), end: text.indexOf(s) + s.length });
-        const sent = EXAMPLES[3][1];
-        const { eb } = make(sent);
-        // A draft with a complete link condition comes first, and none of its rows are in the tree.
-        control("", "add-filter").click();
-        choose(control("2", "key"), "rel.signed_off_by");
-        control("2", "add-link").click();
-        control("2.link", "add-filter").click();
-        choose(control("2.link.0", "key"), "provenance");
-        choose(control("2.link.0", "value-0"), "ai");
-        control("2", "up").click();
-        control("1", "up").click();
-        expect(control("0", "key").value).toBe("rel.signed_off_by");
-
-        const nested = sent.root!.children![1];
-        eb.setParsed({ tree: { root: { kind: "and", children: [
-            { ...sent.root!.children![0], span: span("rel.belongs_to_org_unit:?org") },
-            { ...nested, span: span("rel.signed_off_by"),
-                link: { kind: "and", span: span("provenance:manual at after 2026-11-01"), children: [
-                    { ...nested.link!.children![0], span: span("provenance:manual") },
-                    { ...nested.link!.children![1], span: span("at after 2026-11-01") }] },
-                where: { ...nested.where!, span: span("-rel.member_of:?org") } },
-        ] } }, warnings: [
-            { code: "QL_A", title: "Date", detail: "A.", ...span("2026-11-01") },
-            { code: "QL_B", title: "Across the link", detail: "B.", ...span("manual at") },
-            { code: "QL_C", title: "Inside", detail: "C.", ...span("member_of") },
-        ] });
-
-        // The draft at row 0 took no span, so each warning lands where its text is.
-        expect(row("2.link.1").querySelector(".expressionbuilder-problem-text")!.textContent).toBe("Date. A.");
-        expect(row("2.link").querySelector(":scope > .expressionbuilder-problem .expressionbuilder-problem-text")!
-            .textContent).toBe("Across the link. B.");
-        expect(row("2.where.0").querySelector(".expressionbuilder-problem-text")!.textContent).toBe("Inside. C.");
-        expect(row("0").querySelector(".expressionbuilder-problem")).toBeNull();
     });
 
     test("a search inside back from the bar as one bare condition keeps the rows and the focus", () =>
     {
         const { eb } = make(EXAMPLES[2][1]);
-        const op = control("1", "op");
-        op.focus();
+        const box = control("1", "check");
+        box.focus();
 
         eb.setParsed({ tree: { root: { kind: "and", children: [rel("rel.belongs_to_org_unit", v("org")),
             { kind: "nested", key: "rel.signed_off_by",
                 where: { kind: "and", children: [{ kind: "not", child: rel("rel.member_of", v("org")) }] } }] } } });
 
-        expect(control("1", "op")).toBe(op);
-        expect(document.activeElement).toBe(op);
+        expect(control("1", "check")).toBe(box);
+        expect(document.activeElement).toBe(box);
     });
 });
 
@@ -1180,5 +1185,312 @@ describe("level edits", () =>
         expect(moveTarget(root, [], 0, 0, -1)).toBeNull();
         expect(moveTarget(root, [], 2, 2, 1)).toBeNull();
         expect(moveTarget(and(t("a"), t("b")), [], 0, 0, 1)).toEqual({ level: [], index: 2 });
+    });
+});
+
+// ============================================================================
+// THE GRID: TOOLBAR, KEYBOARD AND DRAG (#237, spec sections 5.3, 5.6 and 6)
+// ============================================================================
+
+describe("ExpressionBuilder, the grid's toolbar, keys and drag", () =>
+{
+    let container: HTMLElement;
+    beforeEach(() =>
+    {
+        vi.useFakeTimers();
+        container = document.createElement("div");
+        container.id = "eb";
+        document.body.appendChild(container);
+    });
+    afterEach(() =>
+    {
+        container.remove();
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+    });
+
+    const tx = (phrase: string): QueryNode => ({ kind: "text", phrase });
+    const make = (root: QueryNode, extra: Partial<Parameters<typeof createExpressionBuilder>[1]> = {}) =>
+        createExpressionBuilder("eb", { facets: FACETS, tree: { root }, ...extra });
+    const line = (item: string): HTMLElement => container.querySelector(`[data-item="${item}"]`)!;
+    const box = (item: string): HTMLInputElement => line(item).querySelector<HTMLInputElement>("[data-role=check]")!;
+    const isGroup = (item: string): boolean => line(item).classList.contains("expressionbuilder-line-group");
+    const tool = (role: string): HTMLButtonElement =>
+        container.querySelector<HTMLButtonElement>(`.expressionbuilder-footer [data-role="${role}"]`)!;
+    const words = (): string[] => Array.from(container.querySelectorAll<HTMLInputElement>("[data-role=phrase]"))
+        .map((i) => i.value);
+    const key = (el: HTMLElement, init: KeyboardEventInit): void =>
+    {
+        el.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }));
+    };
+    const live = (): string => container.querySelector("[role=status]")!.textContent ?? "";
+
+    describe("the toolbar (spec 5.3)", () =>
+    {
+        test("every button is off with nothing checked, and its title says why", () =>
+        {
+            make({ kind: "and", children: [tx("a"), tx("b")] });
+
+            expect(["tool-group", "tool-ungroup", "tool-up", "tool-down", "tool-remove"].map((r) => tool(r).disabled))
+                .toEqual([true, true, true, true, true]);
+            expect(tool("tool-group").title).toBe("Check two or more rows next to each other to group them");
+            expect(tool("tool-up").title).toBe("Check rows next to each other to move them");
+        });
+
+        test("Group wraps rows next to each other, and is off for rows apart", () =>
+        {
+            const eb = make({ kind: "or", children: [tx("a"), tx("b"), tx("c")] });
+            box("0").click();
+            box("2").click();
+            expect(tool("tool-group").disabled).toBe(true);
+
+            box("2").click();
+            box("1").click();
+            expect(tool("tool-group").title).toBe("Group (Alt+G)");
+            tool("tool-group").click();
+
+            expect(isGroup("0")).toBe(true);
+            expect(document.activeElement).toBe(box("0"));
+            // The group is checked in place of its rows, so Ungroup acts on it.
+            expect(box("0").checked).toBe(true);
+            expect(box("0.0").checked).toBe(false);
+            expect(tool("tool-ungroup").disabled).toBe(false);
+            expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "or", children: [tx("a"), tx("b"), tx("c")] }));
+        });
+
+        test("Move up goes into a group above, and says the row it lands on", () =>
+        {
+            make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] }, tx("d")] });
+
+            box("2").click();
+            tool("tool-up").click();
+
+            expect(words()).toEqual(["a", "b", "c", "d"]);
+            expect(box("1.2").checked).toBe(true);
+            expect(document.activeElement).toBe(tool("tool-up"));
+            vi.advanceTimersByTime(20);
+            expect(live()).toBe("Moved to row 5");
+        });
+
+        test("Move up at the top of a group takes the row out, and is off at the top of the grid", () =>
+        {
+            make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c"), tx("e")] }] });
+
+            box("1.0").click();
+            tool("tool-up").click();
+            expect(words()).toEqual(["a", "b", "c", "e"]);
+            expect(line("1").querySelector("[data-role=phrase]")).not.toBeNull();
+
+            tool("tool-up").click();
+            expect(words()).toEqual(["b", "a", "c", "e"]);
+            expect(tool("tool-up").disabled).toBe(true);
+            expect(tool("tool-up").title).toBe("The rows are at the top");
+            // The button went off, so the focus is on the row it moved.
+            expect(document.activeElement).toBe(box("0"));
+        });
+
+        test("the checked state stays when the same query comes back from the bar, and goes with another", () =>
+        {
+            const eb = make({ kind: "and", children: [tx("a"), tx("b")] });
+            box("1").click();
+
+            eb.setParsed({ tree: { root: { kind: "and", children: [tx("a"), tx("b")] } } });
+            expect(box("1").checked).toBe(true);
+
+            eb.setParsed({ tree: { root: { kind: "and", children: [tx("x"), tx("y")] } } });
+            expect(box("1").checked).toBe(false);
+            expect(tool("tool-remove").disabled).toBe(true);
+        });
+
+        test("Remove takes every checked item, a group with its rows", () =>
+        {
+            const eb = make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] },
+                tx("d")] });
+            box("1").click();
+            box("1.0").click();
+            box("2").click();
+
+            tool("tool-remove").click();
+            expect(eb.getTree()).toEqual({ root: tx("a") });
+            expect(document.activeElement).toBe(box("0"));
+        });
+    });
+
+    describe("the keys (spec 6)", () =>
+    {
+        test("↑ and ↓ on a check box go to the line above or below, across a group's edge", () =>
+        {
+            make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] }] });
+            box("0").focus();
+
+            key(box("0"), { key: "ArrowDown" });
+            expect(document.activeElement).toBe(box("1"));
+            key(box("1"), { key: "ArrowDown" });
+            expect(document.activeElement).toBe(box("1.0"));
+            key(box("1.0"), { key: "ArrowUp" });
+            expect(document.activeElement).toBe(box("1"));
+        });
+
+        test("Shift with ↓ checks the next item in the level, and Alt+G groups them, on macOS too", () =>
+        {
+            make({ kind: "or", children: [tx("a"), tx("b"), tx("c")] });
+            box("0").focus();
+
+            key(box("0"), { key: "ArrowDown", shiftKey: true });
+            expect([box("0").checked, box("1").checked]).toEqual([true, true]);
+            expect(document.activeElement).toBe(box("1"));
+
+            key(box("1"), { key: "©", code: "KeyG", altKey: true });
+            expect(isGroup("0")).toBe(true);
+        });
+
+        test("Alt+↓ moves the focused row when none is checked, and keeps the focus on its control", () =>
+        {
+            const onChange = vi.fn();
+            make({ kind: "and", children: [tx("a"), tx("b")] }, { onChange });
+            const phrase = line("0").querySelector<HTMLInputElement>("[data-role=phrase]")!;
+            phrase.focus();
+
+            key(phrase, { key: "ArrowDown", altKey: true });
+            expect(words()).toEqual(["b", "a"]);
+            expect(document.activeElement).toBe(line("1").querySelector("[data-role=phrase]"));
+            expect(onChange).toHaveBeenCalledTimes(1);
+        });
+
+        test("Alt+Shift+G ungroups the focused group, and a binding can change it", () =>
+        {
+            make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] }] },
+                { keyBindings: { ungroup: "Ctrl+U" } });
+            box("1").focus();
+
+            key(box("1"), { key: "G", code: "KeyG", altKey: true, shiftKey: true });
+            expect(isGroup("1")).toBe(true);
+            key(box("1"), { key: "u", code: "KeyU", ctrlKey: true });
+            expect(isGroup("1")).toBe(false);
+            expect(tool("tool-ungroup").title).toBe("Check one group to ungroup it");
+        });
+
+        test("Alt+Shift+G does nothing to a group with Not", () =>
+        {
+            make({ kind: "and", children: [tx("a"), { kind: "not", child: { kind: "or", children: [tx("b"),
+                tx("c")] } }] });
+            box("1").focus();
+
+            key(box("1"), { key: "G", code: "KeyG", altKey: true, shiftKey: true });
+            expect(isGroup("1")).toBe(true);
+        });
+    });
+
+    describe("the drag (spec 5.6)", () =>
+    {
+        beforeEach(() =>
+        {
+            vi.useRealTimers();
+            HTMLElement.prototype.setPointerCapture = vi.fn();
+        });
+
+        /** Lays the lines out 40px apart, each bracket column 24px wide from x = 60, and answers elementFromPoint. */
+        function layout(): void
+        {
+            const lines = Array.from(container.querySelectorAll<HTMLElement>(".expressionbuilder-line"));
+            const rect = (left: number, top: number, w: number, h: number) =>
+                ({ left, top, right: left + w, bottom: top + h, width: w, height: h, x: left, y: top }) as DOMRect;
+            vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement)
+            {
+                const owner = this.closest<HTMLElement>(".expressionbuilder-line");
+                const top = owner ? lines.indexOf(owner) * 40 : lines.length * 40;
+                const depth = this.getAttribute("data-depth");
+                return (depth !== null) ? rect(60 + Number(depth) * 24, top, 24, 40) : rect(0, top, 800, 40);
+            });
+            document.elementFromPoint = (x: number, y: number): Element | null =>
+            {
+                const at = lines[Math.floor(y / 40)];
+                if (!at) { return container.querySelector(".expressionbuilder-footer"); }
+                const cell = Array.from(at.querySelectorAll<HTMLElement>(".expressionbuilder-bracket")).find((c) =>
+                {
+                    const left = 60 + Number(c.getAttribute("data-depth")) * 24;
+                    return x >= left && x < left + 24;
+                });
+                return cell ?? at;
+            };
+        }
+
+        /** Presses an item's handle, moves the pointer to a point, and lifts it or cancels. */
+        function drag(item: string, x: number, y: number, end: "pointerup" | "pointercancel" = "pointerup"): void
+        {
+            const handle = line(item).querySelector<HTMLElement>(".expressionbuilder-drag")!;
+            const fire = (type: string, cx: number, cy: number): boolean => handle.dispatchEvent(new PointerEvent(type,
+                { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true,
+                    button: (type === "pointermove") ? -1 : 0, clientX: cx, clientY: cy }));
+            fire("pointerdown", 400, 5);
+            fire("pointermove", x, y);
+            fire(end, x, y);
+        }
+
+        test("a row added at the end and dropped into a group joins it with the group's join", () =>
+        {
+            const eb = make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] },
+                tx("d")] });
+            layout();
+
+            // Lines: a 0-40, the group 40-80, b 80-120, c 120-160, d 160-200. The bottom half of c, right of the
+            // brackets, is the end of the group.
+            drag("2", 400, 150);
+
+            expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "and", children: [tx("a"),
+                { kind: "or", children: [tx("b"), tx("c"), tx("d")] }] }));
+            expect(document.activeElement).toBe(box("1.2"));
+        });
+
+        test("at a line where a group ends, the bracket column under the pointer picks the level", () =>
+        {
+            const eb = make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] }] });
+            layout();
+
+            // The bottom half of c, over column 0: after the group, in the top level.
+            drag("0", 65, 150);
+
+            expect(words()).toEqual(["b", "c", "a"]);
+            expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "and", children: [
+                { kind: "or", children: [tx("b"), tx("c")] }, tx("a")] }));
+        });
+
+        test("the bottom half of a group's line is first in the group, and the top half is before it", () =>
+        {
+            const eb = make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] },
+                tx("d")] });
+            layout();
+
+            drag("2", 400, 70);
+            expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "and", children: [tx("a"),
+                { kind: "or", children: [tx("d"), tx("b"), tx("c")] }] }));
+        });
+
+        test("a group cannot drop into itself, and a cancel or Escape moves nothing", () =>
+        {
+            const onChange = vi.fn();
+            make({ kind: "and", children: [tx("a"), { kind: "or", children: [tx("b"), tx("c")] }] }, { onChange });
+            layout();
+
+            drag("1", 400, 90);
+            drag("0", 400, 150, "pointercancel");
+            expect(container.querySelector(".expressionbuilder-dragging, .expressionbuilder-drop-after")).toBeNull();
+
+            // Escape during a drag ends it, wherever the focus is, and the dialog does not see it.
+            const outside = vi.fn();
+            window.addEventListener("keydown", outside);
+            const handle = line("0").querySelector<HTMLElement>(".expressionbuilder-drag")!;
+            const init = { bubbles: true, pointerId: 1, pointerType: "mouse", isPrimary: true };
+            handle.dispatchEvent(new PointerEvent("pointerdown", { ...init, button: 0, clientX: 400, clientY: 5 }));
+            handle.dispatchEvent(new PointerEvent("pointermove", { ...init, button: -1, clientX: 400, clientY: 150 }));
+            expect(container.querySelector(".expressionbuilder-drop-after")).not.toBeNull();
+            document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+            handle.dispatchEvent(new PointerEvent("pointerup", { ...init, button: 0, clientX: 400, clientY: 150 }));
+            window.removeEventListener("keydown", outside);
+
+            expect(outside).not.toHaveBeenCalled();
+            expect(container.querySelector(".expressionbuilder-dragging, .expressionbuilder-drop-after")).toBeNull();
+            expect(onChange).not.toHaveBeenCalled();
+        });
     });
 });
