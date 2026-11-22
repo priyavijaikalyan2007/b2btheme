@@ -36,17 +36,24 @@ $eb-bracket-coarse: 44px;
 // operator, value, and the row's actions.
 // ============================================================================
 
+// A narrow screen scrolls the grid sideways inside the builder (spec 7.2). The
+// top level is the grid, at least as wide as its content, so no column is
+// squeezed under the next.
 .expressionbuilder-grid {
-    display: grid;
-    grid-template-columns:
-        auto auto repeat(var(--eb-depth, 1), var(--eb-bracket))
-        auto minmax(8rem, auto) auto minmax(8rem, 1fr) auto;
-    // A narrow screen scrolls the grid sideways inside the builder (spec 7.2).
     overflow-x: auto;
     overscroll-behavior: contain;
 }
 
-.expressionbuilder-level,
+.expressionbuilder-grid > .expressionbuilder-level {
+    display: grid;
+    grid-template-columns:
+        auto auto repeat(var(--eb-depth, 1), var(--eb-bracket))
+        auto minmax(8rem, auto) auto minmax(8rem, 1fr) auto;
+    width: max-content;
+    min-width: 100%;
+}
+
+.expressionbuilder-level .expressionbuilder-level,
 .expressionbuilder-item,
 .expressionbuilder-line {
     display: grid;
@@ -83,7 +90,18 @@ $eb-bracket-coarse: 44px;
     flex-wrap: wrap;
     align-items: center;
     gap: $sp-2;
-    min-width: 0;
+}
+
+// The join list and Not keep their places, so Not lines up on a level's first
+// row, which has no join.
+.expressionbuilder-join {
+    display: inline-grid;
+    grid-template-columns: 5rem auto;
+    column-gap: $sp-2;
+
+    > [data-role="not"] {
+        grid-column: 2;
+    }
 }
 
 // A kept row's text, and a group's control, run across key, operator and value.
