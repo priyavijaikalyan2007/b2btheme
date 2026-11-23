@@ -12,6 +12,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
 import { createFormDialog } from "./formdialog";
+// warnOnDirty asks through ConfirmDialog, which publishes window.showConfirmDialog.
+import "../confirmdialog/confirmdialog";
 import type { FormDialogOptions, FormFieldDef, FormDialog } from "./formdialog";
 
 // ============================================================================
@@ -1034,19 +1036,19 @@ describe("FormDialog tap outside (TOUCH_EXPERIENCE.md 6.1)", () =>
     test("with warnOnDirty, the tap on a form with unsaved changes asks before it discards them", async () =>
     {
         const onCancel = vi.fn();
-        const ask = vi.fn(() => Promise.resolve(true));
-        (window as unknown as { showConfirmDialog: unknown }).showConfirmDialog = ask;
         const handle = createFormDialog(defaultOptions({ onCancel, warnOnDirty: true }));
         handle.show();
         vi.advanceTimersByTime(300);
         getInput(handle.getElement(), "username")!.value = "ada";
 
         tapBackdrop();
-        expect(ask).toHaveBeenCalledTimes(1);
-        await Promise.resolve();
-        await Promise.resolve();
+        vi.advanceTimersByTime(300);
+        const discard = document.querySelector<HTMLButtonElement>(".confirmdialog-confirm")!;
+        expect(discard.textContent).toBe("Discard");
+        expect(onCancel).not.toHaveBeenCalled();
+        discard.click();
+        await vi.runAllTimersAsync();
         expect(onCancel).toHaveBeenCalledTimes(1);
-        delete (window as unknown as { showConfirmDialog?: unknown }).showConfirmDialog;
         handle.destroy();
     });
 
