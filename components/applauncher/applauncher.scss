@@ -42,11 +42,14 @@
     line-height: 1;
     transition: background-color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-hover-bg);
-        border-radius: $border-radius;
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            background-color: var(--theme-hover-bg);
+            border-radius: $border-radius;
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -195,9 +198,12 @@
     cursor: pointer;
     transition: color 100ms;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-text-primary);
+        &:hover
+        {
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible
@@ -251,6 +257,8 @@
 {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-16 $sp-24;
 }
 
@@ -264,6 +272,8 @@
     border-right: 1px solid var(--theme-border-subtle);
     padding: $sp-12 0;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     flex-shrink: 0;
     background-color: var(--theme-surface-raised-bg);
 }
@@ -283,11 +293,14 @@
     text-align: left;
     transition: background-color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-active-bg);
-        border-radius: $border-radius-sm;
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            background-color: var(--theme-active-bg);
+            border-radius: $border-radius-sm;
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -381,10 +394,13 @@
     white-space: nowrap;
     transition: color 100ms, border-color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: var(--theme-text-primary);
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -409,6 +425,8 @@
 {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-8 0;
 }
 
@@ -487,10 +505,13 @@
     position: relative;
     transition: background-color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            background-color: var(--theme-hover-bg);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -621,9 +642,12 @@
     transition: opacity 100ms, color 100ms;
     line-height: 1;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-warning-text);
+        &:hover
+        {
+            color: var(--theme-warning-text);
+        }
     }
 
     &:focus-visible
@@ -640,10 +664,26 @@
     }
 }
 
-.applauncher-tile:hover .applauncher-tile-fav,
 .applauncher-tile:focus-within .applauncher-tile-fav
 {
     opacity: 1;
+}
+
+@media (hover: hover)
+{
+    .applauncher-tile:hover .applauncher-tile-fav
+    {
+        opacity: 1;
+    }
+}
+
+// With no hover, the star shows always, so a finger can see what it taps (TOUCH_EXPERIENCE.md section 8).
+@media (hover: none)
+{
+    .applauncher-tile-fav
+    {
+        opacity: 1;
+    }
 }
 
 // ============================================================================
@@ -679,9 +719,12 @@
     cursor: pointer;
     padding: 0;
 
-    &:hover
+    @media (hover: hover)
     {
-        text-decoration: underline;
+        &:hover
+        {
+            text-decoration: underline;
+        }
     }
 
     &:focus-visible
@@ -717,6 +760,24 @@
 .applauncher-lg .applauncher-tile-initial
 {
     font-size: $font-size-3xl;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .applauncher-trigger,
+    .applauncher-modal-close,
+    .applauncher-sidebar-item,
+    .applauncher-tab,
+    .applauncher-tile-fav,
+    .applauncher-footer-link
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

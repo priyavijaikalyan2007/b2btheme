@@ -31,9 +31,11 @@
     line-height: 1;
     transition: color 150ms ease, background 150ms ease;
 
-    &:hover {
-        background: var(--theme-hover-bg);
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -87,6 +89,8 @@
     top: 0;
     right: 0;
     height: 100vh;
+    // The bottom stays above Safari's toolbar on iOS (section 9, item 17).
+    height: 100dvh;
     background: var(--theme-surface-bg);
     border-left: 1px solid var(--theme-border-color);
     box-shadow: var(--theme-shadow-lg);
@@ -135,8 +139,10 @@
     color: var(--theme-primary-text);
     cursor: pointer;
 
-    &:hover {
-        text-decoration: underline;
+    @media (hover: hover) {
+        &:hover {
+            text-decoration: underline;
+        }
     }
 
     &:focus-visible {
@@ -156,8 +162,10 @@
     color: var(--theme-text-muted);
     font-size: $font-size-base;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -193,8 +201,10 @@
     white-space: nowrap;
     transition: color 150ms ease, border-color 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 
     &.active {
@@ -216,6 +226,8 @@
 .notificationcenter-list {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: 0;
 }
 
@@ -245,8 +257,10 @@
     border-left: 3px solid transparent;
     @include hover-glow(6px);
 
-    &:hover {
-        background: var(--theme-hover-bg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -336,13 +350,25 @@
     opacity: 0;
     transition: opacity 150ms ease, color 150ms ease;
 
-    .notificationcenter-item:hover &,
     .notificationcenter-item:focus-within & {
         opacity: 1;
     }
 
-    &:hover {
-        color: var(--theme-text-secondary);
+    @media (hover: hover) {
+        .notificationcenter-item:hover & {
+            opacity: 1;
+        }
+    }
+
+    // With no hover, the button shows always, so a finger can see what it taps (TOUCH_EXPERIENCE.md section 8).
+    @media (hover: none) {
+        opacity: 1;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-secondary);
+        }
     }
 
     &:focus-visible {
@@ -387,6 +413,21 @@
 .notificationcenter-lg {
     font-size: $font-size-2xl;
     padding: $sp-8 $sp-10;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .notificationcenter-bell,
+    .notificationcenter-close,
+    .notificationcenter-item-dismiss,
+    .notificationcenter-mark-all,
+    .notificationcenter-tab {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================
