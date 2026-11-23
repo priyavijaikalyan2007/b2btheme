@@ -43,9 +43,11 @@
     text-align: center;
 }
 
-.fileupload-dropzone:hover {
-    border-color: var(--theme-primary);
-    background-color: var(--theme-hover-bg);
+@media (hover: hover) {
+    .fileupload-dropzone:hover {
+        border-color: var(--theme-primary);
+        background-color: var(--theme-hover-bg);
+    }
 }
 
 .fileupload-dropzone:focus-visible {
@@ -204,8 +206,10 @@
     border-radius: $border-radius-sm;
 }
 
-.fileupload-file-action:hover {
-    color: var(--theme-text-secondary);
+@media (hover: hover) {
+    .fileupload-file-action:hover {
+        color: var(--theme-text-secondary);
+    }
 }
 
 // ============================================================================
@@ -255,8 +259,10 @@
     font-size: $font-size-base;
 }
 
-.fileupload-download-link:hover {
-    text-decoration: underline;
+@media (hover: hover) {
+    .fileupload-download-link:hover {
+        text-decoration: underline;
+    }
 }
 
 // ============================================================================
@@ -320,5 +326,17 @@
 
     .fileupload-file-progress-bar {
         transition: none;
+    }
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .fileupload-file-action,
+    .fileupload-download-link {
+        min-width: 44px;
+        min-height: 44px;
     }
 }

@@ -127,8 +127,10 @@
     font-size: $font-size-base;
     transition: color 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -157,9 +159,14 @@
     // A vertical swipe on the edge still scrolls the page (TOUCH_EXPERIENCE.md section 9, the touch-action table).
     touch-action: pan-y;
 
-    &:hover,
     &:active {
         background: rgba($primary, 0.2);
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            background: rgba($primary, 0.2);
+        }
     }
 }
 
@@ -173,6 +180,8 @@
     border-bottom: 1px solid var(--theme-border-subtle);
     flex-shrink: 0;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .propertyinspector-tab {
@@ -191,8 +200,10 @@
     white-space: nowrap;
     transition: color 150ms ease, border-color 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 
     &.active {
@@ -214,6 +225,8 @@
 .propertyinspector-body {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-12;
     color: var(--theme-text-primary);
     background-color: var(--theme-surface-bg);
@@ -277,6 +290,10 @@
     .propertyinspector-close-btn
     {
         min-width: 44px;
+        min-height: 44px;
+    }
+    .propertyinspector-tab
+    {
         min-height: 44px;
     }
 }

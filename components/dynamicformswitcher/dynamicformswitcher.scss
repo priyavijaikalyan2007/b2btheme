@@ -110,7 +110,7 @@
     cursor: pointer;
     user-select: none;
 
-    &:hover { background-color: var(--theme-hover-bg, #{$gray-100}); }
+    @media (hover: hover) { &:hover { background-color: var(--theme-hover-bg, #{$gray-100}); } }
     &:focus-visible
     {
         outline: none;
@@ -291,6 +291,8 @@
     line-height: $line-height-lg;
     white-space: pre;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     resize: vertical;
 }
 
@@ -369,6 +371,31 @@
 .dynamicformswitcher-custom
 {
     width: 100%;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .dynamicformswitcher-segment,
+    .dynamicformswitcher-tab
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .dynamicformswitcher-input,
+    .dynamicformswitcher-select,
+    .dynamicformswitcher-selector-dropdown,
+    .dynamicformswitcher-file,
+    .dynamicformswitcher-color,
+    .dynamicformswitcher-radio-wrap,
+    .dynamicformswitcher-check-wrap
+    {
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

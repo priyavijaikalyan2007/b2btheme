@@ -66,6 +66,8 @@
     box-shadow: $shadow-xl;
     width: 100%;
     max-height: calc(100vh - 48px);
+    // The bottom buttons stay above Safari's toolbar on iOS (section 9, item 17).
+    max-height: calc(100dvh - 48px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -131,10 +133,13 @@
     cursor: pointer;
     transition: color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-text-primary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: var(--theme-text-primary);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -170,6 +175,8 @@
     flex-shrink: 0;
     gap: 0;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .formdialog-step
@@ -197,9 +204,12 @@
     cursor: pointer;
     color: var(--theme-success-text);
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-success-text);
+        &:hover
+        {
+            color: var(--theme-success-text);
+        }
     }
 
     .formdialog-step-number
@@ -282,6 +292,8 @@
 {
     flex: 1;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-16;
     min-height: 0;
 }
@@ -324,10 +336,13 @@
     text-align: left;
     transition: box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-text-primary);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: var(--theme-text-primary);
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -519,6 +534,8 @@
 {
     flex-shrink: 0;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     border-left: 1px solid var(--theme-border-subtle);
     background-color: var(--theme-surface-raised-bg);
     border-radius: $border-radius-lg;
@@ -552,9 +569,12 @@
     transition: background-color 100ms;
     touch-action: pan-y;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-border-color);
+        &:hover
+        {
+            background-color: var(--theme-border-color);
+        }
     }
 }
 
@@ -714,6 +734,31 @@
 }
 
 // ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .formdialog-close,
+    .formdialog-btn-cancel,
+    .formdialog-btn-submit,
+    .formdialog-footer .btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .formdialog-section-toggle,
+    .formdialog-input,
+    .formdialog-select,
+    .formdialog-radio-wrap,
+    .formdialog-check-wrap
+    {
+        min-height: 44px;
+    }
+}
+
+// ============================================================================
 // REDUCED MOTION
 // ============================================================================
 
@@ -764,6 +809,8 @@
     line-height: $line-height-lg;
     white-space: pre;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .formdialog-radio-group

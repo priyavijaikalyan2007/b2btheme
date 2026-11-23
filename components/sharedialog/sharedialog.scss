@@ -65,6 +65,8 @@
     box-shadow: var(--theme-shadow-xl);
     width: 100%;
     max-height: calc(100vh - 48px);
+    // The bottom buttons stay above Safari's toolbar on iOS (section 9, item 17).
+    max-height: calc(100dvh - 48px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -123,10 +125,13 @@
     line-height: 1;
     transition: box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-text-secondary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: var(--theme-text-secondary);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -144,6 +149,8 @@
 {
     padding: $sp-16;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     flex: 1;
 }
 
@@ -232,6 +239,8 @@
 {
     max-height: 240px;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .sharedialog-access-empty
@@ -286,10 +295,13 @@
     flex-shrink: 0;
     transition: box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: var(--theme-danger-text);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: var(--theme-danger-text);
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -398,6 +410,28 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .sharedialog-close,
+    .sharedialog-access-remove,
+    .sharedialog-add-btn,
+    .sharedialog-cancel-btn,
+    .sharedialog-done-btn
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .sharedialog-access-select
+    {
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

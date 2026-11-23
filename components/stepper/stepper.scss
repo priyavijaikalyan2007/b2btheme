@@ -112,8 +112,10 @@
 
 // Clickable step hover
 .stepper-step[tabindex="0"] {
-    &:hover .stepper-marker {
-        box-shadow: 0 0 0 3px rgba($primary, 0.2);
+    @media (hover: hover) {
+        &:hover .stepper-marker {
+            box-shadow: 0 0 0 3px rgba($primary, 0.2);
+        }
     }
 
     &:focus-visible .stepper-marker {
@@ -333,6 +335,17 @@
     top: calc(36px / 2);
     left: calc(50% + 36px / 2 + 2px);
     right: calc(-50% + 36px / 2 + 2px);
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .stepper-footer .btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

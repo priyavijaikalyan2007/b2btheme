@@ -102,9 +102,11 @@
     line-height: 1;
     transition: box-shadow 150ms ease;
 
-    &:hover {
-        color: var(--theme-text-secondary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-secondary);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible {
@@ -170,5 +172,18 @@
 
     .confirmdialog {
         animation: none;
+    }
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .confirmdialog-close,
+    .confirmdialog-cancel,
+    .confirmdialog-confirm {
+        min-width: 44px;
+        min-height: 44px;
     }
 }
