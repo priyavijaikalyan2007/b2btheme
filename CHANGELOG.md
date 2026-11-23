@@ -13,6 +13,8 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Fixed
+- **A Ribbon menu's submenu opens on a tap** (#241). It opened only on hover or `ArrowRight`, so a finger reached it only through the browser's emulated mouse events. A click or a tap opens it at once. Ribbon's menu-bar triggers and NavRail's collapsed flyout now hover from pointer events.
+- **Toolbar's split arrow and grip take a 44 px target on a touch screen** (#242). They were 30 px wide and 12 by 32 px. The grip's dots stay a thin strip.
 - **AppLauncher, UserMenu, TenantSwitcher and NotificationCenter close on a tap outside** (#181, part 2 of 3). Each closed from a `mousedown` on the document, and Safari on iOS sends none for a tap on blank space, so the popup stayed open. They listen for `pointerdown` now.
 - **AppLauncher's favorite star and NotificationCenter's dismiss button show on a touch screen** (#181). They showed only on hover, so a finger could tap them without seeing them. On a device with no hover they show always.
 - **A StackLayout divider can be moved from the keyboard** (#232). It took focus and no key. The arrow keys along it move it 10px, and it reports `aria-valuenow`.
@@ -120,6 +122,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
 
 ### Changed
+- **The rest of the shell on a touch screen** (#181, part 3 of 3): Breadcrumb, NavRail, WorkspaceShell, Ribbon, InlineToolbar, BannerBar, ThemeToggle, DockLayout, StatusBar and GraphToolbar.
+  - Hover colors show only on a device with hover.
+  - Each target is 44 px under a coarse pointer. WorkspaceShell's were 40, and the Ribbon's buttons, tabs and menus are larger on a touch screen.
+  - Inner scroll areas keep their scroll at the end.
+  - DockLayout and the Ribbon's backstage fill the screen with `100dvh`.
+  - Each README has a **Pointer and touch** section.
 - **ContextMenu opens as a sheet at the bottom of the screen on a phone** (#181, part 2 of 3), as `TOUCH_EXPERIENCE.md` section 6.1 asks. **If your page opens a context menu, a person on a phone now sees a sheet in place of a menu at the finger.** `sheetOnCompact: false` keeps the menu at the pointer.
   - Below 768 CSS pixels the menu is a full-width sheet over a backdrop. A tap on the backdrop closes it, and the tap reaches nothing under it.
   - In the sheet, a sub-menu opens in place of the list, with a **Back** row.

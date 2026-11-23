@@ -199,15 +199,18 @@ switches the rail automatically — no JavaScript needed.
 
 See `_dark-mode.scss` for the full set.
 
-## Mobile / touch
+## Pointer and touch
 
 - Every interactive target is at least **40px tall** (44px under
-  `@media (hover: none)` or `(pointer: coarse)` per WCAG 2.5.5).
+  `@media (hover: none)` or `(pointer: coarse)` per WCAG 2.5.5), the flyout's
+  items too.
 - Collapsed width grows from 48px → 56px on coarse pointers.
 - Expanded width clamps to `min(80vw, 260px)` below 576px so the rail fits
   narrow phones.
-- Hover-only interactions (flyout on `mouseenter`) are duplicated on `focus`
-  for keyboard + touch.
+- A collapsed item's flyout opens when a mouse or a pen moves over it
+  (`pointerenter`), on `focus`, and on a click or a tap (#241).
+- Hover colors show only on a device with hover. The rail's body keeps its
+  scroll to itself at the end.
 - `-webkit-tap-highlight-color: transparent` + `touch-action` defaults
   prevent double-tap zoom and flash.
 

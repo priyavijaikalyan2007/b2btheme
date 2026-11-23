@@ -140,6 +140,11 @@ var bc = createBreadcrumb({
 | Medium | *(default)* | `$breadcrumb-font-size` (0.8125rem) |
 | Large | `breadcrumb-nav-lg` | 1rem |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each segment link, the ellipsis, the actions caret and each dropdown item are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **The dropdown** keeps its scroll to itself at the end.
+
 ## Keyboard
 
 | Key | Action |

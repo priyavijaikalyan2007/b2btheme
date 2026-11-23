@@ -60,11 +60,13 @@
     flex-shrink: 0;
     transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
 
-    &:hover {
-        background-color: var(--theme-hover-bg);
-        border-radius: $border-radius;
-        color: var(--theme-text-primary);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--theme-hover-bg);
+            border-radius: $border-radius;
+            color: var(--theme-text-primary);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible {
@@ -78,9 +80,11 @@
     background-color: var(--theme-selected-bg);
     color: var(--theme-primary);
 
-    &:hover {
-        background-color: var(--theme-active-bg);
-        color: var(--theme-primary-hover);
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--theme-active-bg);
+            color: var(--theme-primary-hover);
+        }
     }
 }
 
@@ -133,6 +137,17 @@
     width: 32px;
     height: 32px;
     font-size: $font-size-base;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .inlinetoolbar-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

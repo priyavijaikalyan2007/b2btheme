@@ -157,6 +157,11 @@ When visible, the banner sets `--bannerbar-height` on `<html>` to its measured p
 
 The property is removed when the banner is hidden or destroyed.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the action button and the close button are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **A long message** scrolls inside the banner and keeps its scroll to itself at the end.
+
 ## Accessibility
 
 - Root element has `role="alert"` with `aria-live="assertive"` for critical/warning variants, `aria-live="polite"` for info/success

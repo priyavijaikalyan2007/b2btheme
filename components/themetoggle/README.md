@@ -71,6 +71,10 @@ Place this inline script in `<head>` **before** any CSS to prevent a flash of un
 | `setTheme(mode)` | `void` | Programmatically change mode. |
 | `destroy()` | `void` | Remove DOM and event listeners. |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each mode button is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+
 ## Keyboard
 
 | Key | Action |

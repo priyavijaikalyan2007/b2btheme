@@ -178,6 +178,11 @@ Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in
 
 DockLayout is in the A2UI catalog (ADR-241). Each slot (`toolbar`, `leftSidebar`, `rightSidebar`, `bottomPanel`, `statusBar`) and `content` is the id of another A2UI component, rendered as an element that sizes to its content. Over A2UI the layout fills its box rather than the window, and a slot's collapse and resize, which come from a docked component's handle, are the host's.
 
+## Pointer and touch
+
+- **Full height.** The layout fills the screen with `100dvh`, so its status bar stays above Safari's toolbar on iOS (`TOUCH_EXPERIENCE.md` section 9, item 17).
+- **Its parts.** The panels it holds bring their own touch behavior: Sidebar, TabbedPanel, Toolbar and StatusBar each describe theirs.
+
 ## Global Exports
 
 When loaded via `<script>` tag:

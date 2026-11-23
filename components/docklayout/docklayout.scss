@@ -28,6 +28,8 @@
     grid-template-columns: auto 1fr auto;
     grid-template-rows: auto 1fr auto auto;
     height: 100vh;
+    // The bottom stays above Safari's toolbar on iOS (section 9, item 17).
+    height: 100dvh;
     width: 100vw;
     overflow: hidden;
     box-sizing: border-box;

@@ -765,8 +765,9 @@ export const BASELINES = {
     // Part 1 of #181 (shell dividers and drags) lowered three: hover rules
     // 410 -> 378, drags without pointercancel 25 -> 19, and drags without
     // touch-action 22 -> 21. Part 2 (popups and menus) lowered two: hover rules
-    // 378 -> 350, and mousedown-only components 25 -> 21.
-    touchHoverRules: 350,
+    // 378 -> 350, and mousedown-only components 25 -> 21. Part 3 (the rest of
+    // the shell) lowered hover rules 350 -> 317.
+    touchHoverRules: 317,
     touchMousedownOnly: 21,
     touchDragNoCancel: 19,
     touchContextmenuOnly: 7,

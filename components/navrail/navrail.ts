@@ -1134,8 +1134,11 @@ export class NavRail implements NavRailHandle
         );
 
         if (!hasChildren) { return; }
-        btn.addEventListener("mouseenter",
-            () => this.onItemPointerEnter(item, btn));
+        // A mouse or a pen over a collapsed item opens its flyout. A tap opens it by its click (#241).
+        btn.addEventListener("pointerenter", (e: PointerEvent) =>
+        {
+            if (e.pointerType !== "touch") { this.onItemPointerEnter(item, btn); }
+        });
         btn.addEventListener("focus",
             () => this.onItemPointerEnter(item, btn));
     }

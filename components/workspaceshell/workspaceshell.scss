@@ -25,6 +25,8 @@
     padding: 3px 4px 0;
     flex-shrink: 0;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     background-color: var(--theme-surface-raised-bg, #{$gray-100});
     border-bottom: 1px solid var(--theme-border-color, #{$gray-300});
 }
@@ -46,10 +48,17 @@
     cursor: pointer;
     border-top: 2px solid transparent;
 
-    &:hover,
     &:focus-visible
     {
         background-color: var(--theme-hover-bg, #{$gray-200});
+    }
+
+    @media (hover: hover)
+    {
+        &:hover
+        {
+            background-color: var(--theme-hover-bg, #{$gray-200});
+        }
     }
 }
 
@@ -86,10 +95,17 @@
     padding: 2px 4px;
     cursor: pointer;
 
-    &:hover,
     &:focus-visible
     {
         color: var(--theme-text-primary, #{$gray-900});
+    }
+
+    @media (hover: hover)
+    {
+        &:hover
+        {
+            color: var(--theme-text-primary, #{$gray-900});
+        }
     }
 }
 
@@ -125,13 +141,15 @@
     }
 }
 
-@media (pointer: coarse)
+// A finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7).
+@media (any-pointer: coarse)
 {
+    .workspaceshell-tab,
     .workspaceshell-pin,
     .workspaceshell-close,
     .workspaceshell-new
     {
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 44px;
+        min-height: 44px;
     }
 }

@@ -442,6 +442,7 @@ Disable overflow with `overflow: false` in toolbar options.
 - **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A floating toolbar goes back where it was. A toolbar that the drag undocked docks again where it was. Nothing is persisted.
 - **Drag the resize handle** to change the length. A canceled resize puts the length back, and `onResize` hears nothing.
 - **Hover colors and the glow** on a tool show only on a device with hover, so a tap does not leave a tool looking selected.
+- **Targets.** Under a coarse pointer each tool, the overflow button, each gallery option, the split button's arrow and the grip are 44 px (`TOUCH_EXPERIENCE.md` section 7, #242). The grip's dots stay a thin strip in the middle of its target.
 - **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `applyLayoutState()` do it from code.
 
 ## States
