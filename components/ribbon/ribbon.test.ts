@@ -2776,6 +2776,39 @@ describe("menu bar advanced", () =>
         ribbon.destroy();
     });
 
+    // #241: a submenu opened only on hover, so a finger reached it only through the browser's emulated mouse.
+    test("menuItem_WithChildren_TapOpensSubmenuAtOnce_HoverAfterDelay", () =>
+    {
+        vi.useFakeTimers();
+        const ribbon = createRibbon(makeOptions({
+            menuBar: [{ id: "menu-edit", label: "Edit", items: [{ id: "mi-paste", label: "Paste Special",
+                children: [{ id: "mi-paste-text", label: "Plain Text" }] }] }],
+        }), "test-ribbon");
+        (container.querySelector(".ribbon-menu-trigger") as HTMLElement).click();
+        const entry = container.querySelector(".ribbon-menu-dropdown > .ribbon-menu-entry") as HTMLElement;
+        const sub = container.querySelector(".ribbon-menu-submenu") as HTMLElement;
+        const touch = (type: string): boolean => entry.dispatchEvent(new PointerEvent(type, { pointerType: "touch" }));
+
+        // A tap: the touch pointer enters and leaves, and the click opens the submenu at once.
+        touch("pointerenter");
+        touch("pointerleave");
+        entry.click();
+        expect(sub.style.display).toBe("flex");
+        vi.advanceTimersByTime(500);
+        expect(sub.style.display).toBe("flex");
+
+        // A mouse leaves, and after the delay the submenu closes. A mouse over it opens it after the delay.
+        entry.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
+        vi.advanceTimersByTime(500);
+        expect(sub.style.display).toBe("none");
+        entry.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
+        expect(sub.style.display).toBe("none");
+        vi.advanceTimersByTime(500);
+        expect(sub.style.display).toBe("flex");
+        ribbon.destroy();
+        vi.useRealTimers();
+    });
+
     test("menuItem_Disabled_HasDisabledAttribute", () =>
     {
         const ribbon = createRibbon(makeOptions({
@@ -3488,12 +3521,12 @@ describe("backstage content factory", () =>
 });
 
 // ============================================================================
-// MENU BAR — mouseenter switches to another open menu
+// MENU BAR — a mouse over another trigger switches to its menu (#241)
 // ============================================================================
 
 describe("menu bar hover switching", () =>
 {
-    test("mouseenter_WhenMenuOpen_SwitchesToNewMenu", () =>
+    test("pointerenter_WhenMenuOpen_SwitchesToNewMenu", () =>
     {
         const ribbon = createRibbon(makeOptions({
             menuBar: [
@@ -3517,7 +3550,7 @@ describe("menu bar hover switching", () =>
 
         // Hover over Edit trigger — should switch
         (triggers[1] as HTMLElement).dispatchEvent(
-            new MouseEvent("mouseenter", { bubbles: true })
+            new PointerEvent("pointerenter", { pointerType: "mouse" })
         );
         expect((dropdowns[0] as HTMLElement).style.display).toBe("none");
         // Edit dropdown should now be open

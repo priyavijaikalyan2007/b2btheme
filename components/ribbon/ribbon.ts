@@ -1323,8 +1323,10 @@ export class RibbonImpl implements Ribbon
         {
             this.toggleMenu(menuDef.id, trigger, dropdown);
         });
-        trigger.addEventListener("mouseenter", () =>
+        // A mouse or a pen over another trigger moves the open menu to it. A touch pointer taps (#241).
+        trigger.addEventListener("pointerenter", (e: PointerEvent) =>
         {
+            if (e.pointerType === "touch") { return; }
             if (this.openMenuId && this.openMenuId !== menuDef.id)
             {
                 this.closeAllMenus();
@@ -1413,8 +1415,21 @@ export class RibbonImpl implements Ribbon
         sub.classList.add(`${CLS}-menu-submenu`);
         sub.style.display = "none";
 
-        entry.addEventListener("mouseenter", () => this.scheduleSubmenu(item.id, sub, true));
-        entry.addEventListener("mouseleave", () => this.scheduleSubmenu(item.id, sub, false));
+        // A click or a tap opens the submenu at once, since a touch pointer has no hover (#241). Hover opens and
+        // closes it after a delay, for a mouse or a pen: a tap sends a pointerleave at once, which would close it.
+        entry.addEventListener("click", (e: MouseEvent) =>
+        {
+            if (sub.contains(e.target as Node)) { return; }
+            this.scheduleSubmenu(item.id, sub, true, 0);
+        });
+        entry.addEventListener("pointerenter", (e: PointerEvent) =>
+        {
+            if (e.pointerType !== "touch") { this.scheduleSubmenu(item.id, sub, true); }
+        });
+        entry.addEventListener("pointerleave", (e: PointerEvent) =>
+        {
+            if (e.pointerType !== "touch") { this.scheduleSubmenu(item.id, sub, false); }
+        });
         entry.addEventListener("keydown", (e: KeyboardEvent) =>
         {
             logTrace("keydown handler:", { key: e.key.length > 1 ? e.key : "(char)", ctrl: e.ctrlKey });
@@ -1444,12 +1459,18 @@ export class RibbonImpl implements Ribbon
     }
 
     private scheduleSubmenu(
-        id: string, sub: HTMLElement, show: boolean
+        id: string, sub: HTMLElement, show: boolean, delay = SUBMENU_DELAY_MS
     ): void
     {
         const existing = this.submenuTimers.get(id);
         if (existing !== undefined) { clearTimeout(existing); }
 
+        if (show && delay === 0)
+        {
+            this.submenuTimers.delete(id);
+            sub.style.display = "flex";
+            return;
+        }
         if (show)
         {
             const timer = window.setTimeout(() =>

@@ -484,10 +484,27 @@ describe("children and flyout", () =>
         const parent = container.querySelector(
             ".navrail-item[data-item-id=\"billing-root\"]"
         ) as HTMLElement;
-        parent.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+        parent.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
         const flyout = document.querySelector(".navrail-flyout");
         expect(flyout).not.toBeNull();
         expect(flyout!.textContent).toContain("Invoices");
+        rail.destroy();
+    });
+
+    // #241: a touch pointer enters on its tap, and the click opens the flyout, so pointerenter is for a mouse.
+    test("children_CollapsedTouchEnter_OpensNoFlyout_TapDoes", () =>
+    {
+        const rail = createNavRail(
+            { ...withChildren(), collapsed: true }
+        );
+        const parent = container.querySelector(
+            ".navrail-item[data-item-id=\"billing-root\"]"
+        ) as HTMLElement;
+        parent.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "touch" }));
+        parent.dispatchEvent(new MouseEvent("mouseenter"));
+        expect(document.querySelector(".navrail-flyout")).toBeNull();
+        parent.click();
+        expect(document.querySelector(".navrail-flyout")).not.toBeNull();
         rail.destroy();
     });
 
@@ -499,7 +516,7 @@ describe("children and flyout", () =>
         const parent = container.querySelector(
             ".navrail-item[data-item-id=\"billing-root\"]"
         ) as HTMLElement;
-        parent.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+        parent.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
         expect(document.querySelector(".navrail-flyout")).not.toBeNull();
         document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
         expect(document.querySelector(".navrail-flyout")).toBeNull();
