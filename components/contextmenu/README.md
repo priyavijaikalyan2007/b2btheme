@@ -64,6 +64,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 | `autoClose` | `boolean` | `true` | Close on outside click |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `animation` | `string` | `"fade"` | `fade`, `scale`, or `none` |
+| `sheetOnCompact` | `boolean` | `true` | On a viewport less than 768 CSS pixels wide, open as a sheet at the bottom of the screen. `false` keeps the menu at the pointer on every screen |
 
 ### ContextMenuItem
 
@@ -94,7 +95,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 
 - **Theme-aware** — follows system light/dark mode via CSS custom properties; explicit `light`/`dark` override available
 - **Keyboard navigation** — Arrow Up/Down to navigate, Enter to select, Escape to close, Right to open sub-menu, Left to close sub-menu
-- **Sub-menus** — nested menus with hover delay and arrow indicator
+- **Sub-menus** — nested menus with hover delay and arrow indicator. A click or a tap on a sub-menu row opens it at once
 - **Viewport edge detection** — flips up/left when near viewport edges
 - **Checked/radio states** — checkmark icon with `aria-checked`
 - **Disabled items** — 50% opacity, no pointer events, `aria-disabled`
@@ -104,6 +105,16 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 - **Animation** — fade-in (150ms), scale, or none
 - **Icons** — Bootstrap Icons with 20px icon column
 - **Shortcuts** — right-aligned muted shortcut hints
+
+## Pointer and touch
+
+- **On a phone, a sheet.** On a viewport less than 768 CSS pixels wide, the menu opens as a sheet at the bottom of the screen, full width, over a backdrop (`TOUCH_EXPERIENCE.md` section 6.1). `x` and `y`, `minWidth` and `maxWidth` do not apply there. The sheet is at most 70% of the screen high, scrolls inside itself, and keeps clear of the home indicator. Larger screens do not change. `sheetOnCompact: false` keeps the menu at the pointer.
+- **The backdrop.** A tap on it closes the sheet, unless `autoClose` is `false`. The tap reaches nothing under it.
+- **Sub-menus in the sheet** open in place of the list, with a **Back** row and the sub-menu's name first. **Back**, `ArrowLeft` or `Escape` returns to the list, and the focus goes back to the sub-menu's row. `Escape` with no sub-menu open closes the sheet.
+- **No hover needed.** A click or a tap on a sub-menu row opens it at once, on every screen. Hover still opens it after 200 milliseconds.
+- **Targets.** Under a coarse pointer each item is 44 px high, and 48 px in the sheet. Hover colors show only on a device with hover. A long press on an item opens no system callout.
+- **A press outside** closes the menu from `pointerdown`, from any pointer.
+- **`attachLongPress(target, getOptions)`** opens a menu after a 500 millisecond press that moves less than 10 px. It keeps its own timer, so a page that calls it needs no `gesturerecognizer.js`.
 
 ## Accessibility
 

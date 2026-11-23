@@ -115,6 +115,13 @@ const fullpage = createAppLauncher({
 | `setSearchQuery(q)` | `void` | Programmatic search |
 | `getMode()` | `string` | Current mode |
 
+## Pointer and touch
+
+- **A press outside** the launcher closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger, the close button, the sidebar items, the tabs, the favorite star and the footer link are 44 px. Hover colors show only on a device with hover.
+- **The favorite star** shows on hover or focus with a mouse. On a device with no hover it shows always, so a finger can see what it taps.
+- **Scrolling.** The sidebar and the app list keep their scroll to themselves at the end.
+
 ## Keyboard
 
 | Key | Context | Action |

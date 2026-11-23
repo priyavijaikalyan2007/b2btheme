@@ -56,6 +56,12 @@ const switcher = createTenantSwitcher({
 | `addTenant(ws)` | Add a tenant |
 | `removeTenant(id)` | Remove a tenant |
 
+## Pointer and touch
+
+- **A press outside** the list closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger, each tenant and the Create button are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** A long list keeps its scroll to itself at the end.
+
 ## Keyboard
 
 | Key | Action |

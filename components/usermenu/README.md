@@ -143,6 +143,11 @@ menu.setMenuItems([
 | `busy` | Red | User is occupied, do not disturb |
 | `away` | Yellow | User is temporarily away |
 
+## Pointer and touch
+
+- **A press outside** the menu closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger and each item are 44 px. Hover colors show only on a device with hover.
+
 ## Keyboard Shortcuts
 
 ### When Trigger is Focused
