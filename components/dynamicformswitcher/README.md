@@ -202,6 +202,11 @@ createFormDialog({
 
 State is keyed by `(variantId, fieldName)`. A field named `base_url` in variant A is stored independently from `base_url` in variant B — by design, since a base URL for one auth scheme is rarely identical to another.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each field, list, segment, tab, radio and check row is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover. A picker inside a form, such as CronPicker, follows its own README.
+- **Keyboards.** Email, URL, number, date and time fields use their native input types, so a phone opens the matching keyboard or picker.
+
 ## Accessibility
 
 - The form region carries `role="region"`, `aria-label="{variant.label} configuration"`, and `aria-live="polite"`.

@@ -102,6 +102,12 @@ Non-modal right-side panel for viewing and editing entity details without naviga
 
 PropertyInspector is in the A2UI catalog (ADR-242). The agent sets `openWith`: the drawer opens with it, and opens again whenever the agent changes it, as a fresh `open()` does. Its `content`, `footer` and each tab's `content` are ids of other A2UI components. A header action sends `onAction` with `{ actionId }`, and closing the drawer sends `onClose`. The width the user drags to is kept across a rebuild. Escape closes the drawer only while focus is inside it, and the adapter gives it a clipped box as tall as `--outcrop-layout-height` (default 400px).
 
+## Pointer and touch
+
+- **The edge** takes a finger 22 px either side under a coarse pointer, and leaves a vertical swipe to the page (`touch-action: pan-y`). A canceled resize puts the width back, and `onResize` hears nothing (`TOUCH_EXPERIENCE.md` section 9, item 5).
+- **Targets.** Under a coarse pointer the tabs, the close button and each action are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** The tabs and the body keep their scroll at the end.
+
 ## Keyboard
 
 | Key | Action |

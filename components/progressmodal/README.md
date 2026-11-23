@@ -105,6 +105,11 @@ ProgressModal is in the A2UI catalog through `createProgressModal`. It is always
 | `warning` | `bi-exclamation-triangle-fill` | Yellow |
 | `progress` | Mini spinner | Primary |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the copy-log button, the close button and the footer's buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **The log** keeps its scroll at the end.
+
 ## Dependencies
 
 - Bootstrap 5 CSS, Bootstrap Icons, Enterprise Theme CSS

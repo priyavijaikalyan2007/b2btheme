@@ -92,6 +92,10 @@ Linear or non-linear step progression UI for complex multi-step processes with v
 | `error` | Red exclamation | Validation failed |
 | `skipped` | Grey dashed | Skipped (optional step) |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the footer's buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+
 ## Keyboard
 
 | Key | Action |

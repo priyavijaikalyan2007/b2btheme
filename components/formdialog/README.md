@@ -105,7 +105,7 @@ A modal dialog optimized for form-based workflows (create, edit, invite, assign)
 | `customContent` | `HTMLElement` | -- | Custom DOM appended after fields |
 | `showFooter` | `boolean` | `true` | Show footer with Submit/Cancel buttons; set `false` when `customContent` manages its own actions |
 | `autoClose` | `boolean` | `true` | Auto-close after successful submit |
-| `closeOnBackdrop` | `boolean` | `true` | Close on backdrop click |
+| `closeOnBackdrop` | `boolean` | `true` | Close on a tap or a click on the backdrop. A form with unsaved changes stays open, or with `warnOnDirty` asks first |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `warnOnDirty` | `boolean` | `false` | Show confirm dialog before discarding changes |
 | `cssClass` | `string` | -- | Additional CSS class on dialog |
@@ -300,6 +300,14 @@ Pass `contained: true` with a `container` element and `createFormDialog` shows t
 ### Over A2UI
 
 FormDialog is in the A2UI catalog. It is always contained, so it renders in its surface and blocks nothing outside it. Submit sends `onSubmit` with `{ values }`, and cancelling sends `onCancel`. Fields, sections and steps take no `validate`, `customElement` or `"custom"` type; `panel`, `customContent` and `warnOnDirty` are the host's.
+
+## Pointer and touch
+
+- **A tap outside** closes the dialog only when the form has no unsaved changes (`TOUCH_EXPERIENCE.md` section 6.1). With unsaved changes, the tap does nothing, so a tap beside a phone's keyboard loses no work. With `warnOnDirty`, it asks first. **Cancel**, `Escape` and `close()` do not change. `closeOnBackdrop: false` turns the tap off.
+- **The panel's divider** takes a finger 22 px either side of its line under a coarse pointer, and leaves a vertical swipe to the page (`touch-action: pan-y`). A canceled drag puts the panel's width back.
+- **Targets.** Under a coarse pointer the close button, the footer's buttons, each section toggle, field, radio and check row are 44 px. Hover colors show only on a device with hover.
+- **Scrolling and height.** The form, the panel and the steps keep their scroll at the end. The dialog's height uses `100dvh`, so its buttons stay above Safari's toolbar on iOS.
+- **Keyboards.** Email, URL and number fields use their native input types, so a phone opens the matching keyboard.
 
 ## Keyboard
 

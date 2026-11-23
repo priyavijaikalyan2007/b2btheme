@@ -100,6 +100,11 @@ ErrorDialog is in the A2UI catalog. It is always contained, so it shows no Boots
 - **XSS safe** — All content set via `textContent`, never `innerHTML`
 - **Auto-cleanup** — Modal DOM is removed when dismissed
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the close button, the footer's buttons, the copy button and the technical details toggle are 44 px (`TOUCH_EXPERIENCE.md` section 7).
+- **The technical details** keep their scroll at the end.
+
 ## Accessibility
 
 - Modal uses `aria-labelledby` pointing to the title

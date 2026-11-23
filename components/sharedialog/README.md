@@ -101,7 +101,7 @@ const result = await dialog.show();
 | `onCancel` | `() => void` | -- | Callback when user cancels |
 | `size` | `string` | `"md"` | `"sm"`, `"md"`, `"lg"` |
 | `cssClass` | `string` | -- | Additional CSS class on the dialog |
-| `closeOnBackdrop` | `boolean` | `true` | Close when clicking outside |
+| `closeOnBackdrop` | `boolean` | `true` | Close on a tap or a click outside. While the person has changed who has access, or picked people not yet added, it stays open |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `keyBindings` | `Record<string, string>` | -- | Override default key bindings |
 | `onRemoveConfirm` | `(person: { id: string; name: string }) => Promise<boolean>` | -- | Confirmation callback before removing a person's access. Return `true` to proceed, `false` to cancel. If omitted, removal is immediate. |
@@ -145,6 +145,12 @@ Pass `contained: true` with a `container` element and `createShareDialog` shows 
 ### Over A2UI
 
 ShareDialog is in the A2UI catalog. It is always contained. Done sends `onShare` with `{ added, changed, removed }`, and cancelling sends `onCancel`. People searches go to the agent, as PeoplePicker's do (`onSearch` with `searchResult`). `searchUrl` and `onRemoveConfirm` are the host's.
+
+## Pointer and touch
+
+- **A tap outside** closes the dialog only when nothing is unsaved (`TOUCH_EXPERIENCE.md` section 6.1). While the person has added, changed or removed access, or picked people not yet added, the tap does nothing. **Cancel**, `Escape` and `close()` do not change. `closeOnBackdrop: false` turns the tap off.
+- **Targets.** Under a coarse pointer the close button, each access list and remove button, **Add**, **Cancel** and **Done** are 44 px. Hover colors show only on a device with hover.
+- **Scrolling and height.** The body and the access list keep their scroll at the end. The dialog's height uses `100dvh`.
 
 ## Keyboard
 
