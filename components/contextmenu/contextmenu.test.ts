@@ -721,3 +721,132 @@ describe("animation", () =>
         expect(menu?.style.opacity).toBe("1");
     });
 });
+
+// ============================================================================
+// TOUCH: A SHEET ON A COMPACT VIEWPORT, AND SUBMENUS WITHOUT HOVER (#181)
+// ============================================================================
+
+describe("on a compact viewport, a sheet at the bottom (TOUCH_EXPERIENCE.md 6.1)", () =>
+{
+    const MORE: ContextMenuItem[] = [
+        { id: "open", label: "Open" },
+        { id: "more", label: "More", type: "submenu", children: [
+            { id: "x", label: "X" }, { id: "y", label: "Y" }] },
+    ];
+    const labels = (): string[] => getMenuItems().map((el) => el.textContent ?? "");
+    const width = (px: number): void =>
+    {
+        Object.defineProperty(window, "innerWidth", { value: px, configurable: true, writable: true });
+    };
+
+    afterEach(() =>
+    {
+        width(1024);
+    });
+
+    test("below 768px the menu is a sheet, with no pointer position and no width limits", () =>
+    {
+        width(767);
+        currentMenu = createContextMenu(baseOptions({ x: 200, y: 300 }));
+
+        const menu = getMenu()!;
+        expect(menu.classList.contains("contextmenu-sheet")).toBe(true);
+        expect(menu.style.left).toBe("");
+        expect(menu.style.maxWidth).toBe("");
+        expect(document.querySelector(".contextmenu-backdrop")).not.toBeNull();
+        expect(document.activeElement).toBe(getMenuItems()[0]);
+    });
+
+    test("at 768px, and with sheetOnCompact false, it opens at the pointer as before", () =>
+    {
+        width(768);
+        currentMenu = createContextMenu(baseOptions({ x: 200, y: 300 }));
+        expect(getMenu()!.classList.contains("contextmenu-sheet")).toBe(false);
+        expect(getMenu()!.style.left).toBe("200px");
+        currentMenu.destroy();
+
+        width(390);
+        currentMenu = createContextMenu(baseOptions({ x: 200, y: 300, sheetOnCompact: false }));
+        expect(getMenu()!.classList.contains("contextmenu-sheet")).toBe(false);
+        expect(document.querySelector(".contextmenu-backdrop")).toBeNull();
+    });
+
+    test("a tap on the backdrop closes the sheet and removes the backdrop, unless autoClose is false", () =>
+    {
+        width(390);
+        const onClose = vi.fn();
+        currentMenu = createContextMenu(baseOptions({ onClose }));
+        vi.advanceTimersByTime(1);
+        const backdrop = document.querySelector<HTMLElement>(".contextmenu-backdrop")!;
+
+        // The press itself leaves the sheet open, so the tap's click lands on the backdrop and nothing under it.
+        backdrop.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(currentMenu.isOpen()).toBe(true);
+        backdrop.click();
+        expect(currentMenu.isOpen()).toBe(false);
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(document.querySelector(".contextmenu-backdrop")).toBeNull();
+
+        currentMenu = createContextMenu(baseOptions({ autoClose: false }));
+        document.querySelector<HTMLElement>(".contextmenu-backdrop")!.click();
+        expect(currentMenu.isOpen()).toBe(true);
+    });
+
+    test("in the sheet a submenu opens in place of the list, with Back, and Back returns", () =>
+    {
+        width(390);
+        currentMenu = createContextMenu(baseOptions({ items: MORE }));
+
+        getMenuItems()[1].click();
+        expect(getSubmenu()).toBeNull();
+        expect(labels()).toEqual(["Back", "X", "Y"]);
+        expect(getMenu()!.querySelector(".contextmenu-header")!.textContent).toBe("More");
+        expect(document.activeElement).toBe(getMenuItems()[0]);
+
+        getMenuItems()[0].click();
+        expect(labels()).toEqual(["Open", "More▶"]);
+        expect(document.activeElement).toBe(getMenuItems()[1]);
+        expect(currentMenu.isOpen()).toBe(true);
+    });
+
+    test("in the sheet, ArrowRight opens a submenu, and ArrowLeft and Escape go back before Escape closes", () =>
+    {
+        width(390);
+        currentMenu = createContextMenu(baseOptions({ items: MORE }));
+        getMenuItems()[1].focus();
+
+        pressKey("ArrowRight");
+        expect(labels()).toEqual(["Back", "X", "Y"]);
+        pressKey("ArrowLeft");
+        expect(labels()).toEqual(["Open", "More▶"]);
+
+        pressKey("ArrowRight");
+        pressKey("Escape");
+        expect(labels()).toEqual(["Open", "More▶"]);
+        expect(currentMenu.isOpen()).toBe(true);
+        pressKey("Escape");
+        expect(currentMenu.isOpen()).toBe(false);
+    });
+
+    test("an item chosen in a submenu of the sheet runs and closes the sheet", () =>
+    {
+        width(390);
+        const onClick = vi.fn();
+        currentMenu = createContextMenu(baseOptions({ items: [{ id: "more", label: "More", type: "submenu",
+            children: [{ id: "x", label: "X", onClick }] }] }));
+
+        getMenuItems()[0].click();
+        getMenuItems()[1].click();
+        expect(onClick).toHaveBeenCalledTimes(1);
+        expect(currentMenu.isOpen()).toBe(false);
+    });
+
+    test("on a wide screen a click or a tap on a submenu row opens it at once, with no hover", () =>
+    {
+        currentMenu = createContextMenu(baseOptions({ items: MORE }));
+
+        getMenuItems()[1].click();
+        expect(getSubmenu()).not.toBeNull();
+        expect(getSubmenu()!.textContent).toContain("X");
+    });
+});

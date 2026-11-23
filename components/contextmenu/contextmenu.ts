@@ -77,6 +77,12 @@ const DEFAULT_MAX_WIDTH = 320;
 /** Sub-menu hover delay in ms. */
 const SUBMENU_DELAY = 200;
 
+/**
+ * A compact viewport is less than 768 CSS pixels wide (TOUCH_EXPERIENCE.md
+ * section 2). There the menu opens as a sheet at the bottom (section 6.1).
+ */
+const COMPACT_WIDTH = 768;
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -135,6 +141,13 @@ export interface ContextMenuOptions
     closeOnEscape?: boolean;
     /** Animation style. Default: "fade". */
     animation?: "fade" | "scale" | "none";
+    /**
+     * On a compact viewport, less than 768 CSS pixels wide, open as a sheet at
+     * the bottom of the screen, with a backdrop, and show a submenu in place
+     * of the list (TOUCH_EXPERIENCE.md section 6.1). Default: true. False
+     * keeps the menu at the pointer on every screen.
+     */
+    sheetOnCompact?: boolean;
 }
 
 /** Public API handle for a context menu instance. */
@@ -233,16 +246,25 @@ export function createContextMenu(options: ContextMenuOptions): ContextMenu
     }
 
     const state = buildInitialState(options);
+    state.sheet = options.sheetOnCompact !== false && window.innerWidth < COMPACT_WIDTH;
 
     state.menuEl = buildMenu(state);
+    if (state.sheet)
+    {
+        state.backdrop = buildBackdrop(state);
+        document.body.appendChild(state.backdrop);
+    }
     document.body.appendChild(state.menuEl);
 
-    positionMenu(state);
+    if (!state.sheet)
+    {
+        positionMenu(state);
+    }
     animateIn(state);
     focusFirstItem(state.menuEl);
     attachGlobalListeners(state);
 
-    logInfo("Opened at", options.x, options.y);
+    logInfo(state.sheet ? "Opened as a sheet" : "Opened at", options.x, options.y);
 
     return buildHandle(state);
 }
@@ -262,6 +284,12 @@ interface MenuState
     submenuTimer: number;
     handleOutsideClick: (e: Event) => void;
     handleKeyDown: (e: KeyboardEvent) => void;
+    /** Whether the menu opened as a sheet on a compact viewport. */
+    sheet: boolean;
+    /** The sheet's backdrop, whose tap closes the sheet. */
+    backdrop: HTMLElement | null;
+    /** In the sheet, the submenus opened in place of the list, the deepest last. */
+    levels: ContextMenuItem[];
 }
 
 /** Build the initial state object from options. */
@@ -276,6 +304,9 @@ function buildInitialState(options: ContextMenuOptions): MenuState
         submenuTimer: 0,
         handleOutsideClick: () => {},
         handleKeyDown: () => {},
+        sheet: false,
+        backdrop: null,
+        levels: [],
     };
 
     state.handleOutsideClick = (e: Event) => onOutsideClick(state, e as MouseEvent);
@@ -312,13 +343,91 @@ function buildMenu(state: MenuState): HTMLElement
         "aria-label": "Context menu",
     });
 
-    menu.style.minWidth = `${minW}px`;
-    menu.style.maxWidth = `${maxW}px`;
+    if (state.sheet)
+    {
+        menu.classList.add("contextmenu-sheet");
+    }
+    else
+    {
+        menu.style.minWidth = `${minW}px`;
+        menu.style.maxWidth = `${maxW}px`;
+    }
 
     applyTheme(menu, opts.theme ?? "auto");
     renderItems(menu, state, opts.items);
 
     return menu;
+}
+
+/**
+ * The sheet's backdrop. A tap on it closes the sheet, unless autoClose is
+ * false, and the tap reaches nothing under it.
+ */
+function buildBackdrop(state: MenuState): HTMLElement
+{
+    const backdrop = createElement("div", "contextmenu-backdrop");
+    setAttr(backdrop, { "aria-hidden": "true" });
+    backdrop.addEventListener("click", () =>
+    {
+        if (state.options.autoClose !== false)
+        {
+            closeMenu(state);
+        }
+    });
+    return backdrop;
+}
+
+/**
+ * In the sheet, shows a submenu in place of the list, with a Back row and the
+ * submenu's name first. With no submenu open, shows the menu's own items.
+ */
+function showLevel(state: MenuState): void
+{
+    const menu = state.menuEl;
+    const open = state.levels[state.levels.length - 1];
+    menu.innerHTML = "";
+
+    if (open)
+    {
+        const back = createElement("div", "contextmenu-item contextmenu-back");
+        setAttr(back, { role: "menuitem", tabindex: "-1" });
+        appendIcon(back, { id: "back", label: "Back", icon: "bi-chevron-left" });
+        const label = createElement("span", "contextmenu-label");
+        label.textContent = "Back";
+        back.appendChild(label);
+        back.addEventListener("click", () => leaveLevel(state));
+        menu.appendChild(back);
+        menu.appendChild(buildHeader(open));
+    }
+
+    renderItems(menu, state, open ? open.children ?? [] : state.options.items);
+    focusFirstItem(menu);
+}
+
+/** In the sheet, opens a submenu in place of the list. */
+function enterLevel(state: MenuState, item: ContextMenuItem): void
+{
+    if (!item.children || item.children.length === 0)
+    {
+        return;
+    }
+    state.levels.push(item);
+    showLevel(state);
+    logDebug("Sheet shows the submenu", item.id);
+}
+
+/** In the sheet, goes back from a submenu to the list it came from, with the focus on the submenu's row. */
+function leaveLevel(state: MenuState): void
+{
+    const left = state.levels.pop()!;
+    showLevel(state);
+
+    // The rows drawn are the list's items and submenus, in order, after the Back row of a submenu.
+    const parent = state.levels[state.levels.length - 1];
+    const rows = (parent ? parent.children ?? [] : state.options.items)
+        .filter((i) => i.type !== "separator" && i.type !== "header");
+    const at = rows.indexOf(left) + (parent ? 1 : 0);
+    state.menuEl.querySelectorAll<HTMLElement>(".contextmenu-item")[at].focus();
 }
 
 /** Apply the theme class based on the preference. */
@@ -532,14 +641,35 @@ function buildSubmenuTrigger(
     return el;
 }
 
-/** Attach hover and keyboard events for sub-menu opening. */
+/**
+ * Opens a sub-menu on hover after a delay, and at once on a click or a tap,
+ * since a touch pointer has no hover. In the sheet, it opens in place of the
+ * list.
+ */
 function attachSubmenuEvents(
     el: HTMLElement,
     state: MenuState,
     item: ContextMenuItem): void
 {
+    el.addEventListener("click", () =>
+    {
+        clearTimeout(state.submenuTimer);
+        if (state.sheet)
+        {
+            enterLevel(state, item);
+        }
+        else
+        {
+            openSubmenu(el, state, item);
+        }
+    });
+
     el.addEventListener("pointerenter", () =>
     {
+        if (state.sheet)
+        {
+            return;
+        }
         clearTimeout(state.submenuTimer);
         state.submenuTimer = window.setTimeout(
             () => openSubmenu(el, state, item),
@@ -775,6 +905,12 @@ function onOutsideClick(state: MenuState, e: MouseEvent): void
 {
     const target = e.target as HTMLElement;
 
+    // The backdrop's own click closes the sheet, so the tap reaches nothing under it.
+    if (target === state.backdrop)
+    {
+        return;
+    }
+
     if (!state.menuEl.contains(target) &&
         !(state.activeSubmenu && state.activeSubmenu.contains(target)))
     {
@@ -822,6 +958,12 @@ function handleEscape(state: MenuState, e: KeyboardEvent): void
         return;
     }
 
+    if (state.levels.length > 0)
+    {
+        leaveLevel(state);
+        return;
+    }
+
     closeMenu(state);
 }
 
@@ -833,17 +975,22 @@ function handleArrowRight(_state: MenuState, e: KeyboardEvent): void
     if (focused && focused.getAttribute("aria-haspopup") === "menu")
     {
         e.preventDefault();
-        focused.dispatchEvent(new PointerEvent("pointerenter"));
+        focused.click();
     }
 }
 
-/** Handle ArrowLeft: close the active sub-menu. */
+/** Handle ArrowLeft: close the active sub-menu, or in the sheet go back. */
 function handleArrowLeft(state: MenuState, e: KeyboardEvent): void
 {
     if (state.activeSubmenu)
     {
         e.preventDefault();
         closeActiveSubmenu(state);
+    }
+    else if (state.levels.length > 0)
+    {
+        e.preventDefault();
+        leaveLevel(state);
     }
 }
 
@@ -880,6 +1027,7 @@ function closeMenu(state: MenuState): void
     {
         state.menuEl.remove();
     }
+    state.backdrop?.remove();
 
     if (state.options.onClose)
     {
@@ -899,6 +1047,7 @@ function updateItems(state: MenuState, items: ContextMenuItem[]): void
     }
 
     state.options.items = items;
+    state.levels = [];
     state.menuEl.innerHTML = "";
     renderItems(state.menuEl, state, items);
 }
