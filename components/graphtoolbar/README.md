@@ -75,6 +75,10 @@ const handle = createGraphToolbar({
 
 GraphToolbar is in the A2UI catalog (ADR-245). The adapter passes it a container, so it is contained, and its document-wide keyboard shortcuts are off. Every tool sends `onToolClick` with its id, such as `gt-zoom-in`; the agent updates the graph in response. `toolbarOptions` and the per-tool callbacks are the host's.
 
+## Pointer and touch
+
+- GraphToolbar draws its buttons with Toolbar, which gives each a 44 px target under a coarse pointer and shows hover colors only on a device with hover (`TOUCH_EXPERIENCE.md` section 7). See Toolbar's README.
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |

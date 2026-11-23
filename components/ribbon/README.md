@@ -318,6 +318,12 @@ ribbon.setStatusBar(null);
 var wrapper = ribbon.getStatusBarElement();
 ```
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each tab, button, split button part, gallery option, dropdown, toggle, menu trigger, menu entry and backstage item is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **Menu bar submenus** open on a click or a tap at once. With a mouse or a pen, hover opens them after a short delay and closes them after the pointer leaves (#241). With a mouse or a pen, moving over another menu-bar trigger while a menu is open moves the menu to it.
+- **Scrolling.** The tab bar, the gallery popup and the backstage keep their scroll to themselves at the end. The backstage fills the screen with `100dvh`.
+
 ## Keyboard
 
 | Key | Context | Action |

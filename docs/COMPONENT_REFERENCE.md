@@ -1488,6 +1488,11 @@ When visible, the banner sets `--bannerbar-height` on `<html>` to its measured p
 
 The property is removed when the banner is hidden or destroyed.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the action button and the close button are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **A long message** scrolls inside the banner and keeps its scroll to itself at the end.
+
 ## Accessibility
 
 - Root element has `role="alert"` with `aria-live="assertive"` for critical/warning variants, `aria-live="polite"` for info/success
@@ -1960,6 +1965,11 @@ var bc = createBreadcrumb({
 | Small | `breadcrumb-nav-sm` | 0.75rem |
 | Medium | *(default)* | `$breadcrumb-font-size` (0.8125rem) |
 | Large | `breadcrumb-nav-lg` | 1rem |
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each segment link, the ellipsis, the actions caret and each dropdown item are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **The dropdown** keeps its scroll to itself at the end.
 
 ## Keyboard
 
@@ -5448,6 +5458,11 @@ Components like TreeGrid, TreeView, Conversation, and Timeline work naturally in
 ## Over A2UI
 
 DockLayout is in the A2UI catalog (ADR-241). Each slot (`toolbar`, `leftSidebar`, `rightSidebar`, `bottomPanel`, `statusBar`) and `content` is the id of another A2UI component, rendered as an element that sizes to its content. Over A2UI the layout fills its box rather than the window, and a slot's collapse and resize, which come from a docked component's handle, are the host's.
+
+## Pointer and touch
+
+- **Full height.** The layout fills the screen with `100dvh`, so its status bar stays above Safari's toolbar on iOS (`TOUCH_EXPERIENCE.md` section 9, item 17).
+- **Its parts.** The panels it holds bring their own touch behavior: Sidebar, TabbedPanel, Toolbar and StatusBar each describe theirs.
 
 ## Global Exports
 
@@ -9900,6 +9915,10 @@ const handle = createGraphToolbar({
 
 GraphToolbar is in the A2UI catalog (ADR-245). The adapter passes it a container, so it is contained, and its document-wide keyboard shortcuts are off. Every tool sends `onToolClick` with its id, such as `gt-zoom-in`; the agent updates the graph in response. `toolbarOptions` and the per-tool callbacks are the host's.
 
+## Pointer and touch
+
+- GraphToolbar draws its buttons with Toolbar, which gives each a 44 px target under a coarse pointer and shows hover colors only on a device with hover (`TOUCH_EXPERIENCE.md` section 7). See Toolbar's README.
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
@@ -10718,6 +10737,10 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 - Three sizes: xs (24px), sm (28px), md (32px)
 - Compact mode with reduced gaps
 - Theme-aware via CSS custom properties (light/dark mode)
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each button is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
 
 ## Accessibility
 
@@ -13737,15 +13760,18 @@ switches the rail automatically — no JavaScript needed.
 
 See `_dark-mode.scss` for the full set.
 
-## Mobile / touch
+## Pointer and touch
 
 - Every interactive target is at least **40px tall** (44px under
-  `@media (hover: none)` or `(pointer: coarse)` per WCAG 2.5.5).
+  `@media (hover: none)` or `(pointer: coarse)` per WCAG 2.5.5), the flyout's
+  items too.
 - Collapsed width grows from 48px → 56px on coarse pointers.
 - Expanded width clamps to `min(80vw, 260px)` below 576px so the rail fits
   narrow phones.
-- Hover-only interactions (flyout on `mouseenter`) are duplicated on `focus`
-  for keyboard + touch.
+- A collapsed item's flyout opens when a mouse or a pen moves over it
+  (`pointerenter`), on `focus`, and on a click or a tap (#241).
+- Hover colors show only on a device with hover. The rail's body keeps its
+  scroll to itself at the end.
 - `-webkit-tap-highlight-color: transparent` + `touch-action` defaults
   prevent double-tap zoom and flash.
 
@@ -15987,6 +16013,12 @@ ribbon.setStatusBar(null);
 // Get the wrapper element
 var wrapper = ribbon.getStatusBarElement();
 ```
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each tab, button, split button part, gallery option, dropdown, toggle, menu trigger, menu entry and backstage item is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **Menu bar submenus** open on a click or a tap at once. With a mouse or a pen, hover opens them after a short delay and closes them after the pointer leaves (#241). With a mouse or a pen, moving over another menu-bar trigger while a menu is open moves the menu to it.
+- **Scrolling.** The tab bar, the gallery popup and the backstage keep their scroll to themselves at the end. The backstage fills the screen with `100dvh`.
 
 ## Keyboard
 
@@ -19368,6 +19400,10 @@ When visible, the bar sets `--statusbar-height` on `<html>`. Other components ca
 }
 ```
 
+## Pointer and touch
+
+- The status bar shows text and takes no pointer input. A host that puts a control in a region gives that control its own 44 px target under a coarse pointer (`TOUCH_EXPERIENCE.md` section 7).
+
 ## Accessibility
 
 - `role="status"` with `aria-live="polite"` for screen reader announcements.
@@ -20613,6 +20649,10 @@ Place this inline script in `<head>` **before** any CSS to prevent a flash of un
 | `setTheme(mode)` | `void` | Programmatically change mode. |
 | `destroy()` | `void` | Remove DOM and event listeners. |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each mode button is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+
 ## Keyboard
 
 | Key | Action |
@@ -21741,6 +21781,7 @@ Disable overflow with `overflow: false` in toolbar options.
 - **A canceled drag changes nothing.** The browser cancels a drag when it takes the gesture for a scroll or when a call arrives. A floating toolbar goes back where it was. A toolbar that the drag undocked docks again where it was. Nothing is persisted.
 - **Drag the resize handle** to change the length. A canceled resize puts the length back, and `onResize` hears nothing.
 - **Hover colors and the glow** on a tool show only on a device with hover, so a tap does not leave a tool looking selected.
+- **Targets.** Under a coarse pointer each tool, the overflow button, each gallery option, the split button's arrow and the grip are 44 px (`TOUCH_EXPERIENCE.md` section 7, #242). The grip's dots stay a thin strip in the middle of its target.
 - **Without a drag:** the arrow keys resize from a focused handle, and `float()`, `dock()` and `applyLayoutState()` do it from code.
 
 ## States
@@ -23408,6 +23449,11 @@ Pinned canvases sort first, and sorting happens when the data is set rather than
 ## The scrubber is conditional
 
 It renders nothing until the host calls `setRevisionRange()` with a real range. A canvas with one revision has no history worth scrubbing, and an inert slider is worse than no slider.
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each tab and its pin and close buttons, and the new-tab button, are 44 px (`TOUCH_EXPERIENCE.md` section 7). They were 40 px before.
+- **Hover colors** show only on a device with hover. The tab strip keeps its sideways scroll to itself at the end.
 
 ## Security
 

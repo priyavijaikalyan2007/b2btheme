@@ -88,6 +88,11 @@ Pinned canvases sort first, and sorting happens when the data is set rather than
 
 It renders nothing until the host calls `setRevisionRange()` with a real range. A canvas with one revision has no history worth scrubbing, and an inert slider is worse than no slider.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each tab and its pin and close buttons, and the new-tab button, are 44 px (`TOUCH_EXPERIENCE.md` section 7). They were 40 px before.
+- **Hover colors** show only on a device with hover. The tab strip keeps its sideways scroll to itself at the end.
+
 ## Security
 
 Canvas titles are user content and are only ever assigned through `textContent`.

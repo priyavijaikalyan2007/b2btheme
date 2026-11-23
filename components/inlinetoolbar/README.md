@@ -90,6 +90,10 @@ A compact inline toolbar that renders INSIDE a container element as a flex row. 
 - Compact mode with reduced gaps
 - Theme-aware via CSS custom properties (light/dark mode)
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each button is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+
 ## Accessibility
 
 - Toolbar: `role="toolbar"`, `aria-label="Inline toolbar"`

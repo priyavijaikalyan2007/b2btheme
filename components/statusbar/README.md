@@ -97,6 +97,10 @@ When visible, the bar sets `--statusbar-height` on `<html>`. Other components ca
 }
 ```
 
+## Pointer and touch
+
+- The status bar shows text and takes no pointer input. A host that puts a control in a region gives that control its own 44 px target under a coarse pointer (`TOUCH_EXPERIENCE.md` section 7).
+
 ## Accessibility
 
 - `role="status"` with `aria-live="polite"` for screen reader announcements.
