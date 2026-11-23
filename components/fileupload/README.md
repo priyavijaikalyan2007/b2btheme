@@ -178,6 +178,11 @@ window.createFileUpload
 | `completed` | Upload succeeded | Green progress bar at 100%, "Completed" text |
 | `failed` | Upload failed | Red progress bar, error text, retry action button |
 
+## Pointer and touch
+
+- **Choosing files.** A tap on the drop zone opens the file picker, so a phone needs no drag (`TOUCH_EXPERIENCE.md` section 8).
+- **Targets.** Under a coarse pointer each file's actions and each download link are 44 px. Hover colors show only on a device with hover.
+
 ## Keyboard Shortcuts
 
 | Key | Action |

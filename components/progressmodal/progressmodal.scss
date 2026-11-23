@@ -222,6 +222,8 @@
 .progressmodal-log {
     max-height: 200px;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $padding-y-sm;
 }
 
@@ -318,9 +320,11 @@
     font-size: $font-size-sm;
     line-height: 1;
 
-    &:hover {
-        color: var(--theme-primary-text);
-        border-color: var(--theme-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-primary-text);
+            border-color: var(--theme-primary);
+        }
     }
 
     &:focus {
@@ -351,4 +355,17 @@
 
 .progressmodal-failed {
     // Failed state marker — visual changes applied via child selectors above
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .progressmodal-copy-log-btn,
+    .progressmodal-close-btn,
+    .progressmodal-footer .btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }

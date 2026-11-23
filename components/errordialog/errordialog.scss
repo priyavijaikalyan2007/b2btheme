@@ -63,6 +63,8 @@
     word-break: break-word;
     max-height: 200px;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     color: var(--theme-text-secondary);
 }
 
@@ -72,4 +74,21 @@
     top: $sp-8;
     right: $sp-8;
     z-index: 1;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .errordialog-header .btn-close,
+    .errordialog-footer .btn,
+    .errordialog-copy-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .errordialog-technical-toggle {
+        min-height: 44px;
+    }
 }

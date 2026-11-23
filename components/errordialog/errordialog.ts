@@ -400,7 +400,7 @@ function buildAccordionTrigger(collapseId: string): HTMLElement
 {
     const trigger = createElement("button", [
         "accordion-button", "collapsed", "py-2", "px-0",
-        "text-muted", "small"
+        "text-muted", "small", "errordialog-technical-toggle"
     ]);
     setAttr(trigger, "type", "button");
     setAttr(trigger, "data-bs-toggle", "collapse");
@@ -540,7 +540,7 @@ function showCopyFeedback(btn: HTMLElement): void
 function buildFooter(_id: string, error: LiterateError, showRetry: boolean): HTMLElement
 {
     const footer = createElement("div", [
-        "modal-footer", "border-top-0", "pt-0"
+        "modal-footer", "border-top-0", "pt-0", "errordialog-footer"
     ]);
 
     const closeBtn = createElement("button", ["btn", "btn-secondary"]);

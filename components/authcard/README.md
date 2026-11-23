@@ -130,6 +130,11 @@ markup themselves — the login must work with JavaScript disabled.
   Anything that does not parse to a single `<svg>` root is discarded with a
   console warning.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each sign-in provider button and each link in a step is 44 px (`TOUCH_EXPERIENCE.md` section 7).
+- **Scrolling.** The main area keeps its scroll at the end.
+
 ## Scope notes
 
 - **Excluded from the DynamicFormSwitcher field convention (ADR-134):** the

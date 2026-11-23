@@ -12,6 +12,8 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { destroyProbe } from "../../tests/destroy-probe";
 import { createFormDialog } from "./formdialog";
+// warnOnDirty asks through ConfirmDialog, which publishes window.showConfirmDialog.
+import "../confirmdialog/confirmdialog";
 import type { FormDialogOptions, FormFieldDef, FormDialog } from "./formdialog";
 
 // ============================================================================
@@ -991,5 +993,107 @@ describe("each field's label names its control", () =>
         expect(nameOf(el.querySelector("[role='textbox']"))).toBe("Bio");
         expect(nameOf(el.querySelector("[role='switch']"))).toBe("Enabled");
         dialog.destroy();
+    });
+});
+
+// ============================================================================
+// TOUCH: A TAP OUTSIDE CLOSES ONLY A FORM WITH NO UNSAVED CHANGES (#181)
+// ============================================================================
+
+describe("FormDialog tap outside (TOUCH_EXPERIENCE.md 6.1)", () =>
+{
+    const tapBackdrop = (): void => { getBackdrop()!.click(); };
+
+    test("a clean form closes on a tap on the backdrop, as before", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+
+        tapBackdrop();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("a form with unsaved changes stays open on the tap, and Cancel still closes it", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        getInput(handle.getElement(), "username")!.value = "ada";
+
+        tapBackdrop();
+        expect(onCancel).not.toHaveBeenCalled();
+        expect(handle.getElement().isConnected).toBe(true);
+
+        getCancelBtn(handle.getElement())!.click();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("with warnOnDirty, the tap on a form with unsaved changes asks before it discards them", async () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel, warnOnDirty: true }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        getInput(handle.getElement(), "username")!.value = "ada";
+
+        tapBackdrop();
+        vi.advanceTimersByTime(300);
+        const discard = document.querySelector<HTMLButtonElement>(".confirmdialog-confirm")!;
+        expect(discard.textContent).toBe("Discard");
+        expect(onCancel).not.toHaveBeenCalled();
+        discard.click();
+        await vi.runAllTimersAsync();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("closeOnBackdrop false keeps even a clean form open", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel, closeOnBackdrop: false }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+
+        tapBackdrop();
+        expect(onCancel).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+});
+
+// ============================================================================
+// TOUCH: A CANCELED DIVIDER DRAG PUTS THE PANEL'S WIDTH BACK (#181)
+// ============================================================================
+
+describe("FormDialog divider on touch", () =>
+{
+    // TOUCH_EXPERIENCE.md section 9, item 5: pointercancel is an abort.
+    test("a canceled drag puts the panel's width back", () =>
+    {
+        let captured = false;
+        HTMLElement.prototype.setPointerCapture = vi.fn(() => { captured = true; });
+        HTMLElement.prototype.releasePointerCapture = vi.fn(() => { captured = false; });
+        HTMLElement.prototype.hasPointerCapture = vi.fn(() => captured);
+        const panelContent = document.createElement("div");
+        const handle = createFormDialog(defaultOptions({ panel: { content: panelContent, width: 300 } }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        const el = handle.getElement();
+        const divider = el.querySelector<HTMLElement>(".formdialog-divider")!;
+        const panel = el.querySelector<HTMLElement>(".formdialog-panel")!;
+        const fire = (type: string, x: number): boolean => divider.dispatchEvent(new PointerEvent(type,
+            { bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", clientX: x }));
+
+        fire("pointerdown", 500);
+        fire("pointermove", 450);
+        expect(panel.style.width).toBe("350px");
+        fire("pointercancel", 450);
+        expect(panel.style.width).toBe("300px");
+        expect(divider.classList.contains("formdialog-divider-active")).toBe(false);
+        handle.destroy();
     });
 });

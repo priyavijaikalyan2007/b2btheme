@@ -89,6 +89,10 @@ window.createMaskedEntry
 
 **Custom mode** (`maskMode: "custom"`) keeps the input as `type="text"` at all times. When concealed, the component replaces the display value with repeated mask characters. The actual value is stored internally.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the field and its show and copy buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7).
+
 ## Accessibility
 
 - Input linked to label via `for`/`id`, or has `aria-label` when no label

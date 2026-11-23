@@ -122,6 +122,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
 
 ### Changed
+- **A tap outside FormDialog or ShareDialog closes it only when nothing is unsaved** (#181), as `TOUCH_EXPERIENCE.md` section 6.1 asks. **Before, a tap beside a phone's keyboard closed a half-filled form and lost it.** With unsaved changes the tap now does nothing, and FormDialog with `warnOnDirty` asks first. A clean dialog closes as before. **Cancel**, `Escape` and `closeOnBackdrop: false` do not change.
+- **Dialogs and forms on a touch screen** (#181): FormDialog, ConfirmDialog, ErrorDialog, ProgressModal, DynamicFormSwitcher, PropertyInspector, ShareDialog, FileUpload, Stepper, AuthCard and MaskedEntry.
+  - Under a coarse pointer each button, field, tab and row is 44 px, Bootstrap's buttons and fields in them too.
+  - Hover colors show only on a device with hover.
+  - Inner scroll areas keep their scroll at the end. FormDialog and ShareDialog use `100dvh`.
+  - FormDialog's divider and PropertyInspector's edge leave a vertical swipe to the page. A canceled drag puts the width back, and PropertyInspector's `onResize` hears nothing.
 - **The rest of the shell on a touch screen** (#181, part 3 of 3): Breadcrumb, NavRail, WorkspaceShell, Ribbon, InlineToolbar, BannerBar, ThemeToggle, DockLayout, StatusBar and GraphToolbar.
   - Hover colors show only on a device with hover.
   - Each target is 44 px under a coarse pointer. WorkspaceShell's were 40, and the Ribbon's buttons, tabs and menus are larger on a touch screen.

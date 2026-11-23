@@ -112,6 +112,11 @@ ConfirmDialog is in the A2UI catalog. It is always contained, so it renders in i
 | `warning` | `bi-exclamation-circle` | `btn-warning` | Potentially risky actions |
 | `info` | `bi-info-circle` | `btn-info` | Informational confirmation |
 
+## Pointer and touch
+
+- **A tap outside** closes the dialog as before. It holds no input, so nothing is lost (`TOUCH_EXPERIENCE.md` section 6.1).
+- **Targets.** Under a coarse pointer the close button and both buttons are 44 px. Hover colors show only on a device with hover.
+
 ## Keyboard
 
 | Key | Action |

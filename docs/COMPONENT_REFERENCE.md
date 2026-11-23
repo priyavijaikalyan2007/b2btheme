@@ -1317,6 +1317,11 @@ markup themselves — the login must work with JavaScript disabled.
   Anything that does not parse to a single `<svg>` root is discarded with a
   console warning.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each sign-in provider button and each link in a step is 44 px (`TOUCH_EXPERIENCE.md` section 7).
+- **Scrolling.** The main area keeps its scroll at the end.
+
 ## Scope notes
 
 - **Excluded from the DynamicFormSwitcher field convention (ADR-134):** the
@@ -3491,6 +3496,11 @@ ConfirmDialog is in the A2UI catalog. It is always contained, so it renders in i
 | `danger` | `bi-exclamation-triangle` | `btn-danger` | Destructive actions (delete, remove) |
 | `warning` | `bi-exclamation-circle` | `btn-warning` | Potentially risky actions |
 | `info` | `bi-info-circle` | `btn-info` | Informational confirmation |
+
+## Pointer and touch
+
+- **A tap outside** closes the dialog as before. It holds no input, so nothing is lost (`TOUCH_EXPERIENCE.md` section 6.1).
+- **Targets.** Under a coarse pointer the close button and both buttons are 44 px. Hover colors show only on a device with hover.
 
 ## Keyboard
 
@@ -6062,6 +6072,11 @@ createFormDialog({
 
 State is keyed by `(variantId, fieldName)`. A field named `base_url` in variant A is stored independently from `base_url` in variant B — by design, since a base URL for one auth scheme is rarely identical to another.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer each field, list, segment, tab, radio and check row is 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover. A picker inside a form, such as CronPicker, follows its own README.
+- **Keyboards.** Email, URL, number, date and time fields use their native input types, so a phone opens the matching keyboard or picker.
+
 ## Accessibility
 
 - The form region carries `role="region"`, `aria-label="{variant.label} configuration"`, and `aria-live="polite"`.
@@ -6465,6 +6480,11 @@ ErrorDialog is in the A2UI catalog. It is always contained, so it shows no Boots
 - **Retry button** — Shown only when `onRetry` callback is provided
 - **XSS safe** — All content set via `textContent`, never `innerHTML`
 - **Auto-cleanup** — Modal DOM is removed when dismissed
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the close button, the footer's buttons, the copy button and the technical details toggle are 44 px (`TOUCH_EXPERIENCE.md` section 7).
+- **The technical details** keep their scroll at the end.
 
 ## Accessibility
 
@@ -7790,6 +7810,11 @@ window.createFileUpload
 | `completed` | Upload succeeded | Green progress bar at 100%, "Completed" text |
 | `failed` | Upload failed | Red progress bar, error text, retry action button |
 
+## Pointer and touch
+
+- **Choosing files.** A tap on the drop zone opens the file picker, so a phone needs no drag (`TOUCH_EXPERIENCE.md` section 8).
+- **Targets.** Under a coarse pointer each file's actions and each download link are 44 px. Hover colors show only on a device with hover.
+
 ## Keyboard Shortcuts
 
 | Key | Action |
@@ -8416,7 +8441,7 @@ A modal dialog optimized for form-based workflows (create, edit, invite, assign)
 | `customContent` | `HTMLElement` | -- | Custom DOM appended after fields |
 | `showFooter` | `boolean` | `true` | Show footer with Submit/Cancel buttons; set `false` when `customContent` manages its own actions |
 | `autoClose` | `boolean` | `true` | Auto-close after successful submit |
-| `closeOnBackdrop` | `boolean` | `true` | Close on backdrop click |
+| `closeOnBackdrop` | `boolean` | `true` | Close on a tap or a click on the backdrop. A form with unsaved changes stays open, or with `warnOnDirty` asks first |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `warnOnDirty` | `boolean` | `false` | Show confirm dialog before discarding changes |
 | `cssClass` | `string` | -- | Additional CSS class on dialog |
@@ -8611,6 +8636,14 @@ Pass `contained: true` with a `container` element and `createFormDialog` shows t
 ### Over A2UI
 
 FormDialog is in the A2UI catalog. It is always contained, so it renders in its surface and blocks nothing outside it. Submit sends `onSubmit` with `{ values }`, and cancelling sends `onCancel`. Fields, sections and steps take no `validate`, `customElement` or `"custom"` type; `panel`, `customContent` and `warnOnDirty` are the host's.
+
+## Pointer and touch
+
+- **A tap outside** closes the dialog only when the form has no unsaved changes (`TOUCH_EXPERIENCE.md` section 6.1). With unsaved changes, the tap does nothing, so a tap beside a phone's keyboard loses no work. With `warnOnDirty`, it asks first. **Cancel**, `Escape` and `close()` do not change. `closeOnBackdrop: false` turns the tap off.
+- **The panel's divider** takes a finger 22 px either side of its line under a coarse pointer, and leaves a vertical swipe to the page (`touch-action: pan-y`). A canceled drag puts the panel's width back.
+- **Targets.** Under a coarse pointer the close button, the footer's buttons, each section toggle, field, radio and check row are 44 px. Hover colors show only on a device with hover.
+- **Scrolling and height.** The form, the panel and the steps keep their scroll at the end. The dialog's height uses `100dvh`, so its buttons stay above Safari's toolbar on iOS.
+- **Keyboards.** Email, URL and number fields use their native input types, so a phone opens the matching keyboard.
 
 ## Keyboard
 
@@ -13197,6 +13230,10 @@ window.createMaskedEntry
 
 **Custom mode** (`maskMode: "custom"`) keeps the input as `type="text"` at all times. When concealed, the component replaces the display value with repeated mask characters. The actual value is stored internally.
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the field and its show and copy buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7).
+
 ## Accessibility
 
 - Input linked to label via `for`/`id`, or has `aria-label` when no label
@@ -15023,6 +15060,11 @@ ProgressModal is in the A2UI catalog through `createProgressModal`. It is always
 | `warning` | `bi-exclamation-triangle-fill` | Yellow |
 | `progress` | Mini spinner | Primary |
 
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the copy-log button, the close button and the footer's buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
+- **The log** keeps its scroll at the end.
+
 ## Dependencies
 
 - Bootstrap 5 CSS, Bootstrap Icons, Enterprise Theme CSS
@@ -15320,6 +15362,12 @@ Non-modal right-side panel for viewing and editing entity details without naviga
 ### Over A2UI
 
 PropertyInspector is in the A2UI catalog (ADR-242). The agent sets `openWith`: the drawer opens with it, and opens again whenever the agent changes it, as a fresh `open()` does. Its `content`, `footer` and each tab's `content` are ids of other A2UI components. A header action sends `onAction` with `{ actionId }`, and closing the drawer sends `onClose`. The width the user drags to is kept across a rebuild. Escape closes the drawer only while focus is inside it, and the adapter gives it a clipped box as tall as `--outcrop-layout-height` (default 400px).
+
+## Pointer and touch
+
+- **The edge** takes a finger 22 px either side under a coarse pointer, and leaves a vertical swipe to the page (`touch-action: pan-y`). A canceled resize puts the width back, and `onResize` hears nothing (`TOUCH_EXPERIENCE.md` section 9, item 5).
+- **Targets.** Under a coarse pointer the tabs, the close button and each action are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** The tabs and the body keep their scroll at the end.
 
 ## Keyboard
 
@@ -16999,7 +17047,7 @@ const result = await dialog.show();
 | `onCancel` | `() => void` | -- | Callback when user cancels |
 | `size` | `string` | `"md"` | `"sm"`, `"md"`, `"lg"` |
 | `cssClass` | `string` | -- | Additional CSS class on the dialog |
-| `closeOnBackdrop` | `boolean` | `true` | Close when clicking outside |
+| `closeOnBackdrop` | `boolean` | `true` | Close on a tap or a click outside. While the person has changed who has access, or picked people not yet added, it stays open |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `keyBindings` | `Record<string, string>` | -- | Override default key bindings |
 | `onRemoveConfirm` | `(person: { id: string; name: string }) => Promise<boolean>` | -- | Confirmation callback before removing a person's access. Return `true` to proceed, `false` to cancel. If omitted, removal is immediate. |
@@ -17043,6 +17091,12 @@ Pass `contained: true` with a `container` element and `createShareDialog` shows 
 ### Over A2UI
 
 ShareDialog is in the A2UI catalog. It is always contained. Done sends `onShare` with `{ added, changed, removed }`, and cancelling sends `onCancel`. People searches go to the agent, as PeoplePicker's do (`onSearch` with `searchResult`). `searchUrl` and `onRemoveConfirm` are the host's.
+
+## Pointer and touch
+
+- **A tap outside** closes the dialog only when nothing is unsaved (`TOUCH_EXPERIENCE.md` section 6.1). While the person has added, changed or removed access, or picked people not yet added, the tap does nothing. **Cancel**, `Escape` and `close()` do not change. `closeOnBackdrop: false` turns the tap off.
+- **Targets.** Under a coarse pointer the close button, each access list and remove button, **Add**, **Cancel** and **Done** are 44 px. Hover colors show only on a device with hover.
+- **Scrolling and height.** The body and the access list keep their scroll at the end. The dialog's height uses `100dvh`.
 
 ## Keyboard
 
@@ -19511,6 +19565,10 @@ Linear or non-linear step progression UI for complex multi-step processes with v
 | `completed` | Green check | Successfully completed |
 | `error` | Red exclamation | Validation failed |
 | `skipped` | Grey dashed | Skipped (optional step) |
+
+## Pointer and touch
+
+- **Targets.** Under a coarse pointer the footer's buttons are 44 px (`TOUCH_EXPERIENCE.md` section 7). Hover colors show only on a device with hover.
 
 ## Keyboard
 

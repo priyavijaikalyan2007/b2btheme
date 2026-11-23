@@ -128,6 +128,12 @@ export interface FormDialogOptions
     showFooter?: boolean;
     /** Close after a successful submit. Default: true. */
     autoClose?: boolean;
+    /**
+     * Cancel on a tap or a click on the backdrop. Default: true. A form with
+     * unsaved changes stays open on the tap, or with `warnOnDirty` asks first,
+     * so a tap beside a phone's keyboard loses no work (TOUCH_EXPERIENCE.md
+     * section 6.1).
+     */
     closeOnBackdrop?: boolean;
 
     /** Cancel when the user presses Escape. Default: true. */
@@ -1400,6 +1406,7 @@ class FormDialogImpl implements FormDialog
         div.addEventListener("pointerdown", (e) => this.onDividerDown(e));
         div.addEventListener("pointermove", (e) => this.onDividerMove(e));
         div.addEventListener("pointerup", (e) => this.onDividerUp(e));
+        div.addEventListener("pointercancel", (e) => this.onDividerCancel(e));
 
         return div;
     }
@@ -1432,6 +1439,21 @@ class FormDialogImpl implements FormDialog
     {
         this.dividerEl!.releasePointerCapture(e.pointerId);
         this.dividerEl!.classList.remove(`${CLS}-divider-active`);
+    }
+
+    /**
+     * The browser canceled the drag, when it took the gesture for a scroll or a
+     * call arrived: the panel goes back to its width from before the drag
+     * (TOUCH_EXPERIENCE.md section 9, item 5).
+     */
+    private onDividerCancel(e: PointerEvent): void
+    {
+        if (!this.dividerEl!.hasPointerCapture(e.pointerId)) { return; }
+        this.panelWidth = this.dragStartWidth;
+        const panelEl = this.bodyEl?.querySelector(`.${CLS}-panel`) as HTMLElement;
+        if (panelEl) { panelEl.style.width = `${this.panelWidth}px`; }
+        this.onDividerUp(e);
+        logDebug("Divider drag canceled; the panel's width is back");
     }
 
     // ====================================================================
@@ -2279,6 +2301,12 @@ class FormDialogImpl implements FormDialog
     {
         if (this.opts.closeOnBackdrop === false) { return; }
         if (e.target !== this.backdropEl) { return; }
+        // A tap outside closes only a form with no unsaved changes, or asks first with warnOnDirty (6.1).
+        if (!this.opts.warnOnDirty && this.isDirty())
+        {
+            logDebug("Backdrop tap kept the form open: it has unsaved changes");
+            return;
+        }
         this.close();
     }
 

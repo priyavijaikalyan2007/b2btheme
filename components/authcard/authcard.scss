@@ -60,6 +60,8 @@
 .auth-main {
     height: 100%;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,4 +166,16 @@
     color: var(--bs-secondary-color);
     font-size: 0.875rem;
     position: relative;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .idp-button,
+    .auth-step a {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
