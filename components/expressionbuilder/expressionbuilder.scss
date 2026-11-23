@@ -6,9 +6,9 @@
  * ⚓ COMPONENT: ExpressionBuilderStyles
  * 📜 PURPOSE: Styles for the ExpressionBuilder (#207) as a grid of rows (#237):
  *    columns that line up at every depth, solid brackets for groups and
- *    dashed ones for what the precedence reads, the ⋯ menu, the footer and
- *    its toolbar, drafts, problems from Parse, and the drag handle and drop
- *    line.
+ *    dashed ones for what the precedence reads, the grids inside a row, the
+ *    ⋯ menu, the footer and its toolbar, drafts, problems from Parse, and the
+ *    drag handle and drop line.
  * 🔗 RELATES: [[ExpressionBuilder]], [[FacetSearch]], [[EnterpriseTheme]]
  */
 
@@ -38,13 +38,15 @@ $eb-bracket-coarse: 44px;
 
 // A narrow screen scrolls the grid sideways inside the builder (spec 7.2). The
 // top level is the grid, at least as wide as its content, so no column is
-// squeezed under the next.
+// squeezed under the next. A grid inside a row has its own columns, and the
+// outer grid scrolls it with the rest.
 .expressionbuilder-grid {
     overflow-x: auto;
     overscroll-behavior: contain;
 }
 
-.expressionbuilder-grid > .expressionbuilder-level {
+.expressionbuilder-grid > .expressionbuilder-level,
+.expressionbuilder-inner > .expressionbuilder-level {
     display: grid;
     grid-template-columns:
         auto auto repeat(var(--eb-depth, 1), var(--eb-bracket))
@@ -53,12 +55,18 @@ $eb-bracket-coarse: 44px;
     min-width: 100%;
 }
 
-.expressionbuilder-level .expressionbuilder-level,
+.expressionbuilder-item > .expressionbuilder-level,
 .expressionbuilder-item,
 .expressionbuilder-line {
     display: grid;
     grid-template-columns: subgrid;
     grid-column: 1 / -1;
+}
+
+// The end of a level is marked on its last item, so the drop line falls after
+// any grid inside it.
+.expressionbuilder-item {
+    position: relative;
 }
 
 // A list's own indent would break the columns.
@@ -222,6 +230,34 @@ $eb-bracket-coarse: 44px;
     min-width: 0;
     padding: 0 $sp-2;
     border-style: dashed;
+}
+
+// ============================================================================
+// GRIDS INSIDE A ROW: a search inside and link conditions (spec 5.7), from the
+// first bracket column, so they sit under the row they belong to.
+// ============================================================================
+
+.expressionbuilder-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-2;
+    grid-column: 3 / -1;
+    margin: $sp-2 0 $sp-4;
+    padding-left: $sp-6;
+    border-left: 2px solid var(--theme-border-color);
+}
+
+.expressionbuilder-inner-head {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    font-weight: $font-weight-semibold;
+}
+
+.expressionbuilder-empty {
+    color: var(--theme-text-secondary);
+    font-style: italic;
 }
 
 // ============================================================================
