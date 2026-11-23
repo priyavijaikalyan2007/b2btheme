@@ -465,3 +465,38 @@ describe("createShareDialog, contained (ADR-246)", () =>
         expect(onCancel).not.toHaveBeenCalled();
     });
 });
+
+// ============================================================================
+// TOUCH: A TAP OUTSIDE CLOSES ONLY A DIALOG WITH NO UNSAVED CHANGES (#181)
+// ============================================================================
+
+describe("ShareDialog tap outside (TOUCH_EXPERIENCE.md 6.1)", () =>
+{
+    const EXISTING = [{ person: { id: "p1", name: "Alice", email: "alice@test.com" }, accessLevelId: "editor" }];
+
+    test("a clean dialog closes on a tap on the backdrop, as before", async () =>
+    {
+        const dialog = createShareDialog(defaultOptions({ existingAccess: EXISTING }));
+        const result = dialog.show();
+        vi.advanceTimersByTime(300);
+
+        getBackdrop()!.click();
+        expect(await result).toBeNull();
+    });
+
+    test("with a changed access level the dialog stays open on the tap, and Cancel still closes it", async () =>
+    {
+        const dialog = createShareDialog(defaultOptions({ existingAccess: EXISTING }));
+        const result = dialog.show();
+        vi.advanceTimersByTime(300);
+        const level = getOverlay()!.querySelector<HTMLSelectElement>(".sharedialog-access-row select")!;
+        level.value = "viewer";
+        level.dispatchEvent(new Event("change", { bubbles: true }));
+
+        getBackdrop()!.click();
+        expect(getOverlay()).not.toBeNull();
+
+        getCancelBtn()!.click();
+        expect(await result).toBeNull();
+    });
+});

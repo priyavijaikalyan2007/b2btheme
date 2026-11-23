@@ -128,6 +128,12 @@ export interface FormDialogOptions
     showFooter?: boolean;
     /** Close after a successful submit. Default: true. */
     autoClose?: boolean;
+    /**
+     * Cancel on a tap or a click on the backdrop. Default: true. A form with
+     * unsaved changes stays open on the tap, or with `warnOnDirty` asks first,
+     * so a tap beside a phone's keyboard loses no work (TOUCH_EXPERIENCE.md
+     * section 6.1).
+     */
     closeOnBackdrop?: boolean;
 
     /** Cancel when the user presses Escape. Default: true. */
@@ -2279,6 +2285,12 @@ class FormDialogImpl implements FormDialog
     {
         if (this.opts.closeOnBackdrop === false) { return; }
         if (e.target !== this.backdropEl) { return; }
+        // A tap outside closes only a form with no unsaved changes, or asks first with warnOnDirty (6.1).
+        if (!this.opts.warnOnDirty && this.isDirty())
+        {
+            logDebug("Backdrop tap kept the form open: it has unsaved changes");
+            return;
+        }
         this.close();
     }
 

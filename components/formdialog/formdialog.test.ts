@@ -993,3 +993,72 @@ describe("each field's label names its control", () =>
         dialog.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A TAP OUTSIDE CLOSES ONLY A FORM WITH NO UNSAVED CHANGES (#181)
+// ============================================================================
+
+describe("FormDialog tap outside (TOUCH_EXPERIENCE.md 6.1)", () =>
+{
+    const tapBackdrop = (): void => { getBackdrop()!.click(); };
+
+    test("a clean form closes on a tap on the backdrop, as before", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+
+        tapBackdrop();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("a form with unsaved changes stays open on the tap, and Cancel still closes it", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        getInput(handle.getElement(), "username")!.value = "ada";
+
+        tapBackdrop();
+        expect(onCancel).not.toHaveBeenCalled();
+        expect(handle.getElement().isConnected).toBe(true);
+
+        getCancelBtn(handle.getElement())!.click();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+
+    test("with warnOnDirty, the tap on a form with unsaved changes asks before it discards them", async () =>
+    {
+        const onCancel = vi.fn();
+        const ask = vi.fn(() => Promise.resolve(true));
+        (window as unknown as { showConfirmDialog: unknown }).showConfirmDialog = ask;
+        const handle = createFormDialog(defaultOptions({ onCancel, warnOnDirty: true }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        getInput(handle.getElement(), "username")!.value = "ada";
+
+        tapBackdrop();
+        expect(ask).toHaveBeenCalledTimes(1);
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        delete (window as unknown as { showConfirmDialog?: unknown }).showConfirmDialog;
+        handle.destroy();
+    });
+
+    test("closeOnBackdrop false keeps even a clean form open", () =>
+    {
+        const onCancel = vi.fn();
+        const handle = createFormDialog(defaultOptions({ onCancel, closeOnBackdrop: false }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+
+        tapBackdrop();
+        expect(onCancel).not.toHaveBeenCalled();
+        handle.destroy();
+    });
+});

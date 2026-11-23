@@ -91,7 +91,12 @@ export interface ShareDialogOptions
     /** Additional CSS class on the dialog element. */
     cssClass?: string;
 
-    /** Close when clicking the backdrop. Default: true. */
+    /**
+     * Cancel on a tap or a click on the backdrop. Default: true. While the
+     * person has changed who has access, or picked people not yet added, the
+     * dialog stays open on the tap, so it loses no work (TOUCH_EXPERIENCE.md
+     * section 6.1).
+     */
     closeOnBackdrop?: boolean;
 
     /** Close when pressing Escape. Default: true. */
@@ -950,11 +955,15 @@ export class ShareDialog implements ShareDialogHandle
 
         this.backdropEl.addEventListener("click", (e) =>
         {
-            if (e.target === this.backdropEl)
+            if (e.target !== this.backdropEl) { return; }
+            // A tap outside closes only a dialog with no unsaved changes (6.1).
+            if (this.hasUnsavedChanges())
             {
-                logDebug("Backdrop clicked — cancelling.");
-                this.resolve(null);
+                logDebug("Backdrop tap kept the dialog open: it has unsaved changes.");
+                return;
             }
+            logDebug("Backdrop clicked — cancelling.");
+            this.resolve(null);
         });
     }
 
@@ -1234,6 +1243,14 @@ export class ShareDialog implements ShareDialogHandle
         }
 
         return { added, changed };
+    }
+
+    /** Whether the person changed who has access, or picked people not yet added. */
+    private hasUnsavedChanges(): boolean
+    {
+        const { added, changed, removed } = this.computeResult();
+        const picked = this.pickerInstance?.getSelected().length ?? 0;
+        return added.length + changed.length + removed.length + picked > 0;
     }
 
     /** Find person IDs that were in original but removed from current. */
