@@ -870,11 +870,23 @@ $toolbar-transition-fade:   200ms;
 @media (pointer: coarse) {
     .toolbar-tool,
     .toolbar-overflow-btn    { min-width: 44px; min-height: $control-height-xl; }
-    .toolbar-split-arrow     { min-width: $control-height-sm; min-height: $control-height-xl; }
+    .toolbar-split-arrow     { min-width: 44px; min-height: $control-height-xl; }
     .toolbar-gallery-option  { min-width: 44px; min-height: $control-height-xl; }
-    .toolbar-grip            { min-width: $icon-size-xs; min-height: $icon-size-xs; }
     .toolbar-overflow-item,
     .toolbar-split-menu-item { min-height: $control-height-xl; padding: $sp-10 $sp-16; }
+
+    // The grip takes a 44 px target, and its dots stay in the same thin strip in the middle (#242).
+    // The orientation rules set the grip's size, so these match their specificity.
+    .toolbar-horizontal .toolbar-grip,
+    .toolbar-vertical .toolbar-grip {
+        box-sizing: border-box;
+        min-width: 44px;
+        min-height: 44px;
+        background-clip: content-box;
+        background-origin: content-box;
+    }
+    .toolbar-horizontal .toolbar-grip { padding: 0 calc((44px - #{$toolbar-grip-size}) / 2); }
+    .toolbar-vertical .toolbar-grip   { padding: calc((44px - #{$toolbar-grip-size}) / 2) 0; }
 }
 
 // Reduced motion — disable transitions for users who prefer it
