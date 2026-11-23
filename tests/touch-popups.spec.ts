@@ -44,15 +44,21 @@ async function open(page: Page, width: number): Promise<void>
     await page.goto(PAGE);
 }
 
-/** Each element's size under a selector, and those smaller than 44px either way. */
-async function small(page: Page, selectors: string[]): Promise<Array<{ sel: string; w: number; h: number }>>
+/**
+ * The elements under each selector that are drawn and smaller than 44px either way, or the selector itself when
+ * it matches nothing drawn, so a renamed class fails instead of passing with nothing measured. An element inside a
+ * fixed popup has no offsetParent, so "drawn" is having a box.
+ */
+async function small(page: Page, selectors: string[]): Promise<string[]>
 {
     return page.evaluate((sels) => sels.flatMap((sel) =>
-        Array.from(document.querySelectorAll<HTMLElement>(sel)).filter((el) => el.offsetParent !== null).map((el) =>
-        {
-            const r = el.getBoundingClientRect();
-            return { sel, w: Math.round(r.width), h: Math.round(r.height) };
-        })).filter((s) => s.w < 44 || s.h < 44), selectors);
+    {
+        const drawn = Array.from(document.querySelectorAll<HTMLElement>(sel))
+            .filter((el) => el.getClientRects().length > 0);
+        if (drawn.length === 0) { return [sel + ": nothing drawn"]; }
+        return drawn.map((el) => el.getBoundingClientRect()).filter((r) => r.width < 44 || r.height < 44)
+            .map((r) => `${sel}: ${Math.round(r.width)}x${Math.round(r.height)}`);
+    }), selectors);
 }
 
 const ITEMS = `[{ id: "cut", label: "Cut" }, { id: "copy", label: "Copy" },
@@ -119,7 +125,8 @@ const POPUPS: Array<{ name: string; make: string; isOpen: string; targets: strin
         name: "NotificationCenter",
         make: `window.__p = createNotificationCenter({ container: document.getElementById("bell"), notifications: [
             { id: "n1", title: "Build passed", timestamp: new Date().toISOString() }] }); window.__p.open();`,
-        isOpen: `document.querySelector(".notificationcenter-panel").classList.contains("notificationcenter-panel-open")`,
+        isOpen: `document.querySelector(".notificationcenter-panel")
+            .classList.contains("notificationcenter-panel-open")`,
         targets: [".notificationcenter-bell", ".notificationcenter-close", ".notificationcenter-item-dismiss",
             ".notificationcenter-mark-all"],
     },

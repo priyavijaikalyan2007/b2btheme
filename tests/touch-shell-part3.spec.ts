@@ -10,7 +10,7 @@
  * pixels each way (TOUCH_EXPERIENCE.md section 7). Each selector must match a
  * shown element, so a renamed class fails here instead of passing with nothing
  * measured. NavRail's targets were 44px before this part, and the test keeps
- * them there.
+ * them there. Toolbar was part 1's, and its split arrow and grip were not (#242).
  *
  * A Ribbon submenu opens on a tap (#241). Chromium sends an emulated
  * mouseenter for a tap, so here the old hover listener opened it too. The unit
@@ -27,7 +27,8 @@ async function measure(page: Page, selectors: string[])
 {
     return page.evaluate((sels) => sels.map((sel) =>
     {
-        const shown = Array.from(document.querySelectorAll<HTMLElement>(sel)).filter((e) => e.offsetParent !== null);
+        // An element inside a fixed popup has no offsetParent, so "shown" is having a box.
+        const shown = Array.from(document.querySelectorAll<HTMLElement>(sel)).filter((e) => e.getClientRects().length);
         const small = shown.map((e) => e.getBoundingClientRect()).filter((b) => b.width < 44 || b.height < 44)
             .map((b) => `${Math.round(b.width)}x${Math.round(b.height)}`);
         return { sel, shown: shown.length, small };
@@ -47,6 +48,10 @@ const PAGES: Array<{ name: string; targets: string[]; open?: (page: Page) => Pro
     { name: "bannerbar", targets: [".bannerbar-action", ".bannerbar-close"],
         open: (page) => page.locator("#demo-banner-action").click() },
     { name: "themetoggle", targets: [".themetoggle-btn"] },
+    // GraphToolbar draws through Toolbar. The split button and the grip are on Toolbar's own demo (#242).
+    { name: "graphtoolbar", targets: [".toolbar-tool"] },
+    { name: "toolbar", targets: [".toolbar-split-primary", ".toolbar-split-arrow", ".toolbar-grip"],
+        open: (page) => page.locator("#demo-toolbar-split").click() },
 ];
 
 for (const p of PAGES)
