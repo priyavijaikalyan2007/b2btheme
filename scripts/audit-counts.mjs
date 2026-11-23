@@ -766,13 +766,16 @@ export const BASELINES = {
     // 410 -> 378, drags without pointercancel 25 -> 19, and drags without
     // touch-action 22 -> 21. Part 2 (popups and menus) lowered two: hover rules
     // 378 -> 350, and mousedown-only components 25 -> 21. Part 3 (the rest of
-    // the shell) lowered hover rules 350 -> 317.
-    touchHoverRules: 317,
+    // the shell) lowered hover rules 350 -> 317. Dialogs and forms lowered
+    // three: hover rules 317 -> 301, drags without pointercancel 19 -> 17, and
+    // drags without touch-action 21 -> 19 (FormDialog's divider and
+    // PropertyInspector's edge).
+    touchHoverRules: 301,
     touchMousedownOnly: 21,
-    touchDragNoCancel: 19,
+    touchDragNoCancel: 17,
     touchContextmenuOnly: 7,
     touchHtmlDrag: 6,
-    touchDragNoTouchAction: 21,
+    touchDragNoTouchAction: 19,
     // #234. A shared mixin writes its :hover rule into every component that
     // includes it, where the per-component count cannot see it. hover-glow did,
     // in six components. Zero, and it stays zero.
