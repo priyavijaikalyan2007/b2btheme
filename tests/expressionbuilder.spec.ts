@@ -3,12 +3,14 @@
  * SPDX-License-Identifier: MIT
  */
 /**
- * ⚓ TESTS: ExpressionBuilder in a real browser (#207).
+ * ⚓ TESTS: ExpressionBuilder's grid in a real browser (#207, #237).
  * jsdom has no layout and no pointer capture, so these show:
- *   - a drag by a row's grip moves the row, through GestureRecognizer, and reports the tree;
+ *   - a drag by a row's handle moves the row, through GestureRecognizer, and reports the tree;
+ *   - a row added at the end and dropped into a group joins it with the group's join;
  *   - a group cannot be dropped inside itself;
  *   - the same query back from the bar keeps the focus and the half-typed value;
- *   - the grip starts a drag at once on touch (touch-action: none).
+ *   - under a coarse pointer each target is 44px, and the handle takes the touch (touch-action: none).
+ * The page is the test's own, so each test controls the tree it drags.
  */
 
 import { test, expect, type Page } from "@playwright/test";
@@ -48,25 +50,27 @@ async function open(page: Page, root: unknown): Promise<void>
     }, root);
 }
 
-/** Drags the grip of the row at `from` to the vertical middle of `to`, `below` it or above it. */
-async function drag(page: Page, from: string, to: string, below: boolean): Promise<void>
+/**
+ * Drags the handle of the item at `from` to the line of the item at `to`: its bottom half or its top half, at
+ * `x` from the line's left edge, so the pointer can pick a bracket column.
+ */
+async function drag(page: Page, from: string, to: string, below: boolean, x = 600): Promise<void>
 {
-    const grip = page.locator(`[data-path="${from}"] > .expressionbuilder-drag, `
-        + `[data-path="${from}"] > .expressionbuilder-group-head > .expressionbuilder-drag`).first();
-    const g = (await grip.boundingBox())!;
-    const t = (await page.locator(`[data-path="${to}"]`).boundingBox())!;
+    const handle = page.locator(`[data-item="${from}"] > .expressionbuilder-drag`);
+    const h = (await handle.boundingBox())!;
+    const t = (await page.locator(`[data-item="${to}"]`).boundingBox())!;
 
-    await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2);
+    await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
     await page.mouse.down();
-    await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + 12, { steps: 3 });
-    await page.mouse.move(t.x + 200, below ? t.y + t.height - 3 : t.y + 3, { steps: 6 });
+    await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + 12, { steps: 3 });
+    await page.mouse.move(t.x + x, below ? t.y + t.height - 3 : t.y + 3, { steps: 6 });
     await page.mouse.up();
 }
 
 const phrases = (page: Page): Promise<string[]> => page.evaluate(() =>
     Array.from(document.querySelectorAll<HTMLInputElement>("[data-role=phrase]")).map((i) => i.value));
 
-test("a drag by the grip moves the row, and the builder reports the new order", async ({ page }) =>
+test("a drag by the handle moves the row, and the builder reports the new order", async ({ page }) =>
 {
     await open(page, { kind: "and", children: [text("a"), text("b"), text("c")] });
 
@@ -79,25 +83,38 @@ test("a drag by the grip moves the row, and the builder reports the new order", 
     await expect(page.locator(".expressionbuilder-dragging, .expressionbuilder-drop-after")).toHaveCount(0);
 });
 
-test("a drag puts a row into another group, and refuses a group inside itself", async ({ page }) =>
+test("a row added at the end and dropped into a group joins it with Or", async ({ page }) =>
 {
     await open(page, { kind: "and", children: [text("a"), { kind: "or", children: [text("b"), text("c")] }] });
 
-    await drag(page, "0", "1.0", false);
-    expect(await phrases(page)).toEqual(["a", "b", "c"]);
-    // "a" left the root, so the group is row 0, and "a" is its first row.
-    expect(await page.locator('[data-path="0.0"] [data-role=phrase]').inputValue()).toBe("a");
+    await page.locator(".expressionbuilder-footer [data-role=add-text]").click();
+    await page.keyboard.type("d");
+    await page.keyboard.press("Tab");
+    expect(await phrases(page)).toEqual(["a", "b", "c", "d"]);
 
-    // The group is now row 0. Dropping it on its own row "b" is refused, and nothing moves.
-    await drag(page, "0", "0.1", true);
+    // Right of the brackets, at the bottom of c: the end of the group.
+    await drag(page, "2", "1.1", true);
+
+    const tree = await page.evaluate(() => (window as any).__builder.getTree());
+    expect(tree.root).toEqual({ kind: "and", children: [text("a"),
+        { kind: "or", children: [text("b"), text("c"), text("d")] }] });
+    await expect(page.locator('[data-item="1.2"] [data-role=join]')).toHaveValue("or");
+});
+
+test("a group cannot be dropped inside itself, and nothing moves", async ({ page }) =>
+{
+    await open(page, { kind: "and", children: [text("a"), { kind: "or", children: [text("b"), text("c")] }] });
+
+    await drag(page, "1", "1.0", true);
+
     expect(await phrases(page)).toEqual(["a", "b", "c"]);
-    expect(await page.evaluate(() => (window as any).__changes.length)).toBe(1);
+    expect(await page.evaluate(() => (window as any).__changes.length)).toBe(0);
 });
 
 test("the same query back from the bar keeps the focus and what the person is typing", async ({ page }) =>
 {
     await open(page, { kind: "and", children: [title("budget"), text("plan")] });
-    const input = page.locator('[data-path="0"] [data-role="value-0"]');
+    const input = page.locator('[data-item="0"] [data-role="value-0"]');
 
     await input.click();
     await page.keyboard.type(" 2026");
@@ -111,47 +128,39 @@ test("the same query back from the bar keeps the focus and what the person is ty
     await expect(input).toHaveValue("budget 2026!");
 });
 
-test("the grip takes the touch itself, so a drag starts at once", async ({ page }) =>
+test.describe("on a touch screen", () =>
 {
-    await open(page, { kind: "and", children: [text("a"), text("b")] });
+    test.use({ hasTouch: true });
 
-    expect(await page.locator(".expressionbuilder-drag").first().evaluate((el) => getComputedStyle(el).touchAction))
-        .toBe("none");
-});
-
-test("a drag moves a row into a search inside, and never between a link and the rest", async ({ page }) =>
-{
-    await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
-    await page.goto(PAGE);
-    await page.evaluate(() =>
+    test("each target is 44px under a coarse pointer, and the handle takes the touch", async ({ page }) =>
     {
-        const win = window as unknown as Record<string, any>;
-        const f = (key: string, value: unknown) => ({ kind: "filter", key, op: "Equals", value });
-        win.__changes = [];
-        win.__builder = win.createExpressionBuilder("host", {
-            facets: [
-                { key: "title", label: "Title", valueType: "text" },
-                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true,
-                  link: [{ key: "provenance", label: "Provenance", valueType: "text" }] },
-            ],
-            tree: { root: { kind: "and", children: [
-                f("title", { text: "budget" }),
-                { kind: "nested", key: "rel.signed_off_by", link: f("provenance", { text: "manual" }),
-                  where: f("title", { text: "plan" }) },
-            ] } },
-            onChange: (tree: unknown) => win.__changes.push(tree),
+        // A group, and a dashed run inside it, so every kind of target is drawn.
+        await open(page, { kind: "and", children: [text("a"), { kind: "or", children: [
+            { kind: "and", children: [text("b"), text("c")] }, text("d")] }] });
+        await page.locator('[data-item="0"] [data-role=more]').click();
+
+        const sizes = await page.evaluate(() =>
+        {
+            const targets = [
+                ".expressionbuilder-drag", ".expressionbuilder-check", "[data-role=join]", "[data-role=not]",
+                "[data-role=remove]", "[data-role=more]", ".expressionbuilder-menu-item", "[data-role=group-op]",
+                "[data-role=ungroup]", "[data-role=make-group]", ".expressionbuilder-footer button",
+            ];
+            return {
+                coarse: matchMedia("(pointer: coarse)").matches,
+                touchAction: getComputedStyle(document.querySelector(".expressionbuilder-drag")!).touchAction,
+                small: targets.flatMap((sel) => Array.from(document.querySelectorAll<HTMLElement>(sel)).map((el) =>
+                {
+                    const r = el.getBoundingClientRect();
+                    return { sel, w: Math.round(r.width), h: Math.round(r.height) };
+                })).filter((s) => s.w < 44 || s.h < 44),
+                counted: targets.map((sel) => document.querySelectorAll(sel).length),
+            };
         });
+
+        expect(sizes.coarse).toBe(true);
+        expect(sizes.touchAction).toBe("none");
+        expect(sizes.counted.every((n) => n > 0)).toBe(true);
+        expect(sizes.small).toEqual([]);
     });
-
-    // The title row goes into the search inside, below its row.
-    await drag(page, "0", "1.where.0", true);
-    const tree = await page.evaluate(() => (window as any).__builder.getTree());
-    expect(tree.root.where).toEqual({ kind: "and", children: [
-        { kind: "filter", key: "title", op: "Equals", value: { text: "plan" } },
-        { kind: "filter", key: "title", op: "Equals", value: { text: "budget" } }] });
-
-    // The link's row does not leave the link, and a row of the item's keys does not enter it.
-    await drag(page, "0.link.0", "0.where.0", true);
-    await drag(page, "0.where.0", "0.link.0", true);
-    expect(await page.evaluate(() => (window as any).__changes.length)).toBe(1);
 });

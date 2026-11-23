@@ -76,12 +76,17 @@ Shortcuts for `MarkdownEditor`, `CodeEditor`, and `SmartTextInputEngine`.
 
 ### Query Expression Builder
 
-[[ExpressionBuilder]] (#207). Each shortcut moves the row that holds the focus. Every move is also a button on the row.
+[[ExpressionBuilder]] (#207, #237). The keys with a name act on the checked rows, or on the row that holds the focus when none is checked. Every action is also a button.
 
 | Shortcut | Action | Name |
 | :--- | :--- | :--- |
-| `Alt + ↑` | **Move Up** the row in its group | `moveUp` |
-| `Alt + ↓` | **Move Down** the row in its group | `moveDown` |
+| `↑` / `↓` | On a check box, **Go** to the check box of the line above or below | |
+| `Space` | **Check** or uncheck the focused row | |
+| `Shift + ↑` / `Shift + ↓` | On a check box, **Check** the row above or below in the same level too | |
+| `Alt + G` | **Group** the checked rows | `group` |
+| `Alt + Shift + G` | **Ungroup** the checked group | `ungroup` |
+| `Alt + ↑` | **Move Up** one place, into a group above or out at a group's top | `moveUp` |
+| `Alt + ↓` | **Move Down** one place, into a group below or out at a group's bottom | `moveDown` |
 
 ## 5. AI & Agent Interactions
 

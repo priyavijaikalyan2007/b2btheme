@@ -118,6 +118,13 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
 
 ### Changed
+- **ExpressionBuilder shows a query as a grid of rows** (#237, part 1 of 2), like the query editor in Azure Boards. The apps asked for it in knobbyio/apps#379, and the design is `specs/expressionbuilder-grid.prd.md`. The options, the handle, the tree and `facets` keep their contracts.
+  - Each condition is one row. A column joins it to the row above with **And** or **Or**, and **Not** sits beside them.
+  - A group is a solid bracket beside its rows, with its own **And** or **Or** for the rows inside, and **Ungroup**. A run of **And** rows inside an **Or** shows a dashed bracket, which is how the language reads it, and **Make a group** turns it solid.
+  - A toolbar groups, ungroups, moves and removes the checked rows. `Alt + G` groups and `Alt + Shift + G` ungroups, as the new `group` and `ungroup` key bindings.
+  - **Move up**, **Move down** and a drag move a row or a group within its level, into a group, out of one, or between groups. A row moved into another group takes the join of the row it lands before.
+  - `Escape` closes the ⋯ menu or ends a drag and stops there, and otherwise reaches the dialog the builder sits in.
+  - In part 1, a search inside, a link condition, "the same item as" and a comparison show read-only. Part 2 makes them editable in the grid.
 - **The wheel now pans GraphCanvas and SpineMap, and `Ctrl` with the wheel zooms them** (#181), as it does in DiagramEngine since #183. **If you use a mouse on a graph or a spine map, hold `Ctrl`, or `Cmd` on macOS, to zoom with the wheel.** The ontology visualizer uses GraphCanvas, so its users see this change. The apps team has a note.
   - The wheel pans up and down, and `Shift` with the wheel pans sideways. A trackpad scroll pans both ways.
   - `Ctrl` or `Cmd` with the wheel zooms around the pointer, one 15% step a notch. A trackpad pinch zooms in small steps that follow the fingers. In Safari on macOS, a trackpad pinch now zooms the view. Before, it zoomed the page.

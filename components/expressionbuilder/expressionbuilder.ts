@@ -11,10 +11,13 @@
  *    API's Parse call returns: groups joined by `and` or `or`, `not`, filters,
  *    free text, searches inside a relationship (`where`), conditions on a
  *    link, and variables. The search bar edits the same query as text, and the
- *    host keeps the two in step with the API's Parse and Print calls.
+ *    host keeps the two in step with the API's Parse and Print calls. It
+ *    shows the query as a grid of rows, like the Azure Boards query editor
+ *    (#237): each row joins the row above with And or Or, and a group is a
+ *    bracket beside its rows.
  * 🔗 RELATES: [[FacetSearch]], [[QueryLanguage]], [[GestureRecognizer]]
- * ⚡ FLOW: [host Parse] -> [setParsed(tree)] -> [rows] -> [person edits]
- *          -> [onChange(tree)] -> [host Print] -> [FacetSearch.setValue]
+ * ⚡ FLOW: [host Parse] -> [setParsed(tree)] -> [levels] -> [grid] -> [person
+ *          edits a level] -> [onChange(tree)] -> [host Print] -> [FacetSearch.setValue]
  * ----------------------------------------------------------------------------
  *
  * THE API DECIDES WHAT A QUERY MEANS. The builder only holds a tree. It
@@ -24,7 +27,13 @@
  * WHAT IT CANNOT EDIT IT KEEPS (UI_EXPERIENCE.md section 5.7). A parameter,
  * a value it has no editor for, a key with no facet, a variable or a
  * nested search on a key that is not a relationship, and `return` are
- * shown read-only, kept in place, and reported exactly as they came.
+ * shown read-only, kept in place, and reported exactly as they came. In
+ * part 1 of the grid, a search inside, a link condition, "the same item as"
+ * and a comparison are read-only too (spec section 5.5).
+ *
+ * THE TREE IS THE MODEL. The grid is a view of it: each group's level of
+ * items, and each edit a change to a level, written back into the tree
+ * (specs/expressionbuilder-grid.prd.md section 4).
  */
 
 // @entrypoint
@@ -75,6 +84,8 @@ const CLS = "expressionbuilder";
 
 /** The default key bindings. Each moves the row that holds the focus. */
 const DEFAULT_KEY_BINDINGS: Record<string, string> = {
+    group: "Alt+G",
+    ungroup: "Alt+Shift+G",
     moveUp: "Alt+ArrowUp",
     moveDown: "Alt+ArrowDown",
 };
@@ -310,6 +321,11 @@ export interface GroupRow extends RowBase
     children: Row[];
     /** Set inside `link ( … )`: the relationship key whose link fields its rows use. */
     linkOf?: string;
+    /**
+     * A group a person made or changed. It draws a solid bracket where the precedence already gives the same
+     * reading, so a group the person sees does not vanish (spec 4.3). The tree is the same without it.
+     */
+    bracket?: true;
 }
 
 export interface FilterRow extends RowBase
@@ -758,6 +774,327 @@ function clearSpans(root: Row): void
 }
 
 // ============================================================================
+// LEVELS: the grid's view of the tree (spec section 4)
+// ============================================================================
+//
+// A level is a group's items, in order: rows, and groups drawn with a solid
+// bracket. Each item joins the one above it with `and` or `or`. The first
+// item's join is not shown and does not count. A group that reads the same
+// as its parent's level joins that level, so the grid shows only the groups
+// the meaning needs, and the ones a person made.
+
+/** How an item joins the item above it. */
+export type Join = "and" | "or";
+
+/** A row, or a group with a solid bracket, in a level. */
+export interface Item { row: Row; join: Join }
+
+/** An item's index in each level, from the top. A group's level is inside its item. */
+export type ItemPath = number[];
+
+/** Where items can go: before the item at `index` of a level, or at its end. */
+export interface Place { level: ItemPath; index: number }
+
+/** Items next to each other, by their first and last index. */
+export interface Run { start: number; end: number }
+
+/** A group whose items join its parent's level: same op, or an `and` run in an `or`, with no `not` or mark. */
+function joinsLevel(child: Row, parent: GroupRow): child is GroupRow
+{
+    return child.kind === "group" && child.nots === 0 && !child.bracket
+        && (child.op === parent.op || (parent.op === "or" && child.op === "and"));
+}
+
+/** A group's level, by spec 4.1. */
+export function levelOf(group: GroupRow): Item[]
+{
+    const items: Item[] = [];
+    const visit = (g: GroupRow, first: Join): void =>
+    {
+        g.children.forEach((c, i) =>
+        {
+            const join = (i === 0) ? first : g.op;
+            if (joinsLevel(c, g)) { visit(c, join); }
+            else { items.push({ row: c, join: (items.length === 0) ? "and" : join }); }
+        });
+    };
+    visit(group, "and");
+    return items;
+}
+
+/** Each run of a level: split at each item joined with `or`. */
+export function runsOf(items: Item[]): Run[]
+{
+    const runs: Run[] = [];
+    items.forEach((it, i) =>
+    {
+        if (i === 0 || it.join === "or") { runs.push({ start: i, end: i }); }
+        else { runs[runs.length - 1].end = i; }
+    });
+    return runs;
+}
+
+/**
+ * Writes a level back into its group, by spec 4.2: one run is an `and` group, more are an `or` of runs, and a
+ * run of two or more is an `and` group of its own. The group keeps its `not`s, mark, link key and span.
+ */
+export function setLevel(group: GroupRow, items: Item[]): void
+{
+    const runs = runsOf(items).map((r) => items.slice(r.start, r.end + 1).map((it) => it.row));
+    if (runs.length <= 1)
+    {
+        group.op = "and";
+        group.children = runs[0] ?? [];
+        return;
+    }
+    group.op = "or";
+    group.children = runs.map((rows): Row => (rows.length === 1) ? rows[0] : { kind: "group", op: "and", nots: 0,
+        children: rows, ...(group.linkOf ? { linkOf: group.linkOf } : {}) });
+}
+
+/** The group of the level at an item path. The root's level is at []. */
+export function levelAt(root: GroupRow, level: ItemPath): GroupRow
+{
+    let group = root;
+    for (const i of level) { group = levelOf(group)[i].row as GroupRow; }
+    return group;
+}
+
+/** The item at a path, with its level, the level's items and its index there. */
+export function itemAt(root: GroupRow, path: ItemPath): { level: GroupRow; items: Item[]; index: number; item: Item }
+{
+    const level = levelAt(root, path.slice(0, -1));
+    const items = levelOf(level);
+    const index = path[path.length - 1];
+    return { level, items, index, item: items[index] };
+}
+
+/** The item path of a row or a group, found by the row itself, or null when the grid does not show it. */
+export function itemPathOf(root: GroupRow, row: Row, at: ItemPath = []): ItemPath | null
+{
+    const items = levelOf(root);
+    for (let i = 0; i < items.length; i += 1)
+    {
+        const here = [...at, i];
+        if (items[i].row === row) { return here; }
+        const inner = items[i].row;
+        const found = (inner.kind === "group") ? itemPathOf(inner, row, here) : null;
+        if (found) { return found; }
+    }
+    return null;
+}
+
+/** How many bracket columns a group's grid needs: one for its level, and one for each level of groups in it. */
+export function levelDepth(group: GroupRow): number
+{
+    const inner = levelOf(group).map((it) => (it.row.kind === "group" ? levelDepth(it.row) : 0));
+    return 1 + Math.max(0, ...inner);
+}
+
+/** An item path from its text in the page, such as "2.0". */
+export function parseItemPath(text: string): ItemPath
+{
+    return (text === "") ? [] : text.split(".").map(Number);
+}
+
+// ============================================================================
+// LEVEL EDITS (pure, on the model, spec sections 4.5 and 5)
+// ============================================================================
+//
+// Each edit reads a level, changes its items, and writes it back through
+// `edited`, so each group a person changes keeps its bracket (spec 4.3).
+
+/** Writes a level a person changed. A group, not the root, takes the mark, so it stays a group (spec 4.3). */
+function edited(root: GroupRow, group: GroupRow, items: Item[]): void
+{
+    if (group !== root) { group.bracket = true; }
+    setLevel(group, items);
+}
+
+/** Changes one item's join. */
+export function setJoin(root: GroupRow, path: ItemPath, join: Join): void
+{
+    const { level, items, index } = itemAt(root, path);
+    items[index].join = join;
+    edited(root, level, items);
+}
+
+/** Sets the join of every item inside a group but its first. */
+export function setGroupJoins(root: GroupRow, path: ItemPath, join: Join): void
+{
+    const group = itemAt(root, path).item.row as GroupRow;
+    const inner = levelOf(group);
+    inner.forEach((it, i) => { if (i > 0) { it.join = join; } });
+    edited(root, group, inner);
+}
+
+/** Puts items next to each other in a marked group, which takes the first one's join. Returns its path. */
+export function groupItems(root: GroupRow, level: ItemPath, start: number, end: number): ItemPath
+{
+    const parent = levelAt(root, level);
+    const items = levelOf(parent);
+    const inner = items.slice(start, end + 1);
+    const group: GroupRow = { kind: "group", op: "and", nots: 0, children: [], bracket: true,
+        ...(parent.linkOf ? { linkOf: parent.linkOf } : {}) };
+    setLevel(group, inner);
+    items.splice(start, inner.length, { row: group, join: inner[0].join });
+    edited(root, parent, items);
+    return itemPathOf(root, group)!;
+}
+
+/** Puts a group's items in its place, its join on the first. A group with `not` keeps it, so this refuses one. */
+export function ungroupItem(root: GroupRow, path: ItemPath): boolean
+{
+    const { level, items, index, item } = itemAt(root, path);
+    if (item.row.kind !== "group" || item.row.nots > 0) { return false; }
+
+    const inner = levelOf(item.row);
+    if (inner.length > 0) { inner[0].join = item.join; }
+    items.splice(index, 1, ...inner);
+    edited(root, level, items);
+    return true;
+}
+
+/** Adds a row at a place, joined with `and`. Above the first item, the old first takes the `and`. */
+export function insertItem(root: GroupRow, at: Place, row: Row): ItemPath
+{
+    const level = levelAt(root, at.level);
+    const items = levelOf(level);
+    if (at.index === 0 && items.length > 0) { items[0].join = "and"; }
+    items.splice(at.index, 0, { row, join: "and" });
+    edited(root, level, items);
+    return itemPathOf(root, row)!;
+}
+
+/**
+ * After a move or a remove: a group left with no items goes, and one left with one item and no `not` is
+ * ungrouped, because a bracket around one row means nothing. Its parent is then tidied the same way.
+ */
+function tidy(root: GroupRow, group: GroupRow): void
+{
+    if (group === root) { return; }
+    const path = itemPathOf(root, group)!;
+    const { level, items, index } = itemAt(root, path);
+    const inner = levelOf(group);
+
+    if (inner.length === 0) { items.splice(index, 1); }
+    else if (inner.length === 1 && group.nots === 0) { items[index] = { row: inner[0].row, join: items[index].join }; }
+    else { return; }
+    edited(root, level, items);
+    tidy(root, level);
+}
+
+/** Removes rows and groups, a group with its rows, and tidies each level they leave. */
+export function removeItems(root: GroupRow, rows: Row[]): void
+{
+    const left = new Set<GroupRow>();
+    for (const row of rows)
+    {
+        // A row inside a group removed before it went with that group.
+        const path = itemPathOf(root, row);
+        if (!path) { continue; }
+        const { level, items, index } = itemAt(root, path);
+        items.splice(index, 1);
+        edited(root, level, items);
+        left.add(level);
+    }
+    // A level that a later remove took with its group needs no tidy.
+    left.forEach((g) => { if (g === root || itemPathOf(root, g)) { tidy(root, g); } });
+}
+
+/** Whether a move cannot go to a place: into itself or a group inside it, across a link's edge, or nowhere. */
+export function refuses(root: GroupRow, level: ItemPath, start: number, end: number, to: Place): boolean
+{
+    const from = levelAt(root, level);
+    const into = levelAt(root, to.level);
+    const moved = levelOf(from).slice(start, end + 1);
+    const inside = moved.some((m) => m.row.kind === "group"
+        && Array.from(allRows(m.row)).some((r) => r.row === into));
+
+    return inside || (from.linkOf ?? "") !== (into.linkOf ?? "")
+        || (from === into && to.index >= start && to.index <= end + 1);
+}
+
+/**
+ * Moves items next to each other in a level to a place, by spec 4.5, and returns the first one's new path, or
+ * null when the move is refused. `to.index` is the place in its level as it stands before the move.
+ */
+export function moveItems(root: GroupRow, level: ItemPath, start: number, end: number, to: Place): ItemPath | null
+{
+    if (refuses(root, level, start, end, to)) { return null; }
+
+    const from = levelAt(root, level);
+    const into = levelAt(root, to.level);
+    const items = levelOf(from);
+    const moved = items.slice(start, end + 1);
+    const rest = items.filter((_it, i) => i < start || i > end);
+    // The groups a person sees stay groups, so the indices of `to` hold while the items move (spec 4.3).
+    for (const g of [from, into, ...moved.map((m) => m.row)])
+    {
+        if (g.kind === "group" && g !== root) { g.bracket = true; }
+    }
+
+    if (from === into)
+    {
+        const before = items[to.index];
+        rest.splice(before ? rest.indexOf(before) : rest.length, 0, ...moved);
+        if (rest[0] !== items[0])
+        {
+            items[0].join = rest[0].join;
+            rest[0].join = "and";
+        }
+        edited(root, from, rest);
+        return itemPathOf(root, moved[0].row);
+    }
+
+    edited(root, from, rest);
+    const target = levelOf(into);
+    if (to.index === 0)
+    {
+        if (target.length > 0) { target[0].join = target[1]?.join ?? "and"; }
+        moved[0].join = "and";
+    }
+    else { moved[0].join = (target[to.index] ?? target[target.length - 1]).join; }
+    target.splice(to.index, 0, ...moved);
+    edited(root, into, target);
+    tidy(root, from);
+    return itemPathOf(root, moved[0].row);
+}
+
+/** Why the grid shows a row read-only in part 1, or null when it edits it (spec 5.5). */
+export function readOnlyWhy(row: Row, facets: Facets): string | null
+{
+    if (row.kind === "kept") { return row.what; }
+    if (row.kind === "compare") { return "A comparison of two items"; }
+    if (row.kind !== "filter") { return null; }
+    const label = facets.get(row.key.toLowerCase())?.label ?? row.key;
+    if (row.op === "where") { return label + " has one where"; }
+    if (row.link) { return label + " with conditions on its link"; }
+    if (row.variable !== undefined) { return label + " is the same item as another row"; }
+    return null;
+}
+
+/**
+ * Where Move up or Move down takes items, one place in the grid (spec 5.3): past the item beside them, into a
+ * group beside them, or out at a group's edge. Null at the top or the bottom of the grid.
+ */
+export function moveTarget(root: GroupRow, level: ItemPath, start: number, end: number, by: -1 | 1): Place | null
+{
+    const items = levelOf(levelAt(root, level));
+    const next = (by < 0) ? start - 1 : end + 1;
+    const beside = items[next];
+    if (beside && beside.row.kind === "group")
+    {
+        return { level: [...level, next], index: (by < 0) ? levelOf(beside.row).length : 0 };
+    }
+    if (beside) { return { level, index: (by < 0) ? next : next + 1 }; }
+    if (level.length === 0) { return null; }
+
+    const out = level[level.length - 1];
+    return { level: level.slice(0, -1), index: (by < 0) ? out : out + 1 };
+}
+
+// ============================================================================
 // EDITS (pure, on the model)
 // ============================================================================
 
@@ -913,8 +1250,47 @@ function setAttr(el: HTMLElement, name: string, value: string): void
     el.setAttribute(name, value);
 }
 
-/** A problem from Parse or Print, on a row by its path, or above the rows. */
-interface Placed { diagnostic: QueryDiagnostic; severity: "error" | "warning"; path: Step[] | null }
+/** A problem from Parse or Print, on the row whose line shows it, or above the grid. */
+interface Placed { diagnostic: QueryDiagnostic; severity: "error" | "warning"; row: Row | null }
+
+/** Where the focus goes after an edit: a toolbar button while it is on, else a control on a row's line. */
+interface Focus { row?: Row; role?: string; tool?: string }
+
+/** Items next to each other in one level. */
+interface ItemRun { level: ItemPath; start: number; end: number }
+
+/** What a line needs to know about the levels it is in, from the top. */
+interface LineContext
+{
+    path: ItemPath;
+    /** For each depth, whether the item there is the last of its level. */
+    ends: boolean[];
+    /** For each depth, the run of two or more the item there is in, or null. */
+    runs: Array<Run | null>;
+}
+
+/** What a read-only row adds, so a person knows where to change it. */
+const EDIT_IN_BAR = ". Edit this in the search bar.";
+const NOT_UNGROUP = "A group with Not cannot be ungrouped, because that would change what it means";
+const MOVE_OFF = "Check rows next to each other to move them";
+
+/** The toolbar's buttons, which act on the checked items (spec 5.3), with the key binding each has. */
+const TOOLS: Array<{ role: string; label: string; icon: string; action?: string }> = [
+    { role: "tool-group", label: "Group", icon: "bi-bounding-box", action: "group" },
+    { role: "tool-ungroup", label: "Ungroup", icon: "bi-box-arrow-up-left", action: "ungroup" },
+    { role: "tool-up", label: "Move up", icon: "bi-arrow-up", action: "moveUp" },
+    { role: "tool-down", label: "Move down", icon: "bi-arrow-down", action: "moveDown" },
+    { role: "tool-remove", label: "Remove", icon: "bi-trash" },
+];
+
+/** A group's label for a screen reader, such as "Group of 2 rows, joined with or". */
+function groupLabel(items: Item[]): string
+{
+    const joins = Array.from(new Set(items.slice(1).map((it) => it.join)));
+    const n = items.length;
+    const joined = (joins.length > 0) ? ", joined with " + joins.join(" and ") : "";
+    return `Group of ${n} ${n === 1 ? "row" : "rows"}` + joined;
+}
 
 let instanceCounter = 0;
 
@@ -935,9 +1311,19 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     private body: HTMLElement | null = null;
     private message: HTMLElement | null = null;
     private live: HTMLElement | null = null;
-    private gestures: { destroy(): void } | null = null;
-    private dragFrom: Step[] | null = null;
-    private dropAt: { group: Step[]; index: number } | null = null;
+    private gestures: { cancel(): void; destroy(): void } | null = null;
+    /** Each line drawn, by its row, and back, in the order drawn. Rebuilt by each render. */
+    private readonly lineOf = new Map<Row, HTMLElement>();
+    private readonly rowOfLine = new Map<HTMLElement, Row>();
+    /** The checked rows and groups. A tree that means the same keeps them (spec section 8). */
+    private readonly checked = new Set<Row>();
+    /** How many bracket columns the grid has, as drawn. */
+    private depth = 1;
+    /** The open ⋯ menu, its button, and what removes its listener. */
+    private menu: { el: HTMLElement; button: HTMLElement; off: () => void } | null = null;
+    /** The row or group being dragged, and where it would land. */
+    private dragging: Row | null = null;
+    private dropAt: Place | null = null;
     /** How many times the query uses each variable, and their names, as of the last draw. */
     private uses = new Map<string, number>();
     /** Counts the value lists, so each has its own id. */
@@ -1005,6 +1391,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
                 this.root = rootOf(parsed.tree, this.facets);
                 this.ret = [...(parsed.tree.return ?? [])];
                 this.meant = incoming;
+                this.checked.clear();
                 this.render();
                 logDebug("A new tree replaced the rows");
             }
@@ -1019,7 +1406,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
             ...(parsed.errors ?? []).map((diagnostic) => ({ diagnostic, severity: "error" as const })),
             ...(parsed.warnings ?? []).map((diagnostic) => ({ diagnostic, severity: "warning" as const })),
         ];
-        this.problems = found.map((f) => ({ ...f, path: this.rowFor(f.diagnostic) }));
+        this.problems = found.map((f) => ({ ...f, row: this.rowFor(f.diagnostic) }));
         this.renderProblems();
     }
 
@@ -1048,6 +1435,8 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
     {
         if (this.destroyed) { return; }
         this.destroyed = true;
+        this.closeMenu(false);
+        this.dragClear("destroy");
         this.gestures?.destroy();
         this.gestures = null;
         this.el?.remove();
@@ -1067,16 +1456,17 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         spanGroups(this.root);
     }
 
-    /** The path of the deepest row whose text holds a problem, or null to show it above the rows. */
-    private rowFor(d: QueryDiagnostic): Step[] | null
+    /** The deepest row the grid shows whose text holds a problem, or null to show it above the grid. */
+    private rowFor(d: QueryDiagnostic): Row | null
     {
         if (d.start === undefined || d.end === undefined) { return null; }
 
-        // Depth first, so the last row that holds it is the deepest. The root is shown above the rows.
-        let best: Step[] | null = null;
+        // Depth first, so the last row that holds it is the deepest. The root is shown above the grid.
+        let best: Row | null = null;
         for (const { row, path } of allRows(this.root))
         {
-            if (path.length > 0 && row.span && row.span.start <= d.start && d.end <= row.span.end) { best = path; }
+            const holds = !!row.span && row.span.start <= d.start && d.end <= row.span.end;
+            if (path.length > 0 && holds && this.lineOf.has(row)) { best = row; }
         }
         return best;
     }
@@ -1085,7 +1475,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
 
     /**
      * After an edit: drops the problems, whose places no longer hold, and reports the tree when what it means
-     * changed. A draft, or a new group around one row, changes nothing it means, so it reports nothing.
+     * changed. A draft, or a new group around rows, changes nothing it means, so it reports nothing.
      */
     private changed(): void
     {
@@ -1101,33 +1491,60 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         this.opts.onChange?.(tree);
     }
 
-    /** Redraws, keeps the focus on the same control of the same row, and reports any change. */
-    private edit(focusPath?: Step[], focusRole?: string): void
+    /** Makes one edit, logs it, redraws with the focus where it says, and announces it. */
+    private act(kind: string, path: ItemPath, change: () => Focus | void, message?: string | (() => string)): void
     {
-        const active = document.activeElement as HTMLElement | null;
-        const path = focusPath ?? this.pathOf(active);
-        const role = focusRole ?? active?.getAttribute("data-role") ?? null;
+        logDebug("Edit:", kind, "at", path.join(".") || "the top");
+        const focus = change();
+        this.edit(focus || undefined);
+        if (message) { this.announce(typeof message === "string" ? message : message()); }
+    }
+
+    /** Redraws, puts the focus where `focus` says, or on the same control of the same row, and reports a change. */
+    private edit(focus?: Focus): void
+    {
+        const target = focus ?? this.focusNow();
         this.render();
-        if (path) { this.focusRow(path, role); }
+        this.focusOn(target);
         this.changed();
     }
 
-    private pathOf(el: Element | null): Step[] | null
+    /** The control that holds the focus, as a row and a role, to find again after a redraw. */
+    private focusNow(): Focus
     {
-        const row = el?.closest<HTMLElement>("[data-path]");
-        if (!row || !this.el?.contains(row)) { return null; }
-        return parsePath(row.getAttribute("data-path")!);
+        const active = document.activeElement as HTMLElement | null;
+        const line = active?.closest<HTMLElement>(`.${CLS}-line`);
+        const row = line ? this.rowOfLine.get(line) : undefined;
+        const role = active?.getAttribute("data-role") ?? undefined;
+        if (row) { return { row, role }; }
+        if (role && active?.closest(`.${CLS}-footer`)) { return { tool: role }; }
+        return {};
     }
 
-    private focusRow(path: Step[], role: string | null): void
+    /** Focuses a toolbar button while it is on, else the role on the row's line, else that line's check box. */
+    private focusOn(focus: Focus): void
     {
-        const row = this.el?.querySelector<HTMLElement>(`[data-path="${path.join(".")}"]`);
-        if (!row) { return; }
-        const own = (sel: string): HTMLElement | null =>
-            Array.from(row.querySelectorAll<HTMLElement>(sel)).find((e) => e.closest("[data-path]") === row) ?? null;
-        const target = (role ? own(`[data-role="${role}"]:not([disabled])`) : null)
-            ?? own("select, input, button:not([disabled])");
-        target?.focus();
+        const tool = focus.tool ? this.toolButton(focus.tool) : null;
+        if (tool && !tool.disabled)
+        {
+            tool.focus();
+            return;
+        }
+        const line = focus.row ? this.lineOf.get(focus.row) : undefined;
+        if (!line) { return; }
+        const own = focus.role ? line.querySelector<HTMLElement>(`[data-role="${focus.role}"]:not([disabled])`) : null;
+        (own ?? line.querySelector<HTMLElement>("[data-role=check]")!).focus();
+    }
+
+    private toolButton(role: string): HTMLButtonElement | null
+    {
+        return this.el?.querySelector<HTMLButtonElement>(`.${CLS}-footer [data-role="${role}"]`) ?? null;
+    }
+
+    /** A line's number, from 1, in the order drawn, a group's line too (spec 7.3). */
+    private lineNumber(row: Row): number
+    {
+        return Array.from(this.lineOf.keys()).indexOf(row) + 1;
     }
 
     private announce(msg: string): void
@@ -1165,277 +1582,320 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
             onDragStart: (g) => this.dragStart(g.event),
             onDragMove: (g) => this.dragMove(g.x, g.y),
             onDragEnd: () => this.dragEnd(),
-            onDragCancel: () => this.dragClear(),
+            onDragCancel: () => this.dragClear("cancel"),
         });
     }
 
     private render(): void
     {
         if (!this.body) { return; }
+        this.closeMenu(false);
         while (this.body.firstChild) { this.body.removeChild(this.body.firstChild); }
+        this.lineOf.clear();
+        this.rowOfLine.clear();
         this.uses = variableUses(this.root, this.ret);
+        this.depth = levelDepth(this.root);
 
         if (this.ret.length > 0)
         {
             this.body.appendChild(createElement("div", [`${CLS}-kept`, `${CLS}-return`],
-                "Returns " + this.ret.map((r) => "?" + r).join(", ") + ". Edit this in the search bar."));
+                "Returns " + this.ret.map((r) => "?" + r).join(", ") + EDIT_IN_BAR));
         }
-        this.body.appendChild(this.renderGroup(this.root, [], this.facets));
+        const grid = createElement("div", [`${CLS}-grid`]);
+        // It scrolls sideways on a narrow screen, so it has a stable name (ADR-162).
+        setAttr(grid, "data-dui-region", "expressionbuilder:grid");
+        grid.style.setProperty("--eb-depth", String(this.depth));
+        grid.appendChild(this.renderLevel(this.root, { path: [], ends: [], runs: [] }));
+        this.body.append(grid, this.renderFooter());
+
+        for (const row of Array.from(this.checked))
+        {
+            if (!this.lineOf.has(row)) { this.checked.delete(row); }
+        }
+        this.updateToolbar();
         this.renderProblems();
     }
 
-    /** A row in a group, whose rows use the keys of `scope`. */
-    private renderRow(row: Row, path: Step[], scope: Facets): HTMLElement
+    /** A level as a list: a line for each item, and a group's own level under its line. */
+    private renderLevel(group: GroupRow, outer: LineContext): HTMLElement
     {
-        if (row.kind === "group") { return this.renderGroup(row, path, scope); }
+        const list = createElement("ol", [`${CLS}-level`]);
+        setAttr(list, "data-level", outer.path.join("."));
+        const items = levelOf(group);
+        const runs = runsOf(items);
+        if (outer.path.length > 0) { setAttr(list, "aria-label", groupLabel(items)); }
 
-        const el = createElement("div", [`${CLS}-row`, `${CLS}-row-${row.kind}`]);
-        setAttr(el, "data-path", path.join("."));
-        setAttr(el, "role", "group");
-        el.appendChild(this.dragHandle());
-        el.appendChild(this.notToggle(row));
-
-        if (row.kind === "filter") { this.renderFilter(el, row, path, scope); }
-        else if (row.kind === "text") { this.renderText(el, row); }
-        else if (row.kind === "compare") { this.renderCompare(el, row); }
-        else
+        const numbers: number[] = [];
+        items.forEach((item, i) =>
         {
-            el.appendChild(createElement("span", [`${CLS}-kept`], row.what + ". Edit this in the search bar."));
-            setAttr(el, "aria-label", row.what);
-        }
-        el.appendChild(this.rowTools(path, false));
-        return el;
+            const run = runs.find((r) => r.start <= i && i <= r.end)!;
+            const ctx: LineContext = {
+                path: [...outer.path, i],
+                ends: [...outer.ends, i === items.length - 1],
+                runs: [...outer.runs, (runs.length > 1 && run.end > run.start) ? run : null],
+            };
+            const li = createElement("li", [`${CLS}-item`]);
+            li.appendChild(this.renderLine(item, ctx));
+            numbers[i] = this.lineOf.size;
+            const together = (ctx.runs[ctx.runs.length - 1] && i > run.start)
+                ? ", read together with row " + numbers[run.start] : "";
+            setAttr(li, "aria-label", this.lineLabel(item, i === 0, numbers[i]) + together);
+            if (item.row.kind === "group") { li.appendChild(this.renderLevel(item.row, ctx)); }
+            list.appendChild(li);
+        });
+        return list;
+    }
+
+    /** One line of the grid: handle, check box, brackets, join, the row's own columns, and its actions. */
+    private renderLine(item: Item, ctx: LineContext): HTMLElement
+    {
+        const { row } = item;
+        const line = createElement("div", [`${CLS}-line`, `${CLS}-line-${row.kind}`]);
+        setAttr(line, "data-item", ctx.path.join("."));
+        this.lineOf.set(row, line);
+        this.rowOfLine.set(line, row);
+
+        line.append(this.dragHandle(), this.checkBox(row, this.lineOf.size),
+            ...this.brackets(ctx, row.kind === "group"), this.joinCell(item, ctx));
+        if (row.kind === "group") { line.appendChild(this.groupControl(row, ctx.path)); }
+        else { this.cells(line, row); }
+        line.appendChild(this.actions(row));
+        return line;
+    }
+
+    /** What a line reads to a screen reader, such as "Row 3: or not, Assigned to is me". */
+    private lineLabel(item: Item, first: boolean, n: number): string
+    {
+        const head = [first ? "" : item.join, item.row.nots % 2 === 1 ? "not" : ""].filter(Boolean).join(" ");
+        return `Row ${n}: ` + (head ? head + ", " : "") + this.summary(item.row);
+    }
+
+    private summary(row: Row): string
+    {
+        if (row.kind === "group") { return "a group"; }
+        if (row.kind === "text") { return "has the words " + row.phrase; }
+        if (row.kind === "kept") { return row.what; }
+        const why = readOnlyWhy(row, this.facets);
+        if (why) { return why; }
+        const f = row as FilterRow;
+        const facet = this.facets.get(f.key.toLowerCase());
+        if (!facet) { return "a new condition"; }
+        return [facet.label, OP_LABELS[f.op] ?? f.op, ...f.values.filter((v) => v.trim() !== "")].join(" ");
+    }
+
+    private checkBox(row: Row, n: number): HTMLElement
+    {
+        const label = createElement("label", [`${CLS}-check`]);
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.className = "form-check-input";
+        setAttr(input, "data-role", "check");
+        setAttr(input, "aria-label", "Check row " + n);
+        input.checked = this.checked.has(row);
+        input.disabled = !!this.opts.disabled;
+        input.addEventListener("change", () =>
+        {
+            if (input.checked) { this.checked.add(row); }
+            else { this.checked.delete(row); }
+            this.updateToolbar();
+        });
+        label.appendChild(input);
+        return label;
     }
 
     /**
-     * A group: the root, a group in a group, a condition's search inside (`where`), or its link conditions. Only
-     * a group in a group moves, wraps and goes on its own; the others go with their condition.
+     * One cell for each bracket column. Column j belongs to the level at depth j: a solid bracket for the group
+     * whose rows are that level, and a dashed one for a run of `and` items inside an `or` there.
      */
-    private renderGroup(row: GroupRow, path: Step[], scope: Facets): HTMLElement
+    private brackets(ctx: LineContext, group: boolean): HTMLElement[]
     {
-        const last = path[path.length - 1];
-        const place = (path.length === 0) ? "root" : (typeof last === "number") ? "child" : last;
-        const inner = row.linkOf ? scopeOf(this.facets, row.linkOf) : scope;
-        const el = createElement("div", [`${CLS}-group`, `${CLS}-group-${place}`]);
-        setAttr(el, "data-path", path.join("."));
-        setAttr(el, "role", "group");
-        const what = (place === "where") ? "Where the item has " : (place === "link") ? "The link has " : "";
-        setAttr(el, "aria-label", what + (row.op === "and" ? "all of these" : "any of these")
-            + (row.nots % 2 ? ", not" : ""));
-        if (path.filter((p) => typeof p === "number" || p === "where").length % 2 === 1)
+        const d = ctx.path.length - 1;
+        const last = (k: number): boolean => ctx.ends.slice(k).every(Boolean);
+        const cells: HTMLElement[] = [];
+        for (let j = 0; j < this.depth; j += 1)
         {
-            el.classList.add(`${CLS}-group-odd`);
-        }
-
-        const head = createElement("div", [`${CLS}-group-head`]);
-        if (place === "child") { head.appendChild(this.dragHandle()); }
-        if (what) { head.appendChild(createElement("span", [`${CLS}-label`], what.trim())); }
-        head.appendChild(this.notToggle(row));
-
-        const op = this.select("op", [["and", "All of these"], ["or", "Any of these"]], row.op, "How the rows join");
-        op.addEventListener("change", () =>
-        {
-            row.op = (op as HTMLSelectElement).value as "and" | "or";
-            this.edit(path, "op");
-        });
-        head.appendChild(op);
-
-        // A link's fields take no words and no variables, so a link group adds conditions and groups only.
-        const adds: Array<[string, string, string]> = [["filter", "Condition", "bi-funnel"]];
-        if (!row.linkOf) { adds.push(["text", "Words", "bi-fonts"]); }
-        adds.push(["group", "Group", "bi-collection"]);
-        if (!row.linkOf && this.uses.size >= 2) { adds.push(["compare", "Comparison", "bi-arrow-left-right"]); }
-        for (const [kind, label, icon] of adds)
-        {
-            const add = this.button(`add-${kind}`, "Add " + label.toLowerCase(), icon, label);
-            add.addEventListener("click", () => this.add(row, path, kind as "filter" | "text" | "group" | "compare"));
-            head.appendChild(add);
-        }
-        if (place === "child") { head.appendChild(this.rowTools(path, true)); }
-        if (place === "link")
-        {
-            const remove = this.button("remove-link", "Remove the link conditions", "bi-trash", "");
-            remove.addEventListener("click", () =>
+            const cell = createElement("span", [`${CLS}-bracket`]);
+            setAttr(cell, "data-depth", String(j));
+            if (j >= 1 && j <= d)
             {
-                (rowAt(this.root, path.slice(0, -1)).row as FilterRow).link = undefined;
-                this.announce("Link conditions removed");
-                this.edit(path.slice(0, -1), "add-link");
-            });
-            head.appendChild(remove);
-        }
-        el.appendChild(head);
+                cell.classList.add(`${CLS}-bracket-solid`);
+                if (!group && last(j)) { cell.classList.add(`${CLS}-bracket-end`); }
+            }
+            if (group && j === d + 1) { cell.classList.add(`${CLS}-bracket-solid`, `${CLS}-bracket-start`); }
 
-        const list = createElement("div", [`${CLS}-rows`]);
-        setAttr(list, "data-group", path.join("."));
-        row.children.forEach((c, i) => list.appendChild(this.renderRow(c, [...path, i], inner)));
-        if (row.children.length === 0)
-        {
-            list.appendChild(createElement("div", [`${CLS}-empty`], "No rows yet. Add a condition."));
+            const run = (j <= d) ? ctx.runs[j] : null;
+            if (run)
+            {
+                cell.classList.add(`${CLS}-run`);
+                if (j === d && ctx.path[j] === run.start)
+                {
+                    cell.classList.add(`${CLS}-run-start`);
+                    cell.appendChild(this.makeGroupButton(ctx.path.slice(0, -1), run));
+                }
+                if (ctx.path[j] === run.end && last(j + 1) && !(group && j === d))
+                {
+                    cell.classList.add(`${CLS}-run-end`);
+                }
+            }
+            cells.push(cell);
         }
-        el.appendChild(list);
-        return el;
+        return cells;
     }
 
-    private renderFilter(el: HTMLElement, row: FilterRow, path: Step[], scope: Facets): void
+    /** Turns a dashed run into a group of its own, which changes nothing it means (spec 5.2). */
+    private makeGroupButton(level: ItemPath, run: Run): HTMLButtonElement
     {
-        const inLink = scope !== this.facets;
-        const facet = scope.get(row.key.toLowerCase());
-        const keys = Array.from(scope.values()).map((f): [string, string] => [f.key, f.label]);
+        const b = this.button("make-group", "Make a group of the rows read together", "bi-bounding-box", "");
+        b.addEventListener("click", () => this.act("make-group", [...level, run.start], () =>
+        {
+            const path = groupItems(this.root, level, run.start, run.end);
+            return { row: itemAt(this.root, path).item.row };
+        }, "Grouped"));
+        return b;
+    }
+
+    /** The join to the item above, but on a level's first item, and Not. */
+    private joinCell(item: Item, ctx: LineContext): HTMLElement
+    {
+        const cell = createElement("span", [`${CLS}-join`]);
+        if (ctx.path[ctx.path.length - 1] > 0)
+        {
+            const join = this.select("join", [["and", "And"], ["or", "Or"]], item.join, "Join with the row above");
+            join.addEventListener("change", () => this.act("join", ctx.path,
+                () => setJoin(this.root, ctx.path, join.value as Join)));
+            cell.appendChild(join);
+        }
+        cell.appendChild(this.notToggle(item.row, ctx.path));
+        return cell;
+    }
+
+    /** A group's own control: how its items join, Mixed while they differ, and Ungroup. */
+    private groupControl(group: GroupRow, path: ItemPath): HTMLElement
+    {
+        const cell = createElement("span", [`${CLS}-group-control`]);
+        const joins = new Set(levelOf(group).slice(1).map((it) => it.join));
+        const mixed = joins.size > 1;
+        const options: Array<[string, string]> = [["and", "And"], ["or", "Or"]];
+        if (mixed) { options.push(["mixed", "Mixed"]); }
+        const op = this.select("group-op", options, mixed ? "mixed" : (Array.from(joins)[0] ?? "and"),
+            "How the rows in the group join");
+        if (mixed) { op.querySelector<HTMLOptionElement>('option[value="mixed"]')!.disabled = true; }
+        op.addEventListener("change", () => this.act("group-op", path,
+            () => setGroupJoins(this.root, path, op.value as Join)));
+
+        const ungroup = this.button("ungroup", "Ungroup", "bi-box-arrow-up-left", "Ungroup");
+        if (group.nots > 0)
+        {
+            ungroup.disabled = true;
+            ungroup.title = NOT_UNGROUP;
+        }
+        ungroup.addEventListener("click", () => this.ungroup(group));
+        cell.append(op, ungroup);
+        return cell;
+    }
+
+    /** The key, operator and value columns of a row that is not a group. */
+    private cells(line: HTMLElement, row: Exclude<Row, GroupRow>): void
+    {
+        if (row.kind === "kept")
+        {
+            line.appendChild(createElement("span", [`${CLS}-cell`, `${CLS}-readonly`, `${CLS}-kept`],
+                row.what + EDIT_IN_BAR));
+            return;
+        }
+        const key = createElement("span", [`${CLS}-cell`, `${CLS}-cell-key`]);
+        const op = createElement("span", [`${CLS}-cell`, `${CLS}-cell-op`]);
+        const value = createElement("span", [`${CLS}-cell`, `${CLS}-cell-value`]);
+        const why = readOnlyWhy(row, this.facets);
+
+        if (why) { this.readOnlyCells(row, key, op, value, why); }
+        else if (row.kind === "text") { this.renderText(line, key, value, row); }
+        else { this.renderFilter(line, key, op, value, row as FilterRow); }
+        line.append(key, op, value);
+    }
+
+    /** A row part 1 shows but does not edit, as text in its columns (spec 5.5). */
+    private readOnlyCells(row: Row, key: HTMLElement, op: HTMLElement, value: HTMLElement, why: string): void
+    {
+        value.title = why;
+        if (row.kind === "compare")
+        {
+            key.textContent = "?" + row.left;
+            op.textContent = COMPARE_LABELS[row.op] ?? OP_LABELS[row.op] ?? row.op;
+            value.textContent = "?" + row.right + EDIT_IN_BAR;
+            return;
+        }
+        const f = row as FilterRow;
+        key.textContent = this.facets.get(f.key.toLowerCase())?.label ?? f.key;
+        op.textContent = OP_LABELS[f.op] ?? f.op;
+        const what = (f.op === "where") ? "a search inside"
+            : (f.variable !== undefined) ? "the same item as ?" + f.variable : f.values.join(", ");
+        value.textContent = what + (f.link ? ", with conditions on its link" : "") + EDIT_IN_BAR;
+    }
+
+    private renderFilter(line: HTMLElement, keyCell: HTMLElement, opCell: HTMLElement, valueCell: HTMLElement,
+        row: FilterRow): void
+    {
+        const facet = this.facets.get(row.key.toLowerCase());
+        const keys = Array.from(this.facets.values()).map((f): [string, string] => [f.key, f.label]);
         const key = this.select("key", [["", "Choose a key"], ...keys], row.key, "Key");
         key.addEventListener("change", () =>
         {
-            const next = scope.get((key as HTMLSelectElement).value.toLowerCase());
+            const next = this.facets.get(key.value.toLowerCase());
             row.key = next?.key ?? "";
             row.op = next ? facetOps(next)[0] : "";
             row.values = [];
             row.original = [];
             row.variable = row.where = row.link = undefined;
             if (next) { setOp(row, row.op); }
-            this.edit(undefined, "key");
+            this.act("key", itemPathOf(this.root, row)!, () => ({ row, role: "key" }));
         });
-        el.appendChild(key);
-        if (!facet) { el.classList.add(`${CLS}-row-draft`); return; }
+        keyCell.appendChild(key);
+        if (!facet)
+        {
+            line.classList.add(`${CLS}-row-draft`);
+            return;
+        }
 
-        // A relationship key also offers a search inside the item at its other end (spec section 9).
-        const relationship = !!facet.relationship && !inLink;
-        const offered = [...facetOps(facet), ...(relationship ? ["where"] : [])];
         // An operator the facet does not list stays on offer for this row, so a parse is never changed.
+        const offered = facetOps(facet);
         const ops = offered.includes(row.op) ? offered : [row.op, ...offered];
         const op = this.select("op", ops.map((o): [string, string] => [o, OP_LABELS[o] ?? o]), row.op, "Operator");
         op.addEventListener("change", () =>
         {
-            setOp(row, (op as HTMLSelectElement).value);
-            this.edit(undefined, "op");
+            setOp(row, op.value);
+            this.act("op", itemPathOf(this.root, row)!, () => ({ row, role: "op" }));
         });
-        el.appendChild(op);
+        opCell.appendChild(op);
 
-        if (relationship && row.op === "equals") { el.appendChild(this.sameAs(row)); }
-        if (row.op !== "where" && row.variable === undefined)
+        const values = createElement("span", [`${CLS}-values`]);
+        row.values.forEach((_v, i) => values.appendChild(this.valueInput(row, facet, i)));
+        if (arity(row.op) === "many")
         {
-            const values = createElement("span", [`${CLS}-values`]);
-            row.values.forEach((_v, i) => values.appendChild(this.valueInput(row, facet, i)));
-            if (arity(row.op) === "many")
+            const more = this.button("add-value", "Add a value", "bi-plus", "Value");
+            more.addEventListener("click", () =>
             {
-                const more = this.button("add-value", "Add a value", "bi-plus", "Value");
-                more.addEventListener("click", () =>
-                {
-                    row.values.push("");
-                    row.original.push(undefined);
-                    this.edit(undefined, `value-${row.values.length - 1}`);
-                });
-                values.appendChild(more);
-            }
-            el.appendChild(values);
-        }
-        if (relationship && facet.link?.length && !row.link)
-        {
-            const add = this.button("add-link", "Add conditions on the link", "bi-link-45deg", "Link");
-            add.addEventListener("click", () =>
-            {
-                row.link = { kind: "group", op: "and", nots: 0, children: [], linkOf: facet.key };
-                this.announce("Link conditions added");
-                this.edit([...path, "link"], "add-filter");
+                row.values.push("");
+                row.original.push(undefined);
+                this.edit({ row, role: `value-${row.values.length - 1}` });
             });
-            el.appendChild(add);
+            values.appendChild(more);
         }
+        valueCell.appendChild(values);
 
         const draft = this.draftReason(row, facet);
         if (draft)
         {
-            el.classList.add(`${CLS}-row-draft`);
-            el.appendChild(createElement("span", [`${CLS}-draft`], draft));
+            line.classList.add(`${CLS}-row-draft`);
+            valueCell.appendChild(createElement("span", [`${CLS}-draft`], draft));
         }
-
-        // The link's conditions, then the search inside: the order of the text, `key link ( … ) where ( … )`.
-        if (row.link) { el.appendChild(this.renderGroup(row.link, [...path, "link"], scope)); }
-        if (row.op === "where") { el.appendChild(this.renderGroup(row.where!, [...path, "where"], this.facets)); }
     }
 
     /** What a condition still needs, or null when it is complete. */
     private draftReason(row: FilterRow, facet: ExpressionBuilderFacet): string | null
     {
-        if (row.op === "where")
-        {
-            return nodeOf(row.where!, this.facets, this.uses) ? null : "Needs a condition inside";
-        }
         if (isComplete(row, facet, this.uses)) { return null; }
         return (row.variable !== undefined) ? `Needs a second use of ?${row.variable}` : "Needs a value";
-    }
-
-    /**
-     * The choice between a value and "the same item as" another condition (spec section 9). Choosing a condition
-     * that has no variable yet makes one for both, named from its key. A variable stands only after `equals`.
-     */
-    private sameAs(row: FilterRow): HTMLSelectElement
-    {
-        const options: Array<[string, string]> = [["", "a value"]];
-        for (const name of this.uses.keys())
-        {
-            options.push(["var:" + name, "the same item as ?" + name]);
-        }
-        for (const { row: other, path: at } of allRows(this.root))
-        {
-            if (other === row || other.kind !== "filter" || other.variable !== undefined) { continue; }
-            const facet = this.facets.get(other.key.toLowerCase());
-            const empty = other.values.every((v) => v.trim() === "");
-            // A condition another can share a variable with: a relationship key, outside a link, with no value yet.
-            const open = facet?.relationship && !at.includes("link") && empty && ["", "equals"].includes(other.op);
-            if (!open) { continue; }
-            const inside = at.includes("where") ? " (in a search inside)" : "";
-            options.push(["row:" + at.join("."), "the same item as " + facet.label + inside]);
-        }
-
-        const select = this.select("same", options, row.variable ? "var:" + row.variable : "", "Value");
-        select.addEventListener("change", () =>
-        {
-            const [kind, rest] = [select.value.slice(0, 4), select.value.slice(4)];
-            if (kind === "var:") { row.variable = rest; }
-            else if (kind === "row:")
-            {
-                const other = rowAt(this.root, parsePath(rest)).row as FilterRow;
-                const name = newVariable(other.key, new Set(this.uses.keys()));
-                other.op = "equals";
-                other.values = [""];
-                other.original = [undefined];
-                other.variable = name;
-                row.variable = name;
-            }
-            else { row.variable = undefined; }
-            row.values = [""];
-            row.original = [undefined];
-            this.announce(row.variable ? "The same item as ?" + row.variable : "A value");
-            this.edit(undefined, "same");
-        });
-        return select;
-    }
-
-    /** Two variables compared: the same item, or not. */
-    private renderCompare(el: HTMLElement, row: CompareRow): void
-    {
-        const names = Array.from(this.uses.keys()).map((n): [string, string] => [n, "?" + n]);
-        const side = (role: string, value: string, label: string, set: (v: string) => void): HTMLSelectElement =>
-        {
-            const known = names.some(([n]) => n === value);
-            const s = this.select(role, [["", "Choose"], ...(known || !value ? [] : [[value, "?" + value]] as
-                Array<[string, string]>), ...names], value, label);
-            s.addEventListener("change", () => { set(s.value); this.edit(undefined, role); });
-            return s;
-        };
-        el.appendChild(side("left", row.left, "First item", (v) => { row.left = v; }));
-
-        const ops = Object.keys(COMPARE_LABELS).includes(row.op) ? Object.keys(COMPARE_LABELS)
-            : [row.op, ...Object.keys(COMPARE_LABELS)];
-        const op = this.select("op", ops.map((o): [string, string] => [o, COMPARE_LABELS[o] ?? OP_LABELS[o] ?? o]),
-            row.op, "Comparison");
-        op.addEventListener("change", () => { row.op = op.value; this.edit(undefined, "op"); });
-        el.appendChild(op);
-        el.appendChild(side("right", row.right, "Second item", (v) => { row.right = v; }));
-
-        if (!row.left || !row.right || row.left === row.right)
-        {
-            el.classList.add(`${CLS}-row-draft`);
-            el.appendChild(createElement("span", [`${CLS}-draft`], "Needs two different items"));
-        }
     }
 
     /** An input for one value, by the facet's type. Typing changes the row; the query changes on commit. */
@@ -1470,7 +1930,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         input.addEventListener("change", () =>
         {
             row.values[i] = input.value;
-            this.edit(undefined, role);
+            this.act("value", itemPathOf(this.root, row)!, () => ({ row, role }));
         });
 
         const wrap = createElement("span", [`${CLS}-value-item`]);
@@ -1486,7 +1946,7 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         {
             row.values.splice(i, 1);
             row.original.splice(i, 1);
-            this.edit(undefined, "add-value");
+            this.edit({ row, role: "add-value" });
         });
         wrap.appendChild(remove);
         return wrap;
@@ -1521,9 +1981,9 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         return list;
     }
 
-    private renderText(el: HTMLElement, row: TextRow): void
+    private renderText(line: HTMLElement, keyCell: HTMLElement, valueCell: HTMLElement, row: TextRow): void
     {
-        el.appendChild(createElement("span", [`${CLS}-label`], "Has the words"));
+        keyCell.appendChild(createElement("span", [`${CLS}-label`], "Has the words"));
         const input = document.createElement("input");
         input.type = "text";
         input.className = `form-control form-control-sm ${CLS}-value`;
@@ -1532,12 +1992,16 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         setAttr(input, "data-role", "phrase");
         setAttr(input, "aria-label", "Words to search for");
         input.addEventListener("input", () => { row.phrase = input.value; });
-        input.addEventListener("change", () => { row.phrase = input.value; this.edit(undefined, "phrase"); });
-        el.appendChild(input);
+        input.addEventListener("change", () =>
+        {
+            row.phrase = input.value;
+            this.act("words", itemPathOf(this.root, row)!, () => ({ row, role: "phrase" }));
+        });
+        valueCell.appendChild(input);
         if (!row.phrase.trim())
         {
-            el.classList.add(`${CLS}-row-draft`);
-            el.appendChild(createElement("span", [`${CLS}-draft`], "Needs words"));
+            line.classList.add(`${CLS}-row-draft`);
+            valueCell.appendChild(createElement("span", [`${CLS}-draft`], "Needs words"));
         }
     }
 
@@ -1575,220 +2039,522 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
         return b;
     }
 
-    /** The drag handle: a pointer accelerator. The buttons beside it do every move by keyboard and tap. */
+    /** The drag handle: a pointer accelerator. Move up and Move down make every move a drag makes. */
     private dragHandle(): HTMLElement
     {
         const handle = createElement("span", [`${CLS}-drag`]);
         setAttr(handle, "aria-hidden", "true");
         setAttr(handle, "title", "Drag to move");
-        const i = createElement("i", ["bi", "bi-grip-vertical"]);
-        handle.appendChild(i);
+        handle.appendChild(createElement("i", ["bi", "bi-grip-vertical"]));
         return handle;
     }
 
-    private notToggle(row: Row): HTMLButtonElement
+    private notToggle(row: Row, path: ItemPath): HTMLButtonElement
     {
         const on = row.nots % 2 === 1;
         const b = this.button("not", on ? "Not: on" : "Not: off", "bi-slash-circle", "Not");
         setAttr(b, "aria-pressed", String(on));
         if (on) { b.classList.add("active"); }
-        b.addEventListener("click", () =>
+        b.addEventListener("click", () => this.act("not", path, () =>
         {
             row.nots = (row.nots > 0) ? row.nots - 1 : 1;
-            this.announce(row.nots % 2 ? "Not on" : "Not off");
-            this.edit(undefined, "not");
-        });
+            // A group a person changed stays a group, even where it now reads the same as its level (spec 4.3).
+            if (row.kind === "group") { row.bracket = true; }
+        }, () => (row.nots % 2 ? "Not on" : "Not off")));
         return b;
     }
 
-    private rowTools(path: Step[], group: boolean): HTMLElement
+    /** Remove, and the ⋯ menu with the rest. */
+    private actions(row: Row): HTMLElement
     {
-        const tools = createElement("span", [`${CLS}-tools`]);
-        const parent = rowAt(this.root, path.slice(0, -1)).row as GroupRow;
-        const index = path[path.length - 1] as number;
-        const actions: Array<[string, string, string, () => void, boolean]> = [
-            ["up", "Move up", "bi-arrow-up", () => this.move(path, -1), index > 0],
-            ["down", "Move down", "bi-arrow-down", () => this.move(path, 1), index < parent.children.length - 1],
-            ["wrap", "Put in a group", "bi-collection", () => this.wrap(path), true],
-        ];
-        if (group)
+        const cell = createElement("span", [`${CLS}-actions`]);
+        const remove = this.button("remove", (row.kind === "group") ? "Remove this group" : "Remove this row",
+            "bi-x-lg", "");
+        remove.addEventListener("click", () => this.removeRows([row]));
+        const more = this.button("more", "More actions", "bi-three-dots", "");
+        setAttr(more, "aria-haspopup", "menu");
+        setAttr(more, "aria-expanded", "false");
+        more.addEventListener("click", () =>
         {
-            const row = rowAt(this.root, path).row as GroupRow;
-            actions.push(["unwrap", "Take the rows out of this group", "bi-box-arrow-up-left",
-                () => this.unwrap(path), row.nots === 0]);
-        }
-        actions.push(["remove", group ? "Remove this group" : "Remove this row", "bi-trash", () => this.remove(path),
-            true]);
+            if (this.menu?.button === more) { this.closeMenu(true); }
+            else { this.openMenu(more, row); }
+        });
+        cell.append(remove, more);
+        return cell;
+    }
 
-        for (const [role, label, icon, act, enabled] of actions)
+    /** The ⋯ menu: insert above, and Move up and Move down. */
+    private openMenu(button: HTMLElement, row: Row): void
+    {
+        this.closeMenu(false);
+        const path = itemPathOf(this.root, row)!;
+        const level = path.slice(0, -1);
+        const index = path[path.length - 1];
+        const run = { level, start: index, end: index };
+        const move = (by: -1 | 1): (() => void) | null => moveTarget(this.root, level, index, index, by)
+            ? () => this.moveRun(run, by, { row, role: "more" }) : null;
+        const entries: Array<[string, string, (() => void) | null]> = [
+            ["insert-filter", "Insert condition above", () => this.insert({ level, index }, "filter")],
+            ["insert-text", "Insert words above", () => this.insert({ level, index }, "text")],
+            ["up", "Move up", move(-1)],
+            ["down", "Move down", move(1)],
+        ];
+
+        const menu = createElement("div", [`${CLS}-menu`]);
+        setAttr(menu, "role", "menu");
+        setAttr(menu, "aria-label", "Row actions");
+        for (const [role, label, run] of entries)
         {
-            const b = this.button(role, label, icon, "");
-            if (!enabled) { b.disabled = true; }
-            b.addEventListener("click", act);
+            const item = createElement("button", [`${CLS}-menu-item`], label) as HTMLButtonElement;
+            item.type = "button";
+            setAttr(item, "role", "menuitem");
+            setAttr(item, "data-role", role);
+            item.disabled = !run;
+            if (run)
+            {
+                item.addEventListener("click", () =>
+                {
+                    this.closeMenu(false);
+                    run();
+                });
+            }
+            menu.appendChild(item);
+        }
+
+        // A press outside the menu closes it. The ⋯ button's own click toggles it. The grid scrolls sideways on a
+        // narrow screen, so the menu is fixed under its button, and a scroll closes it.
+        const outside = (e: PointerEvent): void =>
+        {
+            const target = e.target as Node;
+            if (!menu.contains(target) && !button.contains(target)) { this.closeMenu(false); }
+        };
+        const scrolled = (): void => this.closeMenu(false);
+        document.addEventListener("pointerdown", outside, true);
+        const at = button.getBoundingClientRect();
+        menu.style.top = at.bottom + "px";
+        menu.style.left = at.right + "px";
+        button.parentElement!.appendChild(menu);
+        setAttr(button, "aria-expanded", "true");
+        this.menu = { el: menu, button, off: () =>
+        {
+            document.removeEventListener("pointerdown", outside, true);
+            window.removeEventListener("scroll", scrolled, true);
+        } };
+        menu.querySelector<HTMLButtonElement>("button:not([disabled])")!.focus({ preventScroll: true });
+        // After the focus, so the focus itself never closes the menu.
+        window.addEventListener("scroll", scrolled, true);
+        logDebug("Menu opened at", path.join("."));
+    }
+
+    private closeMenu(refocus: boolean): void
+    {
+        if (!this.menu) { return; }
+        const { el, button, off } = this.menu;
+        this.menu = null;
+        off();
+        el.remove();
+        setAttr(button, "aria-expanded", "false");
+        if (refocus) { button.focus(); }
+    }
+
+    /** ↑ and ↓ between the menu's items that are on. */
+    private menuKey(e: KeyboardEvent): void
+    {
+        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") { return; }
+        e.preventDefault();
+        const items = Array.from(this.menu!.el.querySelectorAll<HTMLButtonElement>("button:not([disabled])"));
+        const at = items.indexOf(document.activeElement as HTMLButtonElement);
+        const by = (e.key === "ArrowUp") ? -1 : 1;
+        items[(at + by + items.length) % items.length].focus();
+    }
+
+    /** The footer: Add condition and Add words, and the toolbar. */
+    private renderFooter(): HTMLElement
+    {
+        const footer = createElement("div", [`${CLS}-footer`]);
+        const adds = createElement("span", [`${CLS}-adds`]);
+        const filter = this.button("add-filter", "Add condition", "bi-plus-lg", "Add condition");
+        filter.addEventListener("click", () => this.insert({ level: [], index: levelOf(this.root).length }, "filter"));
+        const text = this.button("add-text", "Add words", "bi-fonts", "Add words");
+        text.addEventListener("click", () => this.insert({ level: [], index: levelOf(this.root).length }, "text"));
+        adds.append(filter, text);
+
+        const tools = createElement("span", [`${CLS}-toolbar`]);
+        setAttr(tools, "role", "group");
+        setAttr(tools, "aria-label", "Act on the checked rows");
+        for (const t of TOOLS)
+        {
+            const b = this.button(t.role, t.label, t.icon, t.label);
+            b.addEventListener("click", () => this.tool(t.role));
             tools.appendChild(b);
         }
-        return tools;
+        footer.append(adds, tools);
+        return footer;
+    }
+
+    // ── The checked items and the toolbar ──
+
+    /** The checked items, in the order drawn, and the run they make when they sit next to each other in a level. */
+    private selection(): { rows: Row[]; run: ItemRun | null }
+    {
+        const rows: Row[] = [];
+        const paths: ItemPath[] = [];
+        for (const [line, row] of this.rowOfLine)
+        {
+            if (!this.checked.has(row)) { continue; }
+            rows.push(row);
+            paths.push(parseItemPath(line.getAttribute("data-item")!));
+        }
+        if (paths.length === 0) { return { rows, run: null }; }
+
+        const level = paths[0].slice(0, -1);
+        const indices = paths.map((p) => p[p.length - 1]);
+        const together = paths.every((p) => p.slice(0, -1).join(".") === level.join("."))
+            && indices.every((v, i) => i === 0 || v === indices[i - 1] + 1);
+        return { rows, run: together ? { level, start: indices[0], end: indices[indices.length - 1] } : null };
+    }
+
+    /** Turns each toolbar button on or off for the checked items, with a title that says why (spec 5.3). */
+    private updateToolbar(): void
+    {
+        if (!this.el) { return; }
+        const { rows, run } = this.selection();
+        const one = (rows.length === 1 && rows[0].kind === "group") ? rows[0] : null;
+        const up = !!run && !!moveTarget(this.root, run.level, run.start, run.end, -1);
+        const down = !!run && !!moveTarget(this.root, run.level, run.start, run.end, 1);
+        const state: Record<string, [boolean, string]> = {
+            "tool-group": [!!run && run.end > run.start, "Check two or more rows next to each other to group them"],
+            "tool-ungroup": [!!one && one.nots === 0, one ? NOT_UNGROUP : "Check one group to ungroup it"],
+            "tool-up": [up, run ? "The rows are at the top" : MOVE_OFF],
+            "tool-down": [down, run ? "The rows are at the bottom" : MOVE_OFF],
+            "tool-remove": [rows.length > 0, "Check the rows to remove"],
+        };
+        for (const t of TOOLS)
+        {
+            const [on, off] = state[t.role];
+            const b = this.toolButton(t.role)!;
+            b.disabled = !!this.opts.disabled || !on;
+            b.title = on ? t.label + (t.action ? ` (${this.binding(t.action)})` : "") : off;
+        }
+    }
+
+    private binding(action: string): string
+    {
+        return this.opts.keyBindings?.[action] ?? DEFAULT_KEY_BINDINGS[action];
+    }
+
+    private tool(role: string): void
+    {
+        const { rows, run } = this.selection();
+        if (role === "tool-remove") { this.removeRows(rows); return; }
+        if (role === "tool-ungroup") { this.ungroup(rows[0] as GroupRow); return; }
+        if (!run) { return; }
+        if (role === "tool-group") { this.groupRun(run); return; }
+        this.moveRun(run, (role === "tool-up") ? -1 : 1, { tool: role });
     }
 
     // ── Actions ──
 
-    private add(group: GroupRow, path: Step[], kind: "filter" | "text" | "group" | "compare"): void
+    /** Adds a draft condition or words at a place, joined with And (spec 5.4). */
+    private insert(at: Place, kind: "filter" | "text"): void
     {
-        const linkOf = group.linkOf ? { linkOf: group.linkOf } : {};
-        const row: Row = (kind === "group") ? { kind: "group", op: "and", nots: 0, children: [], ...linkOf }
-            : (kind === "text") ? { kind: "text", phrase: "", nots: 0 }
-                : (kind === "compare") ? { kind: "compare", left: "", op: "not-equals", right: "", nots: 0 }
-                    : { kind: "filter", key: "", op: "", values: [], original: [], nots: 0 };
-        group.children.push(row);
-        this.announce({ group: "Group added", text: "Words added", compare: "Comparison added",
-            filter: "Condition added" }[kind]);
-        this.edit([...path, group.children.length - 1],
-            { filter: "key", text: "phrase", group: "op", compare: "left" }[kind]);
+        const row: Row = (kind === "text") ? { kind: "text", phrase: "", nots: 0 }
+            : { kind: "filter", key: "", op: "", values: [], original: [], nots: 0 };
+        this.act("insert-" + kind, [...at.level, at.index], () =>
+        {
+            insertItem(this.root, at, row);
+            return { row, role: (kind === "text") ? "phrase" : "key" };
+        }, (kind === "text") ? "Words added" : "Condition added");
     }
 
-    private move(path: Step[], by: -1 | 1): void
+    /** Moves a run of items one place, by Move up or Move down, and announces the row they land on. */
+    private moveRun(run: ItemRun, by: -1 | 1, focus: Focus): void
     {
-        const to = moveRow(this.root, path, by);
+        const to = moveTarget(this.root, run.level, run.start, run.end, by);
         if (!to) { return; }
-        this.announce(by < 0 ? "Moved up" : "Moved down");
-        this.edit(to, by < 0 ? "up" : "down");
+        const first = levelOf(levelAt(this.root, run.level))[run.start].row;
+        this.act((by < 0) ? "move-up" : "move-down", [...run.level, run.start], () =>
+        {
+            moveItems(this.root, run.level, run.start, run.end, to);
+            return { ...focus, row: first };
+        }, () => "Moved to row " + this.lineNumber(first));
     }
 
-    private wrap(path: Step[]): void
+    /** Groups the checked run. The new group is checked in place of the items it took (spec 5.3). */
+    private groupRun(run: ItemRun): void
     {
-        wrapRow(this.root, path);
-        this.announce("Put in a group");
-        this.edit(path, "op");
+        if (run.end <= run.start) { return; }
+        const items = levelOf(levelAt(this.root, run.level)).slice(run.start, run.end + 1);
+        this.act("group", [...run.level, run.start], () =>
+        {
+            const group = itemAt(this.root, groupItems(this.root, run.level, run.start, run.end)).item.row;
+            items.forEach((it) => this.checked.delete(it.row));
+            this.checked.add(group);
+            return { row: group };
+        }, "Grouped");
     }
 
-    private unwrap(path: Step[]): void
+    /** Puts a group's items back in its place, and focuses the first. A group with Not keeps them. */
+    private ungroup(group: GroupRow): void
     {
-        if (!unwrapRow(this.root, path)) { return; }
-        this.announce("Group taken apart");
-        this.edit(path);
+        if (group.nots > 0) { return; }
+        const path = itemPathOf(this.root, group)!;
+        const first = levelOf(group)[0]?.row;
+        this.act("ungroup", path, () =>
+        {
+            ungroupItem(this.root, path);
+            this.checked.delete(group);
+            return first ? { row: first } : undefined;
+        }, "Ungrouped");
     }
 
-    private remove(path: Step[]): void
+    /** Removes rows and groups, and focuses the next line, or the one before, or Add condition (spec 6). */
+    private removeRows(rows: Row[]): void
     {
-        const parentPath = path.slice(0, -1);
-        removeRow(this.root, path);
-        this.announce("Removed");
-        const parent = rowAt(this.root, parentPath).row as GroupRow;
-        const next = Math.min(path[path.length - 1] as number, parent.children.length - 1);
-        // The focus goes to the row that took its place, else to the group's own controls.
-        this.edit(next >= 0 ? [...parentPath, next] : parentPath, next >= 0 ? undefined : "add-filter");
+        if (rows.length === 0) { return; }
+        const order = Array.from(this.lineOf.keys());
+        const gone = new Set(rows.flatMap((r) => Array.from(allRows(r), (x) => x.row)));
+        const at = order.findIndex((r) => gone.has(r));
+        this.act("remove", itemPathOf(this.root, rows[0])!, () =>
+        {
+            removeItems(this.root, rows);
+            rows.forEach((r) => this.checked.delete(r));
+            const near = [...order.slice(at), ...order.slice(0, at).reverse()]
+                .find((r) => !gone.has(r) && itemPathOf(this.root, r) !== null);
+            return near ? { row: near } : { tool: "add-filter" };
+        }, "Removed");
     }
 
     // ── Keyboard ──
 
     private onKeydown(e: KeyboardEvent): void
     {
-        if (this.opts.disabled) { return; }
-        const path = this.pathOf(e.target as Element);
-        // Only a row in a group moves: not the root, and not a condition's where or link group.
-        if (!path || typeof path[path.length - 1] !== "number") { return; }
-
-        for (const by of [-1, 1] as const)
+        // Escape closes the ⋯ menu and stops there. With nothing open, it reaches the dialog (spec 7.1).
+        if (e.key === "Escape")
         {
-            const action = (by < 0) ? "moveUp" : "moveDown";
-            if (this.matches(e, action))
-            {
-                e.preventDefault();
-                const role = (e.target as HTMLElement).getAttribute("data-role") ?? undefined;
-                const to = moveRow(this.root, path, by);
-                if (!to) { return; }
-                this.announce(by < 0 ? "Moved up" : "Moved down");
-                this.edit(to, role);
-                return;
-            }
+            if (!this.menu) { return; }
+            e.preventDefault();
+            e.stopPropagation();
+            this.closeMenu(true);
+            return;
         }
+        if (this.opts.disabled) { return; }
+        const target = e.target as HTMLElement;
+        if (this.menu?.el.contains(target))
+        {
+            this.menuKey(e);
+            return;
+        }
+
+        const line = target.closest<HTMLElement>(`.${CLS}-line`);
+        const row = line ? this.rowOfLine.get(line) : undefined;
+        const role = target.getAttribute("data-role") ?? undefined;
+        const arrow = e.key === "ArrowUp" || e.key === "ArrowDown";
+        // A select reads the arrow keys itself, so they step through the grid from a check box only (spec 6).
+        if (row && role === "check" && arrow && !e.altKey && !e.ctrlKey && !e.metaKey)
+        {
+            e.preventDefault();
+            this.stepCheck(row, (e.key === "ArrowUp") ? -1 : 1, e.shiftKey);
+            return;
+        }
+        for (const action of ["group", "ungroup", "moveUp", "moveDown"])
+        {
+            if (!this.matches(e, action)) { continue; }
+            e.preventDefault();
+            this.keyAction(action, row, role);
+            return;
+        }
+    }
+
+    /** The focus to the check box of the line above or below, or, with Shift, the checks of the level grow. */
+    private stepCheck(row: Row, by: -1 | 1, extend: boolean): void
+    {
+        if (!extend)
+        {
+            const lines = Array.from(this.lineOf.values());
+            const next = lines[lines.indexOf(this.lineOf.get(row)!) + by];
+            next?.querySelector<HTMLElement>("[data-role=check]")!.focus();
+            return;
+        }
+        const { items, index } = itemAt(this.root, itemPathOf(this.root, row)!);
+        const other = items[index + by];
+        if (!other) { return; }
+        for (const r of [row, other.row])
+        {
+            this.checked.add(r);
+            this.lineOf.get(r)!.querySelector<HTMLInputElement>("[data-role=check]")!.checked = true;
+        }
+        this.updateToolbar();
+        this.lineOf.get(other.row)!.querySelector<HTMLElement>("[data-role=check]")!.focus();
+    }
+
+    /** A key's action, on the checked items, or on the item whose line holds the focus when none is checked. */
+    private keyAction(action: string, row: Row | undefined, role: string | undefined): void
+    {
+        let { rows, run } = this.selection();
+        if (rows.length === 0 && row)
+        {
+            const p = itemPathOf(this.root, row)!;
+            rows = [row];
+            run = { level: p.slice(0, -1), start: p[p.length - 1], end: p[p.length - 1] };
+        }
+        if (action === "ungroup")
+        {
+            if (rows.length === 1 && rows[0].kind === "group") { this.ungroup(rows[0]); }
+            return;
+        }
+        if (!run) { return; }
+        if (action === "group") { this.groupRun(run); return; }
+        this.moveRun(run, (action === "moveUp") ? -1 : 1, { role });
     }
 
     private matches(e: KeyboardEvent, action: string): boolean
     {
-        const combo = this.opts.keyBindings?.[action] ?? DEFAULT_KEY_BINDINGS[action];
-        const parts = combo.split("+");
+        const parts = this.binding(action).split("+");
         const key = parts[parts.length - 1];
-        return e.key === key && e.altKey === parts.includes("Alt") && e.ctrlKey === parts.includes("Ctrl")
+        // Alt changes the letter a key sends on macOS, so a letter is read by the key's place.
+        const hit = /^[a-z]$/i.test(key) ? e.code === "Key" + key.toUpperCase() : e.key === key;
+        return hit && e.altKey === parts.includes("Alt") && e.ctrlKey === parts.includes("Ctrl")
             && e.shiftKey === parts.includes("Shift") && e.metaKey === parts.includes("Meta");
     }
 
     // ── Drag ──
 
+    /** Escape ends a drag wherever the focus is, and stops there (spec 5.6, 7.1). */
+    private readonly dragKey = (e: KeyboardEvent): void =>
+    {
+        if (e.key !== "Escape" || !this.dragging) { return; }
+        e.preventDefault();
+        e.stopPropagation();
+        this.gestures!.cancel();
+    };
+
     private dragStart(e: PointerEvent): void
     {
-        this.dragFrom = this.pathOf(e.target as Element);
-        if (!this.dragFrom || typeof this.dragFrom[this.dragFrom.length - 1] !== "number")
-        {
-            this.dragFrom = null;
-            return;
-        }
-        this.el?.querySelector(`[data-path="${this.dragFrom.join(".")}"]`)?.classList.add(`${CLS}-dragging`);
-        logDebug("Drag started at", this.dragFrom.join("."));
+        const line = (e.target as Element).closest<HTMLElement>(`.${CLS}-line`)!;
+        this.closeMenu(false);
+        this.dragging = this.rowOfLine.get(line)!;
+        line.classList.add(`${CLS}-dragging`);
+        document.addEventListener("keydown", this.dragKey, true);
+        logDebug("Drag started at", line.getAttribute("data-item"));
     }
 
-    /** Finds where the row would go: before or after the row under the pointer, or into an empty group. */
+    /** Marks where the item would land, or nothing where a drop is refused. */
     private dragMove(x: number, y: number): void
     {
-        if (!this.dragFrom || !this.el) { return; }
-        logTrace("drag move:", Math.round(x), Math.round(y));
-        this.el.querySelectorAll(`.${CLS}-drop-before, .${CLS}-drop-after, .${CLS}-drop-into`).forEach((n) =>
-            n.classList.remove(`${CLS}-drop-before`, `${CLS}-drop-after`, `${CLS}-drop-into`));
-        this.dropAt = null;
-
-        const under = document.elementFromPoint(x, y);
-        const list = under?.closest<HTMLElement>(`.${CLS}-rows`);
-        if (!list || !this.el.contains(list)) { return; }
-
-        const group = parsePath(list.getAttribute("data-group")!);
-        const target = under?.closest<HTMLElement>(`.${CLS}-row, .${CLS}-group`);
-        const into = rowAt(this.root, group).row as GroupRow;
-        const from = rowAt(this.root, this.dragFrom.slice(0, -1)).row as GroupRow;
-        // A link's fields and the builder's facets do not mix, so a row stays among keys of its own kind.
-        if ((into.linkOf ?? "") !== (from.linkOf ?? "")) { return; }
-        let index = into.children.length;
-        let mark: HTMLElement = list;
-        let cls = `${CLS}-drop-into`;
-
-        if (target && target.parentElement === list)
-        {
-            const box = target.getBoundingClientRect();
-            const after = y > box.top + box.height / 2;
-            const i = Number(target.getAttribute("data-path")!.split(".").pop());
-            index = after ? i + 1 : i;
-            mark = target;
-            cls = after ? `${CLS}-drop-after` : `${CLS}-drop-before`;
-        }
-        if (isWithin(group, this.dragFrom)) { return; }
-        this.dropAt = { group, index };
-        mark.classList.add(cls);
+        if (!this.dragging) { return; }
+        this.clearMarks();
+        const from = itemPathOf(this.root, this.dragging)!;
+        const i = from[from.length - 1];
+        const place = this.placeAt(x, y);
+        this.dropAt = (place && !refuses(this.root, from.slice(0, -1), i, i, place)) ? place : null;
+        logTrace("Drag at", Math.round(x), Math.round(y), "to",
+            this.dropAt ? this.dropAt.level.join(".") + "@" + this.dropAt.index : "nowhere");
+        if (this.dropAt) { this.markPlace(this.dropAt); }
     }
 
     private dragEnd(): void
     {
-        const from = this.dragFrom;
-        const at = this.dropAt;
-        this.dragClear();
-        if (!from || !at) { return; }
+        const row = this.dragging;
+        const to = this.dropAt;
+        this.dragClear("drop");
+        if (!row || !to) { return; }
 
-        const to = moveRowTo(this.root, from, at.group, at.index);
-        if (!to) { return; }
-        this.announce("Moved");
-        this.edit(to, "up");
+        const from = itemPathOf(this.root, row)!;
+        const i = from[from.length - 1];
+        this.act("drag", from, () =>
+        {
+            moveItems(this.root, from.slice(0, -1), i, i, to);
+            return { row };
+        }, () => "Moved to row " + this.lineNumber(row));
     }
 
-    private dragClear(): void
+    private dragClear(why: string): void
     {
-        this.el?.querySelectorAll(`.${CLS}-dragging, .${CLS}-drop-before, .${CLS}-drop-after, .${CLS}-drop-into`)
-            .forEach((n) => n.classList.remove(`${CLS}-dragging`, `${CLS}-drop-before`, `${CLS}-drop-after`,
-                `${CLS}-drop-into`));
-        this.dragFrom = null;
+        if (this.dragging) { logDebug("Drag ended:", why); }
+        document.removeEventListener("keydown", this.dragKey, true);
+        this.clearMarks();
+        this.el?.querySelectorAll(`.${CLS}-dragging`).forEach((n) => n.classList.remove(`${CLS}-dragging`));
+        this.dragging = null;
         this.dropAt = null;
+    }
+
+    /**
+     * The place under a point (spec 5.6): before a line's item in its top half, first in a group under its line's
+     * bottom half, and after a row in its bottom half. Where levels end on that line, the bracket column under the
+     * pointer picks the level. Under the footer, the end of the top level.
+     */
+    private placeAt(x: number, y: number): Place | null
+    {
+        const under = document.elementFromPoint(x, y);
+        if (!under || !this.el?.contains(under)) { return null; }
+        if (under.closest(`.${CLS}-footer`)) { return { level: [], index: levelOf(this.root).length }; }
+        const line = under.closest<HTMLElement>(`.${CLS}-line`);
+        if (!line) { return null; }
+
+        const p = parseItemPath(line.getAttribute("data-item")!);
+        const d = p.length - 1;
+        const box = line.getBoundingClientRect();
+        if (y < box.top + box.height / 2) { return { level: p.slice(0, -1), index: p[d] }; }
+        if (line.classList.contains(`${CLS}-line-group`)) { return { level: p, index: 0 }; }
+
+        // The levels that end on this line: this row's, and each one above while it is the last of its level.
+        let m = d;
+        const isLast = (k: number): boolean => p[k] === levelOf(levelAt(this.root, p.slice(0, k))).length - 1;
+        while (m > 0 && isLast(m)) { m -= 1; }
+
+        const cells = Array.from(line.querySelectorAll<HTMLElement>(`.${CLS}-bracket`));
+        const over = cells.findIndex((c) =>
+        {
+            const r = c.getBoundingClientRect();
+            return x >= r.left && x < r.right;
+        });
+        const right = cells.length === 0 || x >= cells[cells.length - 1].getBoundingClientRect().right;
+        const j = right ? d : (over < 0) ? m : Math.min(Math.max(over, m), d);
+        return { level: p.slice(0, j), index: p[j] + 1 };
+    }
+
+    /** Draws the drop line before an item, or after a level's last line, from the place's bracket column. */
+    private markPlace(place: Place): void
+    {
+        const items = levelOf(levelAt(this.root, place.level));
+        const depth = String(place.level.length);
+        if (place.index < items.length)
+        {
+            const line = this.lineOf.get(items[place.index].row)!;
+            line.classList.add(`${CLS}-drop-before`);
+            line.style.setProperty("--eb-drop-depth", depth);
+            return;
+        }
+        // After the level's last line: the last line inside its last item.
+        let last: Row | undefined = items[items.length - 1]?.row;
+        while (last?.kind === "group" && levelOf(last).length > 0)
+        {
+            const inner = levelOf(last);
+            last = inner[inner.length - 1].row;
+        }
+        if (!last)
+        {
+            this.el!.querySelector(`.${CLS}-level`)!.classList.add(`${CLS}-drop-end`);
+            return;
+        }
+        const line = this.lineOf.get(last)!;
+        line.classList.add(`${CLS}-drop-after`);
+        line.style.setProperty("--eb-drop-depth", depth);
+    }
+
+    private clearMarks(): void
+    {
+        this.el?.querySelectorAll(`.${CLS}-drop-before, .${CLS}-drop-after, .${CLS}-drop-end`).forEach((n) =>
+        {
+            n.classList.remove(`${CLS}-drop-before`, `${CLS}-drop-after`, `${CLS}-drop-end`);
+            (n as HTMLElement).style.removeProperty("--eb-drop-depth");
+        });
     }
 
     // ── Problems ──
 
-    /** Shows each problem on its row, and the rest above the rows, and announces a new set once. */
+    /** Shows each problem on its row's line, and the rest above the grid, and announces a new set once. */
     private renderProblems(): void
     {
         if (!this.el || !this.message) { return; }
@@ -1797,15 +2563,15 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
             n.classList.remove(`${CLS}-has-error`, `${CLS}-has-warning`));
         while (this.message.firstChild) { this.message.removeChild(this.message.firstChild); }
 
-        const above = this.problems.filter((p) => !p.path || !this.rowEl(p.path));
+        const lineOf = (p: Placed): HTMLElement | null => (p.row ? this.lineOf.get(p.row) ?? null : null);
+        const above = this.problems.filter((p) => !lineOf(p));
         for (const p of this.problems)
         {
-            const row = p.path ? this.rowEl(p.path) : null;
-            const line = this.problemLine(p);
-            if (row)
+            const line = lineOf(p);
+            if (line)
             {
-                row.classList.add(`${CLS}-has-${p.severity}`);
-                row.appendChild(line);
+                line.classList.add(`${CLS}-has-${p.severity}`);
+                line.appendChild(this.problemLine(p));
             }
         }
         above.forEach((p) => this.message!.appendChild(this.problemLine(p)));
@@ -1819,11 +2585,6 @@ export class ExpressionBuilder implements ExpressionBuilderHandle
             this.announce(n + (n === 1 ? " problem" : " problems") + " in the query. "
                 + this.problemText(this.problems[0].diagnostic));
         }
-    }
-
-    private rowEl(path: Step[]): HTMLElement | null
-    {
-        return this.el?.querySelector<HTMLElement>(`[data-path="${path.join(".")}"]`) ?? null;
     }
 
     private problemText(d: QueryDiagnostic): string

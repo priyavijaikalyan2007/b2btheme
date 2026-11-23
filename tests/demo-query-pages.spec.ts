@@ -8,7 +8,7 @@
  *   - QueryLanguage colors a query, and a sample changes it;
  *   - FacetSearch's query section colors its text, shows a sample error, and has the compact zone button;
  *   - TimezonePicker's compact form shows the current city;
- *   - ExpressionBuilder draws a search inside, a link and a shared variable, and places a sample warning;
+ *   - ExpressionBuilder draws its grid, with dashed runs, a group and a read-only row, and places a sample warning;
  *   - DiagramEngine says the wheel pans, and shows its zoom buttons (#221).
  */
 
@@ -52,21 +52,21 @@ test("TimezonePicker's compact form shows the current city, and opens the dropdo
     await expect(button).toHaveAttribute("aria-expanded", "true");
 });
 
-test("ExpressionBuilder draws a search inside, a link and a shared variable, and places a sample warning",
+test("ExpressionBuilder draws its grid: two dashed runs, a group, a read-only search inside, and a warning",
     async ({ page }) =>
 {
     await page.goto("/demo/components/expressionbuilder.html");
 
-    await expect(page.locator("#eb-demo .expressionbuilder-group-where")).toHaveCount(1);
-    await expect(page.locator("#eb-demo .expressionbuilder-group-link .expressionbuilder-row-filter")).toHaveCount(2);
-    await expect(page.locator("#eb-demo .expressionbuilder-row-kept")).toHaveCount(0);
-    await expect(page.locator('#eb-demo [data-path="3"] [data-role="same"]')).toHaveValue("var:p");
+    await expect(page.locator("#eb-demo .expressionbuilder-run-start [data-role=make-group]")).toHaveCount(2);
+    await expect(page.locator("#eb-demo .expressionbuilder-line-group")).toHaveCount(1);
+    await expect(page.locator('#eb-demo [data-item="3"] [data-role=join]')).toHaveValue("or");
+    await expect(page.locator('#eb-demo [data-item="4"] .expressionbuilder-cell-op')).toHaveText("has one where");
     await expect(page.locator("#eb-demo-tree")).toContainText("\"kind\": \"nested\"");
 
     await page.locator("#eb-demo-warning").click();
     const warned = page.locator("#eb-demo .expressionbuilder-has-warning");
     await expect(warned).toHaveCount(1);
-    await expect(warned.locator("[data-role=key]")).toHaveValue("at");
+    await expect(warned.locator("[data-role=key]")).toHaveValue("assigned");
 });
 
 test("DiagramEngine says the wheel pans and Ctrl zooms, and shows its zoom buttons", async ({ page }) =>
