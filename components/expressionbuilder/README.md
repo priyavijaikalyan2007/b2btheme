@@ -63,9 +63,9 @@ async function parse(text)
 
 Each facet is a key a condition can use: `key`, `label`, `valueType` (`text`, `enum`, `date`, `number` or `boolean`), and `values` or `loadValues` to suggest values.
 
-**Relationship keys** (spec section 9). A facet with `relationship: true` is a key that links to an item or a person, such as `rel.created_by`, or a column key that holds the same fact, such as `created_by`. A condition on it can hold three more things. **In part 1 of the grid, the grid shows each of them read-only, and offers none of them.** Part 2 makes them editable again:
+**Relationship keys** (spec section 9). A facet with `relationship: true` is a key that links to an item or a person, such as `rel.created_by`, or a column key that holds the same fact, such as `created_by`. A condition on it can hold three more things, each edited in the grid (see **Grids inside a row** below):
 
-- **"the same item as"** another condition, which writes a variable (below);
+- **"the same item as"** another condition, which writes a variable;
 - **"has one where"**, a search inside the item at the other end, with its own rows;
 - **Link conditions**, when the facet lists the link's own fields in `link`, such as `provenance`, `confidence` and `at`. They write `link ( … )`.
 
@@ -121,24 +121,33 @@ Each line of the grid has these columns, from left to right (`specs/expressionbu
 | Brackets | One narrow column for each level of groups. A group draws a solid bracket. A run of **And** rows inside an **Or** draws a dashed one |
 | Join | **And** or **Or**, which joins the row to the row above it, and **Not**. The first row of a level has only **Not** |
 | Key, operator, value | The condition, as before. Words show "Has the words" and their input |
-| Actions | **✕** removes the row. **⋯** opens **Insert condition above**, **Insert words above**, **Move up** and **Move down** |
+| Actions | **✕** removes the row. **⋯** opens **Insert condition above**, **Insert words above**, **Insert comparison above**, **Move up** and **Move down**, and **Add link conditions** on a relationship condition whose facet lists `link` fields |
 
 **How rows without a group read.** The language reads `not` first, then `and`, then `or`. So the rows `a`, **And** `b`, **Or** `c` mean `(a and b) or c`. The grid shows that reading with a dashed bracket around `a` and `b`. **Make a group**, at the top of a dashed bracket, turns it into a group, which changes nothing it means.
 
 **Groups.** A group's line has its own check box, join and **Not**, a list with **And** and **Or** that sets every join inside it but the first, and **Ungroup**. The list shows **Mixed** while the joins inside differ. **Ungroup** puts the rows back in place, and is off for a group with **Not**, because that would change what it means. A group a person makes or changes stays a group, even where the precedence would read it the same without one. A query back from the bar shows it dashed again, with the same meaning.
 
-**The footer.** **Add condition** and **Add words** add a row at the end, joined with **And**. The toolbar acts on the checked rows:
+**The footer.** **Add condition**, **Add words** and **Add comparison** add a row at the end, joined with **And**. **Add comparison** is off until the query names two items with "the same item as". The toolbar acts on the checked rows:
 
 | Button | On when |
 |--------|---------|
 | **Group** | Two or more checked rows next to each other in one level. The new group is checked in place of its rows |
 | **Ungroup** | One checked group with no **Not** |
 | **Move up**, **Move down** | Checked rows next to each other in one level, and not at the top or the bottom of the grid |
-| **Remove** | One or more checked rows. A group goes with its rows |
+| **Remove** | One or more checked rows, in any grid. A group goes with its rows, and a condition with its search inside and its link conditions |
 
 A button that is off says why in its title.
 
-**Moves.** **Move up** and **Move down** move one place in the grid. Past a group, they move the rows into it: at its end going up, at its start going down. At a group's edge, they move the rows out of it. Within a level each row keeps its join. Into another level, a row takes the join of the row it lands before, so a row added at the end and moved into an **Or** group joins it with **Or**. A group left with one row and no **Not** is ungrouped. A group cannot move into itself.
+**Moves.** **Move up** and **Move down** move one place in the grid. Past a group, they move the rows into it: at its end going up, at its start going down. At a group's edge, they move the rows out of it. Within a level each row keeps its join. Into another level, a row takes the join of the row it lands before, so a row added at the end and moved into an **Or** group joins it with **Or**. A group left with one row and no **Not** is ungrouped. A group cannot move into itself. A search inside takes rows in and lets them out as a group does, and a condition cannot move into its own. Nothing moves into or out of a link's grid, because its keys differ.
+
+## Grids inside a row
+
+A search inside and link conditions are each a grid of their own, indented under their condition's line, with their own columns, brackets, joins and groups (spec section 5.7). The link's grid comes first, as the bar reads them: `key link ( … ) where ( … )`. Row numbers count their lines.
+
+- **Has one where.** Choose **has one where** as a relationship condition's operator. A grid labeled "Has one where" opens under the row, with a new condition to fill in, and the builder's keys. It has its own **Add condition**, **Add words** and **Add comparison**. The condition is a draft, "Needs a condition inside", until a row inside is complete.
+- **Link conditions.** Choose **Add link conditions** in the ⋯ menu. A grid labeled "Link" opens under the row, with a new condition to fill in, and the keys of the facet's `link` list. It has only **Add condition**, because a link's fields take no words, and a button that removes the link conditions.
+- **The same item as.** A relationship condition with **is**, outside a link, has a list before its value: "a value", or "the same item as row 3, Created by" for each other such condition that has no value of its own or already names an item. Choosing one names one item for both, from the key, such as `?created_by`. An item that only a comparison or `return` names is offered by its name.
+- **Comparisons.** A comparison picks the first item, "is the same item as" or "is not the same item as", and the second item. Each item reads as its name and the rows that name it, such as "?created_by (rows 2 and 5)". It is a draft, "Needs two different items", until both sides name different items.
 
 **Drafts.** A new condition is a draft until it has a key, an operator and the value its operator needs. A draft is shown with a dashed line and "Needs a value", and left out of `getTree()` and `onChange`. So the tree always prints. So are empty words.
 
@@ -146,9 +155,8 @@ A button that is off says why in its title.
 
 **What it cannot edit, it keeps** (`UI_EXPERIENCE.md` section 5.7). These show as read-only rows, which say what they hold and "Edit this in the search bar":
 
-- a search inside ("has one where"), a link condition, "the same item as" another row, and a comparison, in part 1 of the grid
 - a parameter, a relative date, a date with a time, or an instant as a value
-- a variable, a search inside or a link condition on a key that is not a relationship
+- a variable, a search inside or a link condition on a key that is not a relationship, and a variable or a comparison inside a link
 - a key with no facet, or an operator the language does not have
 - `return`
 
@@ -173,7 +181,7 @@ The keys with a name act on the checked rows, or on the row that holds the focus
 
 ## Pointer and touch
 
-A row's handle drags it, and a group's handle drags the group, to any place in the grid: within its level, into a group, out of one, or between groups. A line shows where it will land. Over the top half of a line, the place is before it. Over the bottom half of a row, it is after it, and where groups end on that line, the bracket column under the pointer picks the level. Over the bottom half of a group's line, it is first in the group. `Escape` or a canceled touch moves nothing. The joins follow the rules of **Moves** above.
+A row's handle drags it, and a group's handle drags the group, to any place in the grid: within its level, into a group, out of one, between groups, and into or out of a search inside. A line shows where it will land, and none shows across a link's edge. Over the top half of a line, the place is before it. Over the bottom half of a row, it is after it, and where groups end on that line, the bracket column under the pointer picks the level. Over the bottom half of a group's line, or of a condition with a search inside, it is first in the group or the search inside. `Escape` or a canceled touch moves nothing. The joins follow the rules of **Moves** above.
 
 The handle is a pointer accelerator. **Move up** and **Move down** make every move a drag makes, so no move needs a drag (`TOUCH_EXPERIENCE.md` rule 4). Under a coarse pointer, the handle, the check boxes, the lists, the buttons and the menu items are 44 px. On a narrow screen, the grid scrolls sideways inside the builder.
 
