@@ -113,9 +113,12 @@ $ribbon-ctrl-border-radius: $border-radius;
     font-size: $font-size-xs;
     @include hover-glow(6px);
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled
@@ -161,10 +164,17 @@ $ribbon-ctrl-border-radius: $border-radius;
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover,
     &[aria-expanded="true"]
     {
         background-color: var(--ribbon-control-hover-bg);
+    }
+
+    @media (hover: hover)
+    {
+        &:hover
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 }
 
@@ -199,9 +209,12 @@ $ribbon-ctrl-border-radius: $border-radius;
     white-space: nowrap;
     position: relative;
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled
@@ -285,6 +298,8 @@ $ribbon-ctrl-border-radius: $border-radius;
     border-bottom: 1px solid var(--ribbon-group-border-color);
     gap: 0;
     overflow-x: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     overflow-y: hidden;
 
     // Hide scrollbar
@@ -309,11 +324,14 @@ $ribbon-ctrl-border-radius: $border-radius;
     white-space: nowrap;
     transition: color $ribbon-transition-fast, border-color $ribbon-transition-fast, box-shadow 150ms ease;
 
-    &:hover:not(.ribbon-tab-active)
+    @media (hover: hover)
     {
-        color: var(--ribbon-tab-active-color);
-        background-color: rgba(var(--theme-border-rgb), 0.3);
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover:not(.ribbon-tab-active)
+        {
+            color: var(--ribbon-tab-active-color);
+            background-color: rgba(var(--theme-border-rgb), 0.3);
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 }
 
@@ -360,10 +378,13 @@ $ribbon-ctrl-border-radius: $border-radius;
     cursor: pointer;
     font-size: $font-size-xs;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
-        color: var(--ribbon-control-color);
+        &:hover
+        {
+            background-color: var(--ribbon-control-hover-bg);
+            color: var(--ribbon-control-color);
+        }
     }
 }
 
@@ -523,9 +544,12 @@ $ribbon-ctrl-border-radius: $border-radius;
     padding: $sp-2 $sp-6;
     @include hover-glow(6px);
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled
@@ -710,9 +734,12 @@ button[class*="ribbon-"]:disabled i
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled { opacity: 0.4; cursor: default; }
@@ -730,9 +757,12 @@ button[class*="ribbon-"]:disabled i
     cursor: pointer;
     border-left: 1px solid var(--ribbon-group-border-color);
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled { opacity: 0.4; cursor: default; }
@@ -766,9 +796,12 @@ button[class*="ribbon-"]:disabled i
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled
@@ -811,10 +844,13 @@ button[class*="ribbon-"]:disabled i
     font-size: $font-size-sm;
     cursor: pointer;
 
-    &:hover:not(:disabled)
+    @media (hover: hover)
     {
-        border-color: var(--ribbon-group-border-color);
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover:not(:disabled)
+        {
+            border-color: var(--ribbon-group-border-color);
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     &:disabled
@@ -858,9 +894,12 @@ button[class*="ribbon-"]:disabled i
     font-size: $font-size-2xs;
     border-left: 1px solid var(--ribbon-group-border-color);
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 }
 
@@ -871,6 +910,8 @@ button[class*="ribbon-"]:disabled i
     max-width: 400px;
     max-height: 320px;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-8;
     background-color: var(--ribbon-bg);
     border: 1px solid var(--ribbon-group-border-color);
@@ -1442,9 +1483,12 @@ button[class*="ribbon-"]:disabled i
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     i { font-size: 8px; }
@@ -1530,6 +1574,8 @@ button[class*="ribbon-"]:disabled i
     left: 0;
     width: 100%;
     height: 100vh;
+    // The bottom stays above Safari's toolbar on iOS (section 9, item 17).
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background-color: var(--ribbon-bg);
@@ -1550,9 +1596,12 @@ button[class*="ribbon-"]:disabled i
     font-weight: $font-weight-semibold;
     cursor: pointer;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-primary);
+        &:hover
+        {
+            background-color: var(--theme-primary);
+        }
     }
 
     i { font-size: $font-size-lg; }
@@ -1574,6 +1623,8 @@ button[class*="ribbon-"]:disabled i
     border-right: 1px solid var(--ribbon-group-border-color);
     background-color: var(--ribbon-tab-bar-bg);
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 .ribbon-backstage-item
@@ -1591,9 +1642,12 @@ button[class*="ribbon-"]:disabled i
     text-align: left;
     cursor: pointer;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--ribbon-control-hover-bg);
+        &:hover
+        {
+            background-color: var(--ribbon-control-hover-bg);
+        }
     }
 
     i { font-size: $font-size-lg; width: $icon-size-md; text-align: center; }
@@ -1610,6 +1664,8 @@ button[class*="ribbon-"]:disabled i
     flex: 1;
     padding: $sp-24 $sp-32;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
 }
 
 // ============================================================================
@@ -1647,5 +1703,33 @@ button[class*="ribbon-"]:disabled i
     {
         transition: none;
         animation: none;
+    }
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .ribbon-tab,
+    .ribbon-btn,
+    .ribbon-qat-btn,
+    .ribbon-collapse-btn,
+    .ribbon-menu-trigger,
+    .ribbon-menu-entry,
+    .ribbon-split-primary,
+    .ribbon-split-arrow,
+    .ribbon-split-menu-item,
+    .ribbon-gallery-option,
+    .ribbon-gallery-more,
+    .ribbon-dropdown,
+    .ribbon-toggle,
+    .ribbon-group-overflow-btn,
+    .ribbon-backstage-item,
+    .ribbon-backstage-back
+    {
+        min-width: 44px;
+        min-height: 44px;
     }
 }

@@ -85,6 +85,8 @@ $bannerbar-default-max-height: 200px;
     flex: 1;
     padding: 0.5rem 0.75rem;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     min-width: 0;
 }
 
@@ -140,8 +142,10 @@ $bannerbar-default-max-height: 200px;
     font-size: inherit;
     color: inherit;
 
-    &:hover {
-        opacity: 0.8;
+    @media (hover: hover) {
+        &:hover {
+            opacity: 0.8;
+        }
     }
 
     &:focus-visible {
@@ -172,9 +176,11 @@ $bannerbar-default-max-height: 200px;
     line-height: 1;
     opacity: 0.7;
 
-    &:hover {
-        opacity: 1;
-        background-color: rgba(var(--theme-text-primary-rgb), 0.1);
+    @media (hover: hover) {
+        &:hover {
+            opacity: 1;
+            background-color: rgba(var(--theme-text-primary-rgb), 0.1);
+        }
     }
 
     &:focus-visible {
@@ -221,4 +227,16 @@ $bannerbar-default-max-height: 200px;
     background-color: $green-100;
     color: $green-900;
     border-bottom-color: $green-600;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .bannerbar-action,
+    .bannerbar-close {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }

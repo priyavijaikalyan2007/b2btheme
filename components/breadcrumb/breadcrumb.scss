@@ -57,9 +57,11 @@
     white-space: nowrap;
     line-height: $line-height-base;
 
-    &:hover {
-        color: darken($primary, 10%);
-        text-decoration: underline;
+    @media (hover: hover) {
+        &:hover {
+            color: darken($primary, 10%);
+            text-decoration: underline;
+        }
     }
 
     &:focus-visible {
@@ -114,9 +116,11 @@
     min-width: $control-height-sm;
     text-align: center;
 
-    &:hover {
-        background: var(--theme-active-bg);
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-active-bg);
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -142,8 +146,10 @@
     font-size: 0.75em;
     line-height: 1;
 
-    &:hover {
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -165,6 +171,8 @@
     max-width: 280px;
     padding: $sp-4 0;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     max-height: 240px;
 }
 
@@ -183,8 +191,10 @@
     cursor: pointer;
     white-space: nowrap;
 
-    &:hover {
-        background: var(--theme-hover-bg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -197,9 +207,11 @@
         color: var(--theme-text-muted);
         cursor: not-allowed;
 
-        &:hover {
-            background: none;
-            border-radius: $border-radius-sm;
+        @media (hover: hover) {
+            &:hover {
+                background: none;
+                border-radius: $border-radius-sm;
+            }
         }
     }
 }
@@ -234,6 +246,20 @@
     min-width: $control-height-md;
     padding: 0 $sp-8;
     font-size: $font-size-lg;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .breadcrumb-nav-link,
+    .breadcrumb-nav-ellipsis,
+    .breadcrumb-nav-actions-caret,
+    .breadcrumb-nav-dropdown-item {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

@@ -149,8 +149,10 @@
     cursor: pointer;
     min-height: 40px;
 
-    &:hover {
-        background: var(--_nr-item-hover-bg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--_nr-item-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -163,8 +165,10 @@
 div.navrail-header-body {
     cursor: default;
 
-    &:hover {
-        background: transparent;
+    @media (hover: hover) {
+        &:hover {
+            background: transparent;
+        }
     }
 }
 
@@ -255,8 +259,10 @@ div.navrail-header-body {
         font-size: 1rem;
     }
 
-    &:hover {
-        background: var(--_nr-item-hover-bg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--_nr-item-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -308,6 +314,8 @@ div.navrail-header-body {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     overflow-x: hidden;
     padding: 0.5rem 0;
     scrollbar-width: thin;
@@ -399,8 +407,10 @@ div.navrail-header-body {
         transform: rotate(90deg);
     }
 
-    &:hover:not(.navrail-item-disabled) {
-        background: var(--_nr-item-hover-bg);
+    @media (hover: hover) {
+        &:hover:not(.navrail-item-disabled) {
+            background: var(--_nr-item-hover-bg);
+        }
     }
 
     &:focus-visible {
@@ -565,9 +575,11 @@ div.navrail-header-body {
     cursor: pointer;
     transition: background-color 120ms ease;
 
-    &:hover {
-        background: var(--_nr-item-hover-bg);
-        color: var(--_nr-item-fg);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--_nr-item-hover-bg);
+            color: var(--_nr-item-fg);
+        }
     }
 
     &:focus-visible {
@@ -667,8 +679,10 @@ div.navrail-header-body {
         text-align: center;
     }
 
-    &:hover:not([aria-disabled="true"]) {
-        background: var(--_nr-item-hover-bg, var(--theme-hover-bg, #f1f5f9));
+    @media (hover: hover) {
+        &:hover:not([aria-disabled="true"]) {
+            background: var(--_nr-item-hover-bg, var(--theme-hover-bg, #f1f5f9));
+        }
     }
 
     &:focus-visible {
@@ -716,7 +730,8 @@ div.navrail-header-body {
 
     .navrail-search,
     .navrail-header-body,
-    .navrail-toggle {
+    .navrail-toggle,
+    .navrail-flyout-item {
         min-height: 44px;
     }
 

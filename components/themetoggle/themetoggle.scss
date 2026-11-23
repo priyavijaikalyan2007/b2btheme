@@ -43,9 +43,11 @@
     font-size: $font-size-sm;
     padding: 0;
 
-    &:hover {
-        background: var(--theme-hover-bg);
-        color: var(--theme-text-primary);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-hover-bg);
+            color: var(--theme-text-primary);
+        }
     }
 
     &:focus-visible {
@@ -63,9 +65,11 @@
     background: var(--theme-selected-bg);
     color: var(--theme-primary-text);
 
-    &:hover {
-        background: var(--theme-selected-bg);
-        color: var(--theme-primary-text);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--theme-selected-bg);
+            color: var(--theme-primary-text);
+        }
     }
 }
 
@@ -75,4 +79,15 @@
 
 .themetoggle-btn + .themetoggle-btn {
     border-left: 1px solid var(--theme-border-subtle);
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .themetoggle-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
