@@ -317,3 +317,32 @@ describe("surface contract (B8)", () =>
         launcher.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A PRESS OUTSIDE CLOSES IT, FROM ANY POINTER (#181)
+// ============================================================================
+
+describe("AppLauncher outside press", () =>
+{
+    // Safari on iOS sends no mousedown for a tap on blank space, so the popup listens for pointerdown
+    // (TOUCH_EXPERIENCE.md section 9, item 1).
+    test("a pointerdown outside closes it, and one on the trigger or inside does not", () =>
+    {
+        const launcher = new AppLauncher(makeOptions());
+        launcher.show("launcher-test-container");
+        launcher.open();
+
+        container.querySelector(".applauncher-trigger")!.dispatchEvent(
+            new PointerEvent("pointerdown", { bubbles: true }));
+        expect(launcher.isOpen()).toBe(true);
+        document.querySelector(".applauncher-tile, .applauncher-item")!.dispatchEvent(
+            new PointerEvent("pointerdown", { bubbles: true }));
+        expect(launcher.isOpen()).toBe(true);
+
+        document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        expect(launcher.isOpen()).toBe(true);
+        document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(launcher.isOpen()).toBe(false);
+        launcher.destroy();
+    });
+});

@@ -1645,14 +1645,14 @@ export class AppLauncher implements AppLauncherHandle
 
     private addDocListeners(): void
     {
-        document.addEventListener("mousedown", this.boundOnDocClick, true);
+        document.addEventListener("pointerdown", this.boundOnDocClick, true);
         document.addEventListener("keydown", this.boundOnDocKeydown, true);
     }
 
     private removeDocListeners(): void
     {
         document.removeEventListener(
-            "mousedown", this.boundOnDocClick, true
+            "pointerdown", this.boundOnDocClick, true
         );
         document.removeEventListener(
             "keydown", this.boundOnDocKeydown, true
