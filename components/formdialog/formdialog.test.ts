@@ -1062,3 +1062,36 @@ describe("FormDialog tap outside (TOUCH_EXPERIENCE.md 6.1)", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A CANCELED DIVIDER DRAG PUTS THE PANEL'S WIDTH BACK (#181)
+// ============================================================================
+
+describe("FormDialog divider on touch", () =>
+{
+    // TOUCH_EXPERIENCE.md section 9, item 5: pointercancel is an abort.
+    test("a canceled drag puts the panel's width back", () =>
+    {
+        let captured = false;
+        HTMLElement.prototype.setPointerCapture = vi.fn(() => { captured = true; });
+        HTMLElement.prototype.releasePointerCapture = vi.fn(() => { captured = false; });
+        HTMLElement.prototype.hasPointerCapture = vi.fn(() => captured);
+        const panelContent = document.createElement("div");
+        const handle = createFormDialog(defaultOptions({ panel: { content: panelContent, width: 300 } }));
+        handle.show();
+        vi.advanceTimersByTime(300);
+        const el = handle.getElement();
+        const divider = el.querySelector<HTMLElement>(".formdialog-divider")!;
+        const panel = el.querySelector<HTMLElement>(".formdialog-panel")!;
+        const fire = (type: string, x: number): boolean => divider.dispatchEvent(new PointerEvent(type,
+            { bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", clientX: x }));
+
+        fire("pointerdown", 500);
+        fire("pointermove", 450);
+        expect(panel.style.width).toBe("350px");
+        fire("pointercancel", 450);
+        expect(panel.style.width).toBe("300px");
+        expect(divider.classList.contains("formdialog-divider-active")).toBe(false);
+        handle.destroy();
+    });
+});

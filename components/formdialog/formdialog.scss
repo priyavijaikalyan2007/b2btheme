@@ -540,14 +540,17 @@
     color: var(--theme-text-secondary);
 }
 
-// Divider (drag handle)
+// Divider (drag handle). Between side-by-side panes, a vertical swipe still scrolls the page
+// (TOUCH_EXPERIENCE.md section 9, the touch-action table).
 .formdialog-divider
 {
+    position: relative;
     width: 4px;
     cursor: col-resize;
     background-color: var(--theme-fill-strong);
     flex-shrink: 0;
     transition: background-color 100ms;
+    touch-action: pan-y;
 
     &:hover
     {
@@ -558,6 +561,21 @@
 .formdialog-divider-active
 {
     background-color: var(--theme-primary);
+}
+
+// A finger takes the divider 22 px either side of its line, and the line stays thin (section 6.1).
+@media (any-pointer: coarse)
+{
+    .formdialog-divider::after
+    {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 44px;
+        margin-left: -22px;
+    }
 }
 
 // ============================================================================

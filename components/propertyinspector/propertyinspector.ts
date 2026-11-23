@@ -707,20 +707,37 @@ class PropertyInspector implements PropertyInspectorHandle
             this.applyResize(startX, startWidth, ev.clientX);
         };
 
-        const onUp = (ev: PointerEvent) =>
+        const end = (ev: PointerEvent) =>
         {
             handle.releasePointerCapture(ev.pointerId);
             handle.removeEventListener("pointermove", onMove);
             handle.removeEventListener("pointerup", onUp);
+            handle.removeEventListener("pointercancel", onCancel);
             document.body.style.userSelect = "";
+        };
+
+        const onUp = (ev: PointerEvent) =>
+        {
+            end(ev);
             if (this.options.onResize)
             {
                 this.options.onResize(this.width);
             }
         };
 
+        // The browser canceled the drag, when it took the gesture for a scroll or a call arrived: the width
+        // goes back, and onResize hears nothing (TOUCH_EXPERIENCE.md section 9, item 5).
+        const onCancel = (ev: PointerEvent) =>
+        {
+            end(ev);
+            this.width = startWidth;
+            if (this.drawerEl) { this.drawerEl.style.width = `${this.width}px`; }
+            logDebug("Resize canceled; the width is back");
+        };
+
         handle.addEventListener("pointermove", onMove);
         handle.addEventListener("pointerup", onUp);
+        handle.addEventListener("pointercancel", onCancel);
     }
 
     /** Calculate and apply new drawer width during resize drag. */

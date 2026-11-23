@@ -154,6 +154,8 @@
     height: 100%;
     cursor: col-resize;
     z-index: 2;
+    // A vertical swipe on the edge still scrolls the page (TOUCH_EXPERIENCE.md section 9, the touch-action table).
+    touch-action: pan-y;
 
     &:hover,
     &:active {
@@ -264,10 +266,11 @@
 
 @media (pointer: coarse)
 {
+    // A finger takes the edge 22 px either side of it (TOUCH_EXPERIENCE.md section 6.1).
     .propertyinspector-resize-handle
     {
-        width: 16px;
-        left: -8px;
+        width: 44px;
+        left: -22px;
     }
 
     .propertyinspector-action-btn,

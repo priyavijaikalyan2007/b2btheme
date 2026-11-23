@@ -1406,6 +1406,7 @@ class FormDialogImpl implements FormDialog
         div.addEventListener("pointerdown", (e) => this.onDividerDown(e));
         div.addEventListener("pointermove", (e) => this.onDividerMove(e));
         div.addEventListener("pointerup", (e) => this.onDividerUp(e));
+        div.addEventListener("pointercancel", (e) => this.onDividerCancel(e));
 
         return div;
     }
@@ -1438,6 +1439,21 @@ class FormDialogImpl implements FormDialog
     {
         this.dividerEl!.releasePointerCapture(e.pointerId);
         this.dividerEl!.classList.remove(`${CLS}-divider-active`);
+    }
+
+    /**
+     * The browser canceled the drag, when it took the gesture for a scroll or a
+     * call arrived: the panel goes back to its width from before the drag
+     * (TOUCH_EXPERIENCE.md section 9, item 5).
+     */
+    private onDividerCancel(e: PointerEvent): void
+    {
+        if (!this.dividerEl!.hasPointerCapture(e.pointerId)) { return; }
+        this.panelWidth = this.dragStartWidth;
+        const panelEl = this.bodyEl?.querySelector(`.${CLS}-panel`) as HTMLElement;
+        if (panelEl) { panelEl.style.width = `${this.panelWidth}px`; }
+        this.onDividerUp(e);
+        logDebug("Divider drag canceled; the panel's width is back");
     }
 
     // ====================================================================

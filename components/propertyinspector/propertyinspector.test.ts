@@ -446,3 +446,40 @@ describe("surface (ADR-242)", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A CANCELED RESIZE PUTS THE WIDTH BACK (#181)
+// ============================================================================
+
+describe("PropertyInspector resize on touch", () =>
+{
+    // TOUCH_EXPERIENCE.md section 9, item 5: pointercancel is an abort.
+    test("a canceled resize puts the width back, and onResize hears nothing", () =>
+    {
+        Object.defineProperty(container, "clientWidth", { value: 800, configurable: true });
+        HTMLElement.prototype.setPointerCapture = vi.fn();
+        HTMLElement.prototype.releasePointerCapture = vi.fn();
+        const onResize = vi.fn();
+        const handle = createPropertyInspector(makeOptions({ onResize }));
+        handle.open(makeOpenOptions());
+        const drawer = container.querySelector<HTMLElement>(".propertyinspector")!;
+        const edge = container.querySelector<HTMLElement>(".propertyinspector-resize-handle")!;
+        const before = drawer.style.width;
+        const fire = (type: string, x: number): boolean => edge.dispatchEvent(new PointerEvent(type,
+            { bubbles: true, cancelable: true, pointerId: 1, pointerType: "touch", clientX: x }));
+
+        fire("pointerdown", 500);
+        fire("pointermove", 400);
+        expect(drawer.style.width).not.toBe(before);
+        fire("pointercancel", 400);
+        expect(drawer.style.width).toBe(before);
+        expect(onResize).not.toHaveBeenCalled();
+
+        // A later finished resize still reports.
+        fire("pointerdown", 500);
+        fire("pointermove", 450);
+        fire("pointerup", 450);
+        expect(onResize).toHaveBeenCalledTimes(1);
+        handle.destroy();
+    });
+});
