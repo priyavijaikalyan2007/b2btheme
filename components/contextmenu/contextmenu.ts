@@ -346,6 +346,8 @@ function buildMenu(state: MenuState): HTMLElement
     if (state.sheet)
     {
         menu.classList.add("contextmenu-sheet");
+        // It scrolls inside itself, so it has a stable name (ADR-162).
+        menu.setAttribute("data-dui-region", "contextmenu:sheet");
     }
     else
     {

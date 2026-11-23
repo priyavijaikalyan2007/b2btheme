@@ -44,7 +44,8 @@
     background: rgba(0, 0, 0, 0.32);
 }
 
-.contextmenu.contextmenu-sheet {
+// After .contextmenu, so it wins at the same specificity.
+.contextmenu-sheet {
     top: auto;
     right: 0;
     bottom: 0;
