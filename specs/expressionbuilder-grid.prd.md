@@ -20,6 +20,7 @@ The options, the handle, the tree and the `facets` list keep their contracts. No
 | The model | The existing tree of groups and rows stays the one model. The grid is a view of it (section 4). | Owner, 22 Nov 2026 |
 | The old nested boxes | Replaced, with no option to keep them, because no app uses the builder | Owner, 22 Nov 2026 |
 | Drag to reorder | Kept. A drag moves one row or group to any place in the grid: within its level, into a group, out of one, or from one group to another (section 4.5). Each move a drag makes, **Move up** and **Move down** can also make. | Owner, 22 Nov 2026 |
+| Moves and the search inside | A row or a group moves into and out of a search inside, as into and out of a group. Nothing moves into or out of a link's grid, because its keys differ (section 4.5). | Owner, 23 Nov 2026 |
 
 ## 3. The reference: Azure Boards
 
@@ -236,7 +237,7 @@ The apps show the builder in a modal on the search page, where a person edits a 
 ## 9. Parts
 
 - **Part 1:** sections 4 to 8. The rows in 5.5 are read-only.
-- **Part 2:** a condition with "has one where" opens an indented grid under its row, with its own joins and groups. **Link** on a relationship condition opens a second indented grid, labeled "Link", with the keys from the facet's `link` list. A row never moves between those grids and the others. On a relationship condition with **is**, the value column offers "the same item as" each other relationship row, by its row number and key. A comparison row compares two variables. Each uses the grid of part 1.
+- **Part 2:** a condition with "has one where" opens an indented grid under its row, with its own joins and groups. **Link** on a relationship condition opens a second indented grid, labeled "Link", with the keys from the facet's `link` list. A row moves into and out of a search inside, and never into or out of a link's grid (section 4.5). On a relationship condition with **is**, the value column offers "the same item as" each other relationship row, by its row number and key. A comparison row compares two variables. Each uses the grid of part 1.
 
 ## 10. Tests
 
@@ -246,6 +247,8 @@ The apps show the builder in a modal on the search page, where a person edits a 
 - **Unit, DOM:** each join, Not, Group, Ungroup and its refusal, the group control and Mixed, Make a group, Move up and Move down within a level and into and out of a group, Insert, Remove, the toolbar refusals and their titles, each key, focus after each action, and the three kinds of Escape.
 - **Unit, drag:** through the stubbed recognizer, as the tests do today: each place in 5.6, the bracket column at a line where levels end, a refused place, a drop, Escape and `pointercancel`.
 - **Browser:** a touch spec that measures the targets in 7.2 and reads the handle's `touch-action`, and a drag of a row into a group, on a test page with its own tree, so the test controls what it drags.
+- **Part 2, unit:** the levels reach a search inside, moves into and out of it, a condition refused into its own, `moveTarget` at its edges, each level edit with a link's group as the root, and the order of the lines. In the DOM: the nested grids, their labels and adds, row numbers, the toolbar across grids, problems on nested lines, a drop refused across a link's edge, and each editor and its focus.
+- **Part 2, browser:** a drop into a search inside, a drop refused into a link's grid, and the touch targets of the nested grids' controls.
 - Each new test fails without the change it covers.
 
 ## 11. Answers to the apps' questions
