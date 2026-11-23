@@ -620,3 +620,27 @@ describe("source: results a server ranked, shown as given", () =>
         plain.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: ROWS HIGHLIGHT FROM ANY POINTER (#181)
+// ============================================================================
+
+describe("CommandPalette pointer", () =>
+{
+    // TOUCH_EXPERIENCE.md section 9, item 1: Pointer Events, not mouse events.
+    test("a pointer over a row highlights it, and a mouseenter alone does nothing", () =>
+    {
+        registerCommands([makeCommand("a", "Alpha"), makeCommand("b", "Beta")]);
+        const inst = CommandPalette.getInstance();
+        inst.open();
+        const rows = (): HTMLElement[] =>
+            Array.from(getResults()!.querySelectorAll<HTMLElement>(".commandpalette-item"));
+        const lit = (): number => rows().findIndex((r) => r.classList.contains("commandpalette-item-highlighted"));
+        expect(lit()).toBe(0);
+
+        rows()[1].dispatchEvent(new MouseEvent("mouseenter"));
+        expect(lit()).toBe(0);
+        rows()[1].dispatchEvent(new PointerEvent("pointerenter"));
+        expect(lit()).toBe(1);
+    });
+});

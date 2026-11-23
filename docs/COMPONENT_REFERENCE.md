@@ -1046,6 +1046,13 @@ const fullpage = createAppLauncher({
 | `setSearchQuery(q)` | `void` | Programmatic search |
 | `getMode()` | `string` | Current mode |
 
+## Pointer and touch
+
+- **A press outside** the launcher closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger, the close button, the sidebar items, the tabs, the favorite star and the footer link are 44 px. Hover colors show only on a device with hover.
+- **The favorite star** shows on hover or focus with a mouse. On a device with no hover it shows always, so a finger can see what it taps.
+- **Scrolling.** The sidebar and the app list keep their scroll to themselves at the end.
+
 ## Keyboard
 
 | Key | Context | Action |
@@ -3133,6 +3140,13 @@ interface PaletteResult {
 | `destroy()` | Full cleanup |
 | `openCommandPalette()` | Global: open singleton |
 
+## Pointer and touch
+
+- **On a phone,** which has no `Ctrl` key, give the page a visible search button that calls `open()` (`TOUCH_EXPERIENCE.md` section 6.1). A tap on a result runs it.
+- **A pointer over a result** highlights it, from `pointerenter`, for any pointer.
+- **Targets.** Under a coarse pointer each result and the footer link are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** The results keep their scroll to themselves at the end.
+
 ## Keyboard
 
 | Key | Action |
@@ -3592,6 +3606,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 | `autoClose` | `boolean` | `true` | Close on outside click |
 | `closeOnEscape` | `boolean` | `true` | Close on Escape key |
 | `animation` | `string` | `"fade"` | `fade`, `scale`, or `none` |
+| `sheetOnCompact` | `boolean` | `true` | On a viewport less than 768 CSS pixels wide, open as a sheet at the bottom of the screen. `false` keeps the menu at the pointer on every screen |
 
 ### ContextMenuItem
 
@@ -3622,7 +3637,7 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 
 - **Theme-aware** — follows system light/dark mode via CSS custom properties; explicit `light`/`dark` override available
 - **Keyboard navigation** — Arrow Up/Down to navigate, Enter to select, Escape to close, Right to open sub-menu, Left to close sub-menu
-- **Sub-menus** — nested menus with hover delay and arrow indicator
+- **Sub-menus** — nested menus with hover delay and arrow indicator. A click or a tap on a sub-menu row opens it at once
 - **Viewport edge detection** — flips up/left when near viewport edges
 - **Checked/radio states** — checkmark icon with `aria-checked`
 - **Disabled items** — 50% opacity, no pointer events, `aria-disabled`
@@ -3632,6 +3647,16 @@ A theme-aware, accessible context menu component with icons, keyboard shortcuts,
 - **Animation** — fade-in (150ms), scale, or none
 - **Icons** — Bootstrap Icons with 20px icon column
 - **Shortcuts** — right-aligned muted shortcut hints
+
+## Pointer and touch
+
+- **On a phone, a sheet.** On a viewport less than 768 CSS pixels wide, the menu opens as a sheet at the bottom of the screen, full width, over a backdrop (`TOUCH_EXPERIENCE.md` section 6.1). `x` and `y`, `minWidth` and `maxWidth` do not apply there. The sheet is at most 70% of the screen high, scrolls inside itself, and keeps clear of the home indicator. Larger screens do not change. `sheetOnCompact: false` keeps the menu at the pointer.
+- **The backdrop.** A tap on it closes the sheet, unless `autoClose` is `false`. The tap reaches nothing under it.
+- **Sub-menus in the sheet** open in place of the list, with a **Back** row and the sub-menu's name first. **Back**, `ArrowLeft` or `Escape` returns to the list, and the focus goes back to the sub-menu's row. `Escape` with no sub-menu open closes the sheet.
+- **No hover needed.** A click or a tap on a sub-menu row opens it at once, on every screen. Hover still opens it after 200 milliseconds.
+- **Targets.** Under a coarse pointer each item is 44 px high, and 48 px in the sheet. Hover colors show only on a device with hover. A long press on an item opens no system callout.
+- **A press outside** closes the menu from `pointerdown`, from any pointer.
+- **`attachLongPress(target, getOptions)`** opens a menu after a 500 millisecond press that moves less than 10 px. It keeps its own timer, so a page that calls it needs no `gesturerecognizer.js`.
 
 ## Accessibility
 
@@ -13879,6 +13904,13 @@ Aggregated notification panel with bell trigger, unread badge, category filters,
 | `getElement()` | `HTMLElement` | Return bell button element |
 | `destroy()` | `void` | Tear down DOM and listeners |
 
+## Pointer and touch
+
+- **A press outside** the panel closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the bell, the close button, the tabs, **Mark all read** and each dismiss button are 44 px. Hover colors show only on a device with hover.
+- **The dismiss button** shows on hover or focus with a mouse. On a device with no hover it shows always, so a finger can see what it taps.
+- **The panel** fills the screen's height with `100dvh`, so its bottom stays above Safari's toolbar on iOS. The list keeps its scroll to itself at the end.
+
 ## Keyboard
 
 | Key | Action |
@@ -20386,6 +20418,12 @@ const switcher = createTenantSwitcher({
 | `addTenant(ws)` | Add a tenant |
 | `removeTenant(id)` | Remove a tenant |
 
+## Pointer and touch
+
+- **A press outside** the list closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger, each tenant and the Create button are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** A long list keeps its scroll to itself at the end.
+
 ## Keyboard
 
 | Key | Action |
@@ -22904,6 +22942,11 @@ menu.setMenuItems([
 | `offline` | Grey | User is disconnected |
 | `busy` | Red | User is occupied, do not disturb |
 | `away` | Yellow | User is temporarily away |
+
+## Pointer and touch
+
+- **A press outside** the menu closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the trigger and each item are 44 px. Hover colors show only on a device with hover.
 
 ## Keyboard Shortcuts
 

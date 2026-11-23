@@ -153,6 +153,13 @@ interface PaletteResult {
 | `destroy()` | Full cleanup |
 | `openCommandPalette()` | Global: open singleton |
 
+## Pointer and touch
+
+- **On a phone,** which has no `Ctrl` key, give the page a visible search button that calls `open()` (`TOUCH_EXPERIENCE.md` section 6.1). A tap on a result runs it.
+- **A pointer over a result** highlights it, from `pointerenter`, for any pointer.
+- **Targets.** Under a coarse pointer each result and the footer link are 44 px. Hover colors show only on a device with hover.
+- **Scrolling.** The results keep their scroll to themselves at the end.
+
 ## Keyboard
 
 | Key | Action |

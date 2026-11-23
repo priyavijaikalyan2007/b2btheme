@@ -98,6 +98,8 @@
 
 .commandpalette-results {
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     flex: 1;
     min-height: 0;
 }
@@ -127,10 +129,16 @@
     cursor: pointer;
     min-height: $control-height-lg;
 
-    &:hover,
     &.commandpalette-item-highlighted {
         background-color: var(--theme-active-bg);
         border-radius: $border-radius-sm;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--theme-active-bg);
+            border-radius: $border-radius-sm;
+        }
     }
 }
 
@@ -230,8 +238,22 @@
     text-decoration: none;
     cursor: pointer;
 
-    &:hover {
-        text-decoration: underline;
+    @media (hover: hover) {
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse) {
+    .commandpalette-item,
+    .commandpalette-footer-link {
+        min-width: 44px;
+        min-height: 44px;
     }
 }
 

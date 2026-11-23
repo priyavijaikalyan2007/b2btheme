@@ -13,6 +13,8 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
 ## [Unreleased]
 
 ### Fixed
+- **AppLauncher, UserMenu, TenantSwitcher and NotificationCenter close on a tap outside** (#181, part 2 of 3). Each closed from a `mousedown` on the document, and Safari on iOS sends none for a tap on blank space, so the popup stayed open. They listen for `pointerdown` now.
+- **AppLauncher's favorite star and NotificationCenter's dismiss button show on a touch screen** (#181). They showed only on hover, so a finger could tap them without seeing them. On a device with no hover they show always.
 - **A StackLayout divider can be moved from the keyboard** (#232). It took focus and no key. The arrow keys along it move it 10px, and it reports `aria-valuenow`.
 - **A floating TabbedPanel resized from its left edge stays put** (#233). It was placed from its last title bar drag, which for a panel never moved is the left of the window.
 - **The `hover-glow` mixin no longer leaves its glow after a tap** (#234). Six components include it: ActionItems, ExplorerPicker, NotificationCenter, Ribbon, TabbedPanel and Toolbar.
@@ -118,6 +120,11 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   The build refuses a bump that skips this, and refuses a served file that changes bytes under the same URL. See `CDN_CONTRACT.md` "Bumping a version". DOMPurify 3.4.16, a2ui-runtime 0.14.0 and marked 18.0.12 were removed before this existed, and are listed as retired.
 
 ### Changed
+- **ContextMenu opens as a sheet at the bottom of the screen on a phone** (#181, part 2 of 3), as `TOUCH_EXPERIENCE.md` section 6.1 asks. **If your page opens a context menu, a person on a phone now sees a sheet in place of a menu at the finger.** `sheetOnCompact: false` keeps the menu at the pointer.
+  - Below 768 CSS pixels the menu is a full-width sheet over a backdrop. A tap on the backdrop closes it, and the tap reaches nothing under it.
+  - In the sheet, a sub-menu opens in place of the list, with a **Back** row.
+  - On every screen, a click or a tap on a sub-menu row opens it at once. Before, only hover opened it, so a finger could not.
+  - CommandPalette's results highlight from `pointerenter`. The six popups and menus of the shell have 44 px targets under a coarse pointer, hover colors only on a device with hover, and inner scroll areas that keep their scroll. NotificationCenter's panel uses `100dvh`.
 - **ExpressionBuilder shows a query as a grid of rows** (#237, part 1 of 2), like the query editor in Azure Boards. The apps asked for it in knobbyio/apps#379, and the design is `specs/expressionbuilder-grid.prd.md`. The options, the handle, the tree and `facets` keep their contracts.
   - Each condition is one row. A column joins it to the row above with **And** or **Or**, and **Not** sits beside them.
   - A group is a solid bracket beside its rows, with its own **And** or **Or** for the rows inside, and **Ungroup**. A run of **And** rows inside an **Or** shows a dashed bracket, which is how the language reads it, and **Make a group** turns it solid.

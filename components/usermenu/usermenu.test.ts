@@ -334,3 +334,28 @@ describe("UserMenu surface contract", () =>
         menu.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A PRESS OUTSIDE CLOSES IT, FROM ANY POINTER (#181)
+// ============================================================================
+
+describe("UserMenu outside press", () =>
+{
+    // Safari on iOS sends no mousedown for a tap on blank space, so the menu listens for pointerdown
+    // (TOUCH_EXPERIENCE.md section 9, item 1).
+    test("a pointerdown outside closes it, and one inside does not", () =>
+    {
+        const menu = new UserMenu(makeOptions());
+        menu.show("usermenu-test-container");
+        menu.open();
+
+        container.querySelector(".usermenu")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(menu.isOpen()).toBe(true);
+
+        document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        expect(menu.isOpen()).toBe(true);
+        document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(menu.isOpen()).toBe(false);
+        menu.destroy();
+    });
+});

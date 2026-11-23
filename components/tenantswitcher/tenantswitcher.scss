@@ -60,11 +60,14 @@
     transition: background-color 150ms, box-shadow 150ms ease;
     max-width: 220px;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-active-bg);
-        border-radius: $border-radius;
-        box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            background-color: var(--theme-active-bg);
+            border-radius: $border-radius;
+            box-shadow: 0 0 6px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -228,6 +231,8 @@
 {
     flex: 1 1 auto;
     overflow-y: auto;
+    // A scroll that reaches the end stays here (TOUCH_EXPERIENCE.md section 9, item 16).
+    overscroll-behavior: contain;
     padding: $sp-4 0;
 }
 
@@ -244,11 +249,14 @@
     cursor: pointer;
     transition: background-color 100ms, box-shadow 150ms ease;
 
-    &:hover
+    @media (hover: hover)
     {
-        background-color: var(--theme-hover-bg);
-        border-radius: $border-radius-sm;
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            background-color: var(--theme-hover-bg);
+            border-radius: $border-radius-sm;
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -363,11 +371,14 @@
     width: 100%;
     text-align: left;
 
-    &:hover
+    @media (hover: hover)
     {
-        color: $blue-700;
-        background-color: var(--theme-hover-bg);
-        box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        &:hover
+        {
+            color: $blue-700;
+            background-color: var(--theme-hover-bg);
+            box-shadow: 0 0 4px var(--theme-glow-color-hover, rgba(37, 99, 235, 0.18));
+        }
     }
 
     &:focus-visible
@@ -399,6 +410,21 @@
     text-align: center;
     color: var(--theme-text-muted);
     font-size: $font-size-sm;
+}
+
+// ============================================================================
+// TOUCH: a finger needs a 44 px target (TOUCH_EXPERIENCE.md section 7)
+// ============================================================================
+
+@media (any-pointer: coarse)
+{
+    .tenantswitcher-trigger,
+    .tenantswitcher-item,
+    .tenantswitcher-create
+    {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 // ============================================================================

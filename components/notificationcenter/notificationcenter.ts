@@ -239,7 +239,7 @@ class NotificationCenter implements NotificationCenterHandle
         this.buildLiveRegion();
         this.updateBadge();
 
-        document.addEventListener("mousedown", this.boundOutsideClick, true);
+        document.addEventListener("pointerdown", this.boundOutsideClick, true);
         document.addEventListener("keydown", this.boundKeyDown, true);
 
         logInfo("Created", this.id);
@@ -419,7 +419,7 @@ class NotificationCenter implements NotificationCenterHandle
         for (const set of this.handlers.values()) { set.clear(); }
         this.close();
 
-        document.removeEventListener("mousedown", this.boundOutsideClick, true);
+        document.removeEventListener("pointerdown", this.boundOutsideClick, true);
         document.removeEventListener("keydown", this.boundKeyDown, true);
 
         this.bellEl?.parentNode?.removeChild(this.bellEl);

@@ -99,6 +99,13 @@ Aggregated notification panel with bell trigger, unread badge, category filters,
 | `getElement()` | `HTMLElement` | Return bell button element |
 | `destroy()` | `void` | Tear down DOM and listeners |
 
+## Pointer and touch
+
+- **A press outside** the panel closes it, from `pointerdown`, so a tap on blank space closes it in Safari on iOS too (`TOUCH_EXPERIENCE.md` section 9, item 1).
+- **Targets.** Under a coarse pointer the bell, the close button, the tabs, **Mark all read** and each dismiss button are 44 px. Hover colors show only on a device with hover.
+- **The dismiss button** shows on hover or focus with a mouse. On a device with no hover it shows always, so a finger can see what it taps.
+- **The panel** fills the screen's height with `100dvh`, so its bottom stays above Safari's toolbar on iOS. The list keeps its scroll to itself at the end.
+
 ## Keyboard
 
 | Key | Action |

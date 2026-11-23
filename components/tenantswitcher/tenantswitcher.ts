@@ -369,7 +369,7 @@ export class TenantSwitcher implements TenantSwitcherHandle
         this.updateTriggerExpanded(true);
         this.focusSearchOrFirst();
 
-        document.addEventListener("mousedown", this.boundOnDocClick, true);
+        document.addEventListener("pointerdown", this.boundOnDocClick, true);
         document.addEventListener("keydown", this.boundOnDocKeydown, true);
 
         safeCallback(this.opts.onOpen);
@@ -1087,7 +1087,7 @@ export class TenantSwitcher implements TenantSwitcherHandle
 
         this.updateTriggerExpanded(false);
 
-        document.removeEventListener("mousedown", this.boundOnDocClick, true);
+        document.removeEventListener("pointerdown", this.boundOnDocClick, true);
         document.removeEventListener("keydown", this.boundOnDocKeydown, true);
 
         safeCallback(this.opts.onClose);

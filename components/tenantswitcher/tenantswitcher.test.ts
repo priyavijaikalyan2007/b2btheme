@@ -399,3 +399,28 @@ describe("a tenant picked from search results (#62)", () =>
         vi.useRealTimers();
     });
 });
+
+// ============================================================================
+// TOUCH: A PRESS OUTSIDE CLOSES IT, FROM ANY POINTER (#181)
+// ============================================================================
+
+describe("TenantSwitcher outside press", () =>
+{
+    // Safari on iOS sends no mousedown for a tap on blank space, so the dropdown listens for pointerdown
+    // (TOUCH_EXPERIENCE.md section 9, item 1).
+    test("a pointerdown outside closes it, and one on the trigger does not", () =>
+    {
+        const switcher = new TenantSwitcher(makeOptions());
+        switcher.show("ws-test-container");
+        switcher.open();
+
+        container.querySelector("button")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(switcher.isOpen()).toBe(true);
+
+        document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        expect(switcher.isOpen()).toBe(true);
+        document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(switcher.isOpen()).toBe(false);
+        switcher.destroy();
+    });
+});

@@ -352,7 +352,7 @@ export class UserMenu implements UserMenuHandle
         setAttr(this.triggerEl!, "aria-expanded", "true");
         this.focusItem(0);
 
-        document.addEventListener("mousedown", this.boundOnDocumentClick, true);
+        document.addEventListener("pointerdown", this.boundOnDocumentClick, true);
         logDebug("Dropdown opened");
     }
 
@@ -375,7 +375,7 @@ export class UserMenu implements UserMenuHandle
         }
 
         this.clearItemHighlights();
-        document.removeEventListener("mousedown", this.boundOnDocumentClick, true);
+        document.removeEventListener("pointerdown", this.boundOnDocumentClick, true);
         logDebug("Dropdown closed");
     }
 
@@ -823,7 +823,7 @@ export class UserMenu implements UserMenuHandle
         this.triggerEl?.removeEventListener("click", this.boundOnTriggerClick);
         this.triggerEl?.removeEventListener("keydown", this.boundOnTriggerKeydown);
         this.dropdownEl?.removeEventListener("keydown", this.boundOnDropdownKeydown);
-        document.removeEventListener("mousedown", this.boundOnDocumentClick, true);
+        document.removeEventListener("pointerdown", this.boundOnDocumentClick, true);
     }
 
     // ========================================================================

@@ -684,3 +684,29 @@ describe("surface contract (B6)", () =>
         handle.destroy();
     });
 });
+
+// ============================================================================
+// TOUCH: A PRESS OUTSIDE CLOSES IT, FROM ANY POINTER (#181)
+// ============================================================================
+
+describe("NotificationCenter outside press", () =>
+{
+    // Safari on iOS sends no mousedown for a tap on blank space, so the panel listens for pointerdown
+    // (TOUCH_EXPERIENCE.md section 9, item 1).
+    test("a pointerdown outside closes the panel, and one on the bell or inside does not", () =>
+    {
+        const handle = createNotificationCenter(defaultOptions());
+        handle.open();
+        const open = (): boolean => getPanel()!.classList.contains("notificationcenter-panel-open");
+
+        getBell()!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        getPanel()!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(open()).toBe(true);
+
+        document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        expect(open()).toBe(true);
+        document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        expect(open()).toBe(false);
+        handle.destroy();
+    });
+});
