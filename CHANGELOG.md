@@ -125,6 +125,12 @@ and the git log. For the complete machine-readable history, see `agentknowledge/
   - **Move up**, **Move down** and a drag move a row or a group within its level, into a group, out of one, or between groups. A row moved into another group takes the join of the row it lands before.
   - `Escape` closes the ⋯ menu or ends a drag and stops there, and otherwise reaches the dialog the builder sits in.
   - In part 1, a search inside, a link condition, "the same item as" and a comparison show read-only. Part 2 makes them editable in the grid.
+- **ExpressionBuilder edits a search inside, link conditions, "the same item as" and comparisons in its grid** (#237, part 2 of 2). Part 1 showed them read-only.
+  - **Has one where** opens a grid under its row, with its own joins, groups and adds. A row or a group moves into and out of it as into and out of a group, by a drag or by **Move up** and **Move down**.
+  - **Add link conditions**, in the ⋯ menu, opens a grid labeled "Link" under its row, with the keys of the facet's `link` list. Nothing moves into or out of it, because its keys differ.
+  - "The same item as row 3, Created by", in the value column of a relationship condition with **is**, names one item for both rows.
+  - **Add comparison** compares two named items. It is off until the query names two.
+  - Problems from Parse now land on a line inside a nested grid. Row numbers count the nested lines.
 - **The wheel now pans GraphCanvas and SpineMap, and `Ctrl` with the wheel zooms them** (#181), as it does in DiagramEngine since #183. **If you use a mouse on a graph or a spine map, hold `Ctrl`, or `Cmd` on macOS, to zoom with the wheel.** The ontology visualizer uses GraphCanvas, so its users see this change. The apps team has a note.
   - The wheel pans up and down, and `Shift` with the wheel pans sideways. A trackpad scroll pans both ways.
   - `Ctrl` or `Cmd` with the wheel zooms around the pointer, one 15% step a notch. A trackpad pinch zooms in small steps that follow the fingers. In Safari on macOS, a trackpad pinch now zooms the view. Before, it zoomed the page.

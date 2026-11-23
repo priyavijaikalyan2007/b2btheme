@@ -8,8 +8,10 @@
  *   - a drag by a row's handle moves the row, through GestureRecognizer, and reports the tree;
  *   - a row added at the end and dropped into a group joins it with the group's join;
  *   - a group cannot be dropped inside itself;
+ *   - a row dropped on a condition's bottom half goes into its search inside, and none goes into a link's grid;
  *   - the same query back from the bar keeps the focus and the half-typed value;
- *   - under a coarse pointer each target is 44px, and the handle takes the touch (touch-action: none).
+ *   - under a coarse pointer each target is 44px, the nested grids' too, and the handle takes the touch
+ *     (touch-action: none).
  * The page is the test's own, so each test controls the tree it drags.
  */
 
@@ -32,22 +34,30 @@ const HTML = `<!doctype html>
 
 const text = (phrase: string) => ({ kind: "text", phrase });
 const title = (value: string) => ({ kind: "filter", key: "title", op: "Contains", value: { text: value } });
+const signed = (extra: Record<string, unknown>) => ({ kind: "filter", key: "rel.signed_off_by", op: "Equals",
+    value: { resource: "u1" }, ...extra });
+const manual = { kind: "filter", key: "provenance", op: "Equals", value: { text: "manual" } };
+const FACETS = [
+    { key: "title", label: "Title", valueType: "text" },
+    { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true,
+        link: [{ key: "provenance", label: "Provenance", valueType: "enum", values: ["manual", "ai"] }] },
+];
 
 /** Opens a builder on `root`, and records each tree it reports in window.__changes. */
 async function open(page: Page, root: unknown): Promise<void>
 {
     await page.route(`**${PAGE}`, (route) => route.fulfill({ contentType: "text/html", body: HTML }));
     await page.goto(PAGE);
-    await page.evaluate((root) =>
+    await page.evaluate(({ root, facets }) =>
     {
         const win = window as unknown as Record<string, any>;
         win.__changes = [];
         win.__builder = win.createExpressionBuilder("host", {
-            facets: [{ key: "title", label: "Title", valueType: "text" }],
+            facets,
             tree: { root },
             onChange: (tree: unknown) => win.__changes.push(tree),
         });
-    }, root);
+    }, { root, facets: FACETS });
 }
 
 /**
@@ -111,6 +121,30 @@ test("a group cannot be dropped inside itself, and nothing moves", async ({ page
     expect(await page.evaluate(() => (window as any).__changes.length)).toBe(0);
 });
 
+test("a row dropped on the bottom half of a condition goes first into its search inside", async ({ page }) =>
+{
+    await open(page, { kind: "and", children: [text("a"),
+        { kind: "nested", key: "rel.signed_off_by", where: title("b") }] });
+
+    await drag(page, "0", "1", true);
+
+    const tree = await page.evaluate(() => (window as any).__builder.getTree());
+    expect(tree.root).toEqual({ kind: "nested", key: "rel.signed_off_by",
+        where: { kind: "and", children: [text("a"), title("b")] } });
+    await expect(page.locator('[data-item="0.0"] [data-role=phrase]')).toHaveValue("a");
+});
+
+test("a row cannot be dropped into a link's grid, and nothing moves", async ({ page }) =>
+{
+    await open(page, { kind: "and", children: [text("a"), signed({ link: manual })] });
+
+    await drag(page, "0", "1.link.0", false);
+
+    expect(await phrases(page)).toEqual(["a"]);
+    await expect(page.locator('[data-item="1.link.0"] [data-role=key]')).toHaveValue("provenance");
+    expect(await page.evaluate(() => (window as any).__changes.length)).toBe(0);
+});
+
 test("the same query back from the bar keeps the focus and what the person is typing", async ({ page }) =>
 {
     await open(page, { kind: "and", children: [title("budget"), text("plan")] });
@@ -134,9 +168,11 @@ test.describe("on a touch screen", () =>
 
     test("each target is 44px under a coarse pointer, and the handle takes the touch", async ({ page }) =>
     {
-        // A group, and a dashed run inside it, so every kind of target is drawn.
+        // A group, a dashed run inside it, a link's grid, a search inside and "the same item as", so every kind
+        // of target is drawn.
         await open(page, { kind: "and", children: [text("a"), { kind: "or", children: [
-            { kind: "and", children: [text("b"), text("c")] }, text("d")] }] });
+            { kind: "and", children: [text("b"), text("c")] }, text("d")] },
+        { kind: "nested", key: "rel.signed_off_by", link: manual, where: title("e") }, signed({})] });
         await page.locator('[data-item="0"] [data-role=more]').click();
 
         const sizes = await page.evaluate(() =>
@@ -145,6 +181,8 @@ test.describe("on a touch screen", () =>
                 ".expressionbuilder-drag", ".expressionbuilder-check", "[data-role=join]", "[data-role=not]",
                 "[data-role=remove]", "[data-role=more]", ".expressionbuilder-menu-item", "[data-role=group-op]",
                 "[data-role=ungroup]", "[data-role=make-group]", ".expressionbuilder-footer button",
+                ".expressionbuilder-inner .expressionbuilder-adds button", "[data-role=remove-link]",
+                "[data-role=same]",
             ];
             return {
                 coarse: matchMedia("(pointer: coarse)").matches,

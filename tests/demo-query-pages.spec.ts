@@ -8,7 +8,8 @@
  *   - QueryLanguage colors a query, and a sample changes it;
  *   - FacetSearch's query section colors its text, shows a sample error, and has the compact zone button;
  *   - TimezonePicker's compact form shows the current city;
- *   - ExpressionBuilder draws its grid, with dashed runs, a group and a read-only row, and places a sample warning;
+ *   - ExpressionBuilder draws its grid, with dashed runs, a group, a search inside and link conditions under their
+ *     row, the same item as and a comparison, and places a sample warning;
  *   - DiagramEngine says the wheel pans, and shows its zoom buttons (#221).
  */
 
@@ -52,7 +53,7 @@ test("TimezonePicker's compact form shows the current city, and opens the dropdo
     await expect(button).toHaveAttribute("aria-expanded", "true");
 });
 
-test("ExpressionBuilder draws its grid: two dashed runs, a group, a read-only search inside, and a warning",
+test("ExpressionBuilder draws its grid: dashed runs, a group, grids under a row, a comparison, and a warning",
     async ({ page }) =>
 {
     await page.goto("/demo/components/expressionbuilder.html");
@@ -60,8 +61,13 @@ test("ExpressionBuilder draws its grid: two dashed runs, a group, a read-only se
     await expect(page.locator("#eb-demo .expressionbuilder-run-start [data-role=make-group]")).toHaveCount(2);
     await expect(page.locator("#eb-demo .expressionbuilder-line-group")).toHaveCount(1);
     await expect(page.locator('#eb-demo [data-item="3"] [data-role=join]')).toHaveValue("or");
-    await expect(page.locator('#eb-demo [data-item="4"] .expressionbuilder-cell-op')).toHaveText("has one where");
+    await expect(page.locator('#eb-demo [data-item="4"] [data-role=op]')).toHaveValue("where");
+    await expect(page.locator('#eb-demo [data-item="4.link.0"] [data-role=key]')).toHaveValue("provenance");
+    await expect(page.locator('#eb-demo [data-item="4.0"] [data-role=key]')).toHaveValue("state");
+    await expect(page.locator('#eb-demo [data-item="5"] [data-role=same]')).toHaveValue("var:doer");
+    await expect(page.locator('#eb-demo [data-item="7"] [data-role=left]')).toHaveValue("reviewer");
     await expect(page.locator("#eb-demo-tree")).toContainText("\"kind\": \"nested\"");
+    await expect(page.locator("#eb-demo-tree")).toContainText("\"kind\": \"compare\"");
 
     await page.locator("#eb-demo-warning").click();
     const warned = page.locator("#eb-demo .expressionbuilder-has-warning");

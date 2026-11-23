@@ -20,6 +20,7 @@ The options, the handle, the tree and the `facets` list keep their contracts. No
 | The model | The existing tree of groups and rows stays the one model. The grid is a view of it (section 4). | Owner, 22 Nov 2026 |
 | The old nested boxes | Replaced, with no option to keep them, because no app uses the builder | Owner, 22 Nov 2026 |
 | Drag to reorder | Kept. A drag moves one row or group to any place in the grid: within its level, into a group, out of one, or from one group to another (section 4.5). Each move a drag makes, **Move up** and **Move down** can also make. | Owner, 22 Nov 2026 |
+| Moves and the search inside | A row or a group moves into and out of a search inside, as into and out of a group. Nothing moves into or out of a link's grid, because its keys differ (section 4.5). | Owner, 23 Nov 2026 |
 
 ## 3. The reference: Azure Boards
 
@@ -89,7 +90,9 @@ A drag, **Move up** and **Move down** each move items by the same rules. A move 
 
 **The level it leaves.** When the item was first there, the next item becomes first and no longer shows its join. A group left with no items is removed. A group left with one item and no `not` is ungrouped, because a bracket around one row means nothing. A group with `not` keeps its one item. The same two rules apply after **Remove**.
 
-**What a move refuses.** A group cannot move into itself or into a group inside it. In part 2, an item never moves between a link's grid and the others, because their keys differ. The model's `moveRowTo` and `isWithin` hold both rules today.
+**A search inside (part 2).** A condition's search inside is that condition's own level, as a group's level is the group's. An item moves into and out of it by the rules above, as into and out of a group (owner, 23 November 2026).
+
+**What a move refuses.** A group cannot move into itself or into a group inside it, and a condition cannot move into its own search inside. An item never moves into or out of a link's grid, because the link's keys differ. The model's `moveRowTo` and `isWithin` hold both rules today.
 
 A draft moves like any other row. It stays out of the tree until it is complete, as today.
 
@@ -116,7 +119,7 @@ From left to right:
 5. **Key.** The facet's label, from `facets`.
 6. **Operator.** The operators the facet lists.
 7. **Value.** The input that fits the operator, as today.
-8. **Row actions.** **Remove** (✕), and a menu (⋯) with **Insert condition above**, **Insert words above**, **Move up** and **Move down**.
+8. **Row actions.** **Remove** (✕), and a menu (⋯) with **Insert condition above**, **Insert words above**, **Move up** and **Move down**. In part 2 the menu also has **Insert comparison above**, and **Add link conditions** on a relationship condition whose facet lists `link` fields and that has none yet. In a link's grid, the menu offers only **Insert condition above**, **Move up** and **Move down**.
 
 ### 5.2 Groups
 
@@ -135,7 +138,7 @@ The toolbar acts on the checked items. A checked group counts as one item, and c
 | :--- | :--- | :--- |
 | **Group** | Two or more checked items, next to each other, in one level | Wraps them in a group with the bracket mark. The group takes the first item's join, and that item's join is no longer shown. The new group is checked in place of the items it took, so the next action acts on the group. |
 | **Ungroup** | One checked group with no `not` | As in 5.2 |
-| **Move up**, **Move down** | Checked items next to each other in one level, except at the top of the grid for **Move up** and at its bottom for **Move down** | Moves them one place in the grid, by the rules in 4.5. Within a level, they change places with the item beside them. Above them, a group takes them in at its end. At the top of a group, they leave it and go before it. **Move down** is the mirror: a group below takes them in at its start, and at the bottom of a group they leave it and go after it. A dashed bracket is not a group, so they pass through it within their level. |
+| **Move up**, **Move down** | Checked items next to each other in one level, except at the top of the grid for **Move up** and at its bottom for **Move down** | Moves them one place in the grid, by the rules in 4.5. Within a level, they change places with the item beside them. Above them, a group takes them in at its end. At the top of a group, they leave it and go before it. **Move down** is the mirror: a group below takes them in at its start, and at the bottom of a group they leave it and go after it. A dashed bracket is not a group, so they pass through it within their level. A search inside takes them in and lets them out as a group does. A link's grid is a grid of its own, so its top and its bottom are the top and the bottom. |
 | **Remove** | One or more checked items | Removes them. A group goes with its rows. |
 
 A button that cannot act is off, and its title says why, such as "Check two or more rows next to each other to group them".
@@ -147,6 +150,7 @@ With several checked items, the first of them takes the join that 4.5 gives, and
 - **Add condition** and **Add words** add a row at the end of the top level, joined with **And**, as Azure's **Add new clause** does.
 - **Insert condition above** and **Insert words above** add a row at that place, in that row's level, joined with **And**. Above the first row of a level, the new row shows no join, and the row that was first takes **And**.
 - A new condition is a draft until its key and value are set. A draft stays out of the tree, so the tree always prints, as today.
+- **Add comparison** (part 2) adds a comparison of two items at the end of the top level. **Insert comparison above** adds one at a row's place. Both are on when the query names two or more items with "the same item as", and off otherwise, with the title "Name two items with "the same item as" to compare them". A link's grid offers neither.
 
 ### 5.5 Other rows
 
@@ -157,7 +161,7 @@ A row of words, a comparison of two variables and a kept row use the same column
 - A condition whose value is "the same item as" another row.
 - A comparison.
 
-In part 1 the builder does not offer "has one where", **Link**, "the same item as" or a comparison, so these rows come only from a parse. Their part of the tree is kept as it came, so `getTree()` returns it unchanged. They can still be moved, checked, grouped and removed like any row. Part 2 makes them editable (section 9).
+In part 1 the builder does not offer "has one where", **Link**, "the same item as" or a comparison, so these rows come only from a parse. Their part of the tree is kept as it came, so `getTree()` returns it unchanged. They can still be moved, checked, grouped and removed like any row. Part 2 makes them editable (section 9 and 5.7). After part 2, only a kept row stays read-only, and the "Returns" line, which the bar edits.
 
 ### 5.6 Drag
 
@@ -167,6 +171,18 @@ In part 1 the builder does not offer "has one where", **Link**, "the same item a
 - A place that 4.5 refuses shows no line, and a drop there changes nothing.
 - **Escape** or `pointercancel` ends the drag with nothing moved.
 - A drop is announced in the live region with the item's new row number, as **Move up** is.
+
+### 5.7 Grids inside a row (part 2)
+
+- **A search inside.** A condition with "has one where" shows an indented grid under its line, labeled "Has one where", with the builder's keys. Its value column is empty. While the grid holds no complete row, the condition is a draft: "Needs a condition inside". Choosing "has one where" adds a draft condition inside.
+- **Link conditions.** A condition with link conditions shows an indented grid labeled "Link", with the keys of the facet's `link` list, and a button that removes the link conditions. **Add link conditions** adds the grid with a draft condition in it.
+- **Order.** The link's grid comes before the search inside, as the bar reads them: `key link ( … ) where ( … )`.
+- **Columns.** Each nested grid has its own columns, brackets, joins and groups, and its own **Add condition** and **Add words**. A link's grid has only **Add condition**, because a link's fields take no words. An empty grid says "No conditions yet".
+- **The checked items.** **Group**, **Move up** and **Move down** need the checked items to be next to each other in one level. **Remove** takes checked items from any grid.
+- **Drag.** Over the bottom half of a condition with a search inside, the place is first in the search inside, as for a group's line. A place across a link's edge shows no line.
+- **Row numbers** count the lines of nested grids, in the order drawn.
+- **"The same item as."** On a relationship condition with **is**, outside a link, the value column has a select before the value. It offers "a value", and "the same item as row N, Key" for each other such condition that has no value of its own or that already names an item. Choosing one names the item for both rows. The name is the key's last part, such as `?created_by`, and it shows in the bar. An item that only a comparison or `return` names is offered as "the same item as ?name".
+- **A comparison.** The key column picks the first item. The operator column has "is the same item as" and "is not the same item as". The value column picks the second item. Each item reads as its name and the rows that name it, such as "?created_by (rows 2 and 5)". A comparison with a side unset, or of an item with itself, is a draft: "Needs two different items".
 
 ## 6. Keyboard and focus
 
@@ -208,11 +224,12 @@ The apps show the builder in a modal on the search page, where a person edits a 
 - Each level is a list. Each row is a list item whose label reads its meaning, such as "Row 3: or, Assigned to is me". Row numbers count every line of the grid, a group's line too.
 - A group is a region with a label, such as "Group of 2 rows, joined with or".
 - A dashed bracket has a text equivalent for a screen reader, such as "read together with row 1".
+- A nested grid is a region with a label, such as "The search inside Signed off by" or "The link conditions of Signed off by".
 - Each edit is announced in the builder's live region, as today.
 
 ## 8. Problems, contracts and logging
 
-- An error or a warning from Parse or Print shows on the deepest line the grid shows whose text it covers, or above the grid, as today. In part 1, a problem inside a search inside goes on that condition's line.
+- An error or a warning from Parse or Print shows on the deepest line the grid shows whose text it covers, or above the grid, as today. After part 2, that can be a line of a search inside or of a link's grid. In part 1, it went on that condition's line.
 - `ExpressionBuilderOptions`, `ExpressionBuilderHandle`, `getTree()`, `setParsed()` and `onChange` keep their contracts. A tree that means what the builder holds keeps the rows, their checked state and their bracket marks.
 - The builder still requires `gesturerecognizer.js`, for the drag.
 - Each edit logs at debug level with its kind and the item's path. A drag logs its start, its place and its drop or cancel.
@@ -220,7 +237,7 @@ The apps show the builder in a modal on the search page, where a person edits a 
 ## 9. Parts
 
 - **Part 1:** sections 4 to 8. The rows in 5.5 are read-only.
-- **Part 2:** a condition with "has one where" opens an indented grid under its row, with its own joins and groups. **Link** on a relationship condition opens a second indented grid, labeled "Link", with the keys from the facet's `link` list. A row never moves between those grids and the others. On a relationship condition with **is**, the value column offers "the same item as" each other relationship row, by its row number and key. A comparison row compares two variables. Each uses the grid of part 1.
+- **Part 2:** a condition with "has one where" opens an indented grid under its row, with its own joins and groups. **Link** on a relationship condition opens a second indented grid, labeled "Link", with the keys from the facet's `link` list. A row moves into and out of a search inside, and never into or out of a link's grid (section 4.5). On a relationship condition with **is**, the value column offers "the same item as" each other relationship row, by its row number and key. A comparison row compares two variables. Each uses the grid of part 1.
 
 ## 10. Tests
 
@@ -230,6 +247,8 @@ The apps show the builder in a modal on the search page, where a person edits a 
 - **Unit, DOM:** each join, Not, Group, Ungroup and its refusal, the group control and Mixed, Make a group, Move up and Move down within a level and into and out of a group, Insert, Remove, the toolbar refusals and their titles, each key, focus after each action, and the three kinds of Escape.
 - **Unit, drag:** through the stubbed recognizer, as the tests do today: each place in 5.6, the bracket column at a line where levels end, a refused place, a drop, Escape and `pointercancel`.
 - **Browser:** a touch spec that measures the targets in 7.2 and reads the handle's `touch-action`, and a drag of a row into a group, on a test page with its own tree, so the test controls what it drags.
+- **Part 2, unit:** the levels reach a search inside, moves into and out of it, a condition refused into its own, `moveTarget` at its edges, each level edit with a link's group as the root, and the order of the lines. In the DOM: the nested grids, their labels and adds, row numbers, the toolbar across grids, problems on nested lines, a drop refused across a link's edge, and each editor and its focus.
+- **Part 2, browser:** a drop into a search inside, a drop refused into a link's grid, and the touch targets of the nested grids' controls.
 - Each new test fails without the change it covers.
 
 ## 11. Answers to the apps' questions

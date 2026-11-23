@@ -11,10 +11,10 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import
 {
-    allRows, createExpressionBuilder, facetMap, facetOps, groupItems, insertItem, itemAt, itemPathOf, levelAt,
-    levelDepth, levelOf, meaning, moveItems, moveRow, moveRowTo, moveTarget, newVariable, nodeOf, opName, opWord,
-    parseItemPath, parsePath, refuses, removeItems, removeRow, rootOf, rowAt, runsOf, setGroupJoins, setJoin,
-    setLevel, setOp, treeOf, ungroupItem, unwrapRow, variableUses, wrapRow,
+    allRows, createExpressionBuilder, facetMap, facetOps, gridLines, groupItems, insertItem, itemAt, itemPathOf,
+    levelAt, levelDepth, levelOf, meaning, moveItems, moveRow, moveRowTo, moveTarget, newVariable, nodeOf, opName,
+    opWord, parseItemPath, parsePath, readOnlyWhy, refuses, removeItems, removeRow, rootOf, rowAt, runsOf,
+    setGroupJoins, setJoin, setLevel, setOp, treeOf, ungroupItem, unwrapRow, variableUses, wrapRow,
 } from "./expressionbuilder";
 import type
 {
@@ -848,7 +848,7 @@ describe("searches inside, link conditions and variables", () =>
     });
 });
 
-describe("ExpressionBuilder, part 2", () =>
+describe("ExpressionBuilder, part 2: grids inside a row, the same item as, and comparisons", () =>
 {
     let container: HTMLElement;
 
@@ -863,6 +863,7 @@ describe("ExpressionBuilder, part 2", () =>
     {
         container.remove();
         vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     const make = (tree?: QueryTree, onChange = vi.fn()) =>
@@ -871,72 +872,320 @@ describe("ExpressionBuilder, part 2", () =>
     const row = (item: string): HTMLElement => container.querySelector(`[data-item="${item}"]`)!;
     const control = (item: string, role: string): HTMLInputElement =>
         row(item).querySelector<HTMLInputElement>(`[data-role="${role}"]`)!;
-
-    test("in part 1, a search inside, a link, the same item as, and a comparison are read-only", () =>
+    const items = (): string[] => Array.from(container.querySelectorAll(".expressionbuilder-line"),
+        (l) => l.getAttribute("data-item")!);
+    const tool = (role: string): HTMLButtonElement =>
+        container.querySelector<HTMLButtonElement>(`.expressionbuilder-footer [data-role="${role}"]`)!;
+    const choose = (el: HTMLInputElement | HTMLSelectElement, value: string): void =>
     {
-        make(EXAMPLES[2][1]);
+        el.value = value;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+    const roles = (el: Element, sel: string): string[] =>
+        Array.from(el.querySelectorAll(sel), (b) => b.getAttribute("data-role")!);
+    const tx = (phrase: string): QueryNode => ({ kind: "text", phrase });
+    const signed = (where: QueryNode): QueryNode => ({ kind: "nested", key: "rel.signed_off_by", where });
+    const TYPE = rel("type", { text: "checklists.instance" });
 
-        expect(row("1").querySelector(".expressionbuilder-cell-op")!.textContent).toBe("has one where");
-        expect(row("1").querySelector(".expressionbuilder-cell-value")!.textContent)
-            .toBe("a search inside. Edit this in the search bar.");
-        expect(row("0").querySelector(".expressionbuilder-cell-value")!.textContent)
-            .toBe("the same item as ?org. Edit this in the search bar.");
-        expect(row("0").closest("li")!.getAttribute("aria-label")).toContain("is the same item as another row");
-        expect(container.querySelector('[data-role=op] option[value="where"]')).toBeNull();
-        expect(container.querySelector("[data-role=add-link], [data-role=same], [data-role=add-compare]")).toBeNull();
+    describe("grids inside a row (spec 5.7)", () =>
+    {
+        test("a condition draws its link's grid, then its search inside, each labeled, with its own adds", () =>
+        {
+            make(EXAMPLES[3][1]);
+
+            expect(items()).toEqual(["0", "1", "1.link.0", "1.link.1", "1.0"]);
+            const link = container.querySelector(".expressionbuilder-inner-link")!;
+            const where = container.querySelector(".expressionbuilder-inner-where")!;
+            expect(link.getAttribute("aria-label")).toBe("The link conditions of Signed off by");
+            expect(link.querySelector(".expressionbuilder-inner-head")!.textContent).toBe("Link");
+            expect(where.getAttribute("aria-label")).toBe("The search inside Signed off by");
+            expect(where.querySelector(".expressionbuilder-inner-head")!.textContent).toBe("Has one where");
+
+            // A link's fields take no words, no comparison and no search inside.
+            expect(roles(link, ":scope > .expressionbuilder-adds button")).toEqual(["add-filter"]);
+            expect(roles(where, ":scope > .expressionbuilder-adds button"))
+                .toEqual(["add-filter", "add-text", "add-compare"]);
+            expect(control("1", "op").value).toBe("where");
+            expect(control("1.link.0", "op").querySelector('option[value="where"]')).toBeNull();
+            expect(container.querySelector(".expressionbuilder-readonly")).toBeNull();
+        });
+
+        test("row numbers count the lines of nested grids, and a nested grid's brackets start again", () =>
+        {
+            make(EXAMPLES[3][1]);
+
+            expect(row("1.0").closest("li")!.getAttribute("aria-label"))
+                .toBe("Row 5: not, Member of is the same item as ?org");
+            expect(control("1.0", "check").getAttribute("aria-label")).toBe("Check row 5");
+            expect(row("1.0").querySelectorAll(".expressionbuilder-bracket")).toHaveLength(1);
+        });
+
+        test("Move down takes a row into the search inside below it, and Move up at its top takes it out", () =>
+        {
+            const { eb } = make({ root: { kind: "and", children: [tx("a"), signed(TYPE)] } });
+            control("0", "check").click();
+
+            tool("tool-down").click();
+            expect(items()).toEqual(["0", "0.0", "0.1"]);
+            expect(meaning(eb.getTree().root)).toEqual(meaning(signed({ kind: "and", children: [tx("a"), TYPE] })));
+            expect(tool("tool-up").disabled).toBe(false);
+
+            tool("tool-up").click();
+            expect(meaning(eb.getTree().root)).toEqual(meaning({ kind: "and", children: [tx("a"), signed(TYPE)] }));
+            expect(control("0", "check").checked).toBe(true);
+        });
+
+        test("Group works inside a search inside and inside a link, and changes no meaning", () =>
+        {
+            make({ root: signed({ kind: "or", children: [tx("b"), tx("c")] }) });
+            control("0.0", "check").click();
+            control("0.1", "check").click();
+            tool("tool-group").click();
+            expect(row("0.0").classList.contains("expressionbuilder-line-group")).toBe(true);
+            expect(items()).toEqual(["0", "0.0", "0.0.0", "0.0.1"]);
+
+            container.textContent = "";
+            const before = meaning(EXAMPLES[3][1].root);
+            const { eb } = make(EXAMPLES[3][1]);
+            control("1.link.0", "check").click();
+            control("1.link.1", "check").click();
+            tool("tool-group").click();
+            expect(row("1.link.0").classList.contains("expressionbuilder-line-group")).toBe(true);
+            expect(meaning(eb.getTree().root)).toEqual(before);
+        });
+
+        test("in a link nothing leaves: Move up is off at its top. Rows in two grids only Remove", () =>
+        {
+            make(EXAMPLES[3][1]);
+            control("1.link.0", "check").click();
+            expect(tool("tool-up").disabled).toBe(true);
+            expect(tool("tool-up").title).toBe("The rows are at the top");
+
+            control("0", "check").click();
+            expect([tool("tool-group").disabled, tool("tool-up").disabled, tool("tool-down").disabled])
+                .toEqual([true, true, true]);
+            tool("tool-remove").click();
+            expect(items()).toEqual(["0", "0.link.0", "0.0"]);
+        });
+
+        test("a warning inside a search inside or a link lands on the deepest line that holds it", () =>
+        {
+            const { eb } = make();
+            const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual ) "
+                + "where ( -rel.member_of:?org )";
+            const at = (x: string): [number, number] => [text.indexOf(x), text.indexOf(x) + x.length];
+            const span = (x: string) => ({ start: at(x)[0], end: at(x)[1] });
+
+            eb.setParsed({ tree: { root: { kind: "and", children: [
+                { ...rel("rel.belongs_to_org_unit", v("org")), span: span("rel.belongs_to_org_unit:?org") },
+                { kind: "nested", key: "rel.signed_off_by", span: span("rel.signed_off_by link ( provenance:manual ) "
+                    + "where ( -rel.member_of:?org )"),
+                    link: { ...rel("provenance", { text: "manual" }), span: span("provenance:manual") },
+                    where: { kind: "not", span: span("-rel.member_of:?org"),
+                        child: { ...rel("rel.member_of", v("org")), span: span("rel.member_of:?org") } } },
+            ] } }, warnings: [
+                { code: "QL_A", title: "On the link", detail: "A.", start: at("manual")[0], end: at("manual")[1] },
+                { code: "QL_B", title: "Inside", detail: "B.", start: at("member_of")[0], end: at("member_of")[1] },
+            ] });
+
+            expect(row("1").querySelectorAll(".expressionbuilder-problem")).toHaveLength(0);
+            expect(row("1.link.0").querySelector(".expressionbuilder-problem")!.textContent).toContain("On the link");
+            expect(row("1.0").querySelector(".expressionbuilder-problem")!.textContent).toContain("Inside");
+        });
+
+        test("the same query back from the bar keeps the rows and the focus inside a nested grid", () =>
+        {
+            const { eb } = make(EXAMPLES[2][1]);
+            const box = control("1.0", "check");
+            box.focus();
+
+            const negated: QueryNode = { kind: "not", child: rel("rel.member_of", v("org")) };
+            const inner: QueryNode = { kind: "and", children: [negated] };
+            eb.setParsed({ tree: { root: { kind: "and", children: [rel("rel.belongs_to_org_unit", v("org")),
+                { kind: "nested", key: "rel.signed_off_by", where: inner }] } } });
+
+            expect(control("1.0", "check")).toBe(box);
+            expect(document.activeElement).toBe(box);
+        });
+
+        describe("the drag", () =>
+        {
+            beforeEach(() =>
+            {
+                vi.useRealTimers();
+                HTMLElement.prototype.setPointerCapture = vi.fn();
+            });
+
+            /** Lays the lines out 40px apart, in the order drawn, and answers elementFromPoint with a line. */
+            function layout(): void
+            {
+                const lines = Array.from(container.querySelectorAll<HTMLElement>(".expressionbuilder-line"));
+                vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement)
+                {
+                    const owner = this.closest<HTMLElement>(".expressionbuilder-line");
+                    const top = owner ? lines.indexOf(owner) * 40 : lines.length * 40;
+                    return { left: 0, top, right: 800, bottom: top + 40, width: 800, height: 40, x: 0, y: top } as
+                        DOMRect;
+                });
+                document.elementFromPoint = (_x: number, y: number): Element | null =>
+                    lines[Math.floor(y / 40)] ?? container.querySelector(".expressionbuilder-footer");
+            }
+
+            function drag(item: string, y: number): void
+            {
+                const handle = row(item).querySelector<HTMLElement>(".expressionbuilder-drag")!;
+                const fire = (type: string, cy: number): boolean => handle.dispatchEvent(new PointerEvent(type,
+                    { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true,
+                        button: (type === "pointermove") ? -1 : 0, clientX: 400, clientY: cy }));
+                fire("pointerdown", 5);
+                fire("pointermove", y);
+                fire("pointerup", y);
+            }
+
+            test("over the bottom half of a condition with a search inside, a row lands first in it", () =>
+            {
+                const { eb } = make({ root: { kind: "and", children: [tx("a"), signed(TYPE)] } });
+                layout();
+
+                // Lines: a 0-40, the condition 40-80, the row inside 80-120.
+                drag("0", 70);
+
+                expect(meaning(eb.getTree().root)).toEqual(meaning(signed({ kind: "and", children: [tx("a"), TYPE] })));
+                expect(document.activeElement).toBe(control("0.0", "check"));
+            });
+
+            test("a row dragged into a link's grid shows no line, and nothing moves", () =>
+            {
+                const { onChange } = make(EXAMPLES[3][1]);
+                layout();
+                const handle = row("0").querySelector<HTMLElement>(".expressionbuilder-drag")!;
+                const fire = (type: string, cy: number): boolean => handle.dispatchEvent(new PointerEvent(type,
+                    { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true,
+                        button: (type === "pointermove") ? -1 : 0, clientX: 400, clientY: cy }));
+
+                // The top half of the link's first line, 80-120.
+                fire("pointerdown", 5);
+                fire("pointermove", 90);
+                expect(container.querySelector(".expressionbuilder-drop-before, .expressionbuilder-drop-after"))
+                    .toBeNull();
+                fire("pointerup", 90);
+
+                expect(items()).toEqual(["0", "1", "1.link.0", "1.link.1", "1.0"]);
+                expect(onChange).not.toHaveBeenCalled();
+            });
+
+            test("a drop at the end of a level marks after its last item, nested grids and all", () =>
+            {
+                make({ root: { kind: "and", children: [tx("a"), signed(TYPE)] } });
+                layout();
+                const handle = row("0").querySelector<HTMLElement>(".expressionbuilder-drag")!;
+                const fire = (type: string, cy: number): boolean => handle.dispatchEvent(new PointerEvent(type,
+                    { bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", isPrimary: true,
+                        button: (type === "pointermove") ? -1 : 0, clientX: 400, clientY: cy }));
+
+                // Under the last line: the footer, the end of the top level.
+                fire("pointerdown", 5);
+                fire("pointermove", 200);
+                const mark = container.querySelector(".expressionbuilder-drop-after")!;
+                expect(mark.tagName).toBe("LI");
+                expect(mark.contains(row("1.0"))).toBe(true);
+                fire("pointercancel", 200);
+            });
+        });
     });
 
-    test("a link condition and a comparison show what they hold, read-only", () =>
+    describe("the editors (spec 5.7)", () =>
     {
-        make(EXAMPLES[3][1]);
-        expect(row("1").querySelector(".expressionbuilder-cell-value")!.textContent)
-            .toBe("a search inside, with conditions on its link. Edit this in the search bar.");
+        test("has one where opens a search inside with a condition to fill in, a draft until it is complete", () =>
+        {
+            const { eb } = make();
+            tool("add-filter").click();
+            choose(control("0", "key"), "rel.signed_off_by");
+            choose(control("0", "op"), "where");
 
-        container.textContent = "";
-        make(EXAMPLES[1][1]);
-        expect(row("2").querySelector(".expressionbuilder-cell-key")!.textContent).toBe("?approver");
-        expect(row("2").querySelector(".expressionbuilder-cell-op")!.textContent).toBe("is not the same item as");
-        expect(row("2").querySelector(".expressionbuilder-cell-value")!.textContent)
-            .toBe("?doer. Edit this in the search bar.");
-    });
+            expect(items()).toEqual(["0", "0.0"]);
+            expect(document.activeElement).toBe(control("0", "op"));
+            expect(row("0").querySelector(".expressionbuilder-draft")!.textContent).toBe("Needs a condition inside");
+            expect(eb.getTree()).toEqual({});
 
-    test("a warning inside a where or a link lands on its condition's line in part 1", () =>
-    {
-        const { eb } = make();
-        const text = "rel.belongs_to_org_unit:?org rel.signed_off_by link ( provenance:manual ) "
-            + "where ( -rel.member_of:?org )";
-        const at = (s: string): [number, number] => [text.indexOf(s), text.indexOf(s) + s.length];
-        const span = (s: string) => ({ start: at(s)[0], end: at(s)[1] });
+            choose(control("0.0", "key"), "type");
+            choose(control("0.0", "value-0"), "checklists.instance");
+            expect(eb.getTree().root).toEqual(signed(TYPE));
+            expect(row("0").querySelector(".expressionbuilder-draft")).toBeNull();
+        });
 
-        eb.setParsed({ tree: { root: { kind: "and", children: [
-            { ...rel("rel.belongs_to_org_unit", v("org")), span: span("rel.belongs_to_org_unit:?org") },
-            { kind: "nested", key: "rel.signed_off_by", span: span("rel.signed_off_by link ( provenance:manual ) "
-                + "where ( -rel.member_of:?org )"),
-                link: { ...rel("provenance", { text: "manual" }), span: span("provenance:manual") },
-                where: { kind: "not", span: span("-rel.member_of:?org"),
-                    child: { ...rel("rel.member_of", v("org")), span: span("rel.member_of:?org") } } },
-        ] } }, warnings: [
-            { code: "QL_A", title: "On the link", detail: "A.", start: at("manual")[0], end: at("manual")[1] },
-            { code: "QL_B", title: "Inside", detail: "B.", start: at("member_of")[0], end: at("member_of")[1] },
-        ] });
+        test("Add link conditions opens a link's grid with a condition, and its button removes it", () =>
+        {
+            const { eb } = make({ root: rel("rel.signed_off_by", { resource: "u1" }) });
+            control("0", "more").click();
+            expect(roles(container, ".expressionbuilder-menu button"))
+                .toEqual(["insert-filter", "insert-text", "insert-compare", "add-link", "up", "down"]);
+            container.querySelector<HTMLButtonElement>(".expressionbuilder-menu [data-role=add-link]")!.click();
 
-        // Part 1 shows no line inside the search inside or the link, so both go on the condition's line.
-        expect(row("1").classList.contains("expressionbuilder-has-warning")).toBe(true);
-        expect(row("1").querySelectorAll(".expressionbuilder-problem")).toHaveLength(2);
-    });
+            expect(items()).toEqual(["0", "0.link.0"]);
+            expect(document.activeElement).toBe(control("0.link.0", "key"));
+            expect(Array.from(control("0.link.0", "key").options, (o) => o.value)).toEqual(["", "provenance", "at"]);
 
-    test("a search inside back from the bar as one bare condition keeps the rows and the focus", () =>
-    {
-        const { eb } = make(EXAMPLES[2][1]);
-        const box = control("1", "check");
-        box.focus();
+            // In a link's grid the menu inserts only conditions.
+            control("0.link.0", "more").click();
+            expect(roles(container, ".expressionbuilder-menu button")).toEqual(["insert-filter", "up", "down"]);
 
-        eb.setParsed({ tree: { root: { kind: "and", children: [rel("rel.belongs_to_org_unit", v("org")),
-            { kind: "nested", key: "rel.signed_off_by",
-                where: { kind: "and", children: [{ kind: "not", child: rel("rel.member_of", v("org")) }] } }] } } });
+            choose(control("0.link.0", "key"), "provenance");
+            choose(control("0.link.0", "value-0"), "manual");
+            expect(eb.getTree().root!.link).toEqual(rel("provenance", { text: "manual" }));
 
-        expect(control("1", "check")).toBe(box);
-        expect(document.activeElement).toBe(box);
+            container.querySelector<HTMLButtonElement>("[data-role=remove-link]")!.click();
+            expect(items()).toEqual(["0"]);
+            expect(document.activeElement).toBe(control("0", "more"));
+            expect(eb.getTree().root).toEqual(rel("rel.signed_off_by", { resource: "u1" }));
+        });
+
+        test("the same item as another row, by its number, names one item for both, and a value takes it off", () =>
+        {
+            const { eb } = make();
+            tool("add-filter").click();
+            choose(control("0", "key"), "rel.created_by");
+            tool("add-filter").click();
+            choose(control("1", "key"), "rel.completed_by");
+            const same = control("1", "same") as unknown as HTMLSelectElement;
+            expect(Array.from(same.options, (o) => o.textContent)).toEqual(["a value",
+                "the same item as row 1, Created by"]);
+
+            choose(same, "row:1");
+            expect(eb.getTree().root).toEqual({ kind: "and", children: [rel("rel.created_by", v("created_by")),
+                rel("rel.completed_by", v("created_by"))] });
+            expect(document.activeElement).toBe(control("1", "same"));
+            expect(control("1", "value-0")).toBeNull();
+            expect((control("0", "same") as unknown as HTMLSelectElement).value).toBe("row:2");
+
+            choose(control("1", "same"), "");
+            expect(eb.getTree()).toEqual({});
+            expect(row("0").querySelector(".expressionbuilder-draft")!.textContent)
+                .toBe("Needs a second use of ?created_by");
+        });
+
+        test("a comparison is off until two items are named, then picks both sides by name and rows", () =>
+        {
+            make(EXAMPLES[0][1]);
+            expect(tool("add-compare").disabled).toBe(true);
+            expect(tool("add-compare").title).toBe("Name two items with \"the same item as\" to compare them");
+
+            container.textContent = "";
+            const { eb } = make(EXAMPLES[1][1]);
+            const left = control("2", "left") as unknown as HTMLSelectElement;
+            expect(left.value).toBe("approver");
+            expect(Array.from(left.options, (o) => o.textContent))
+                .toEqual(["Choose an item", "?doer (row 1)", "?approver (row 2)"]);
+            expect(control("2", "op").value).toBe("not-equals");
+
+            tool("add-compare").click();
+            expect(document.activeElement).toBe(control("3", "left"));
+            expect(row("3").querySelector(".expressionbuilder-draft")!.textContent).toBe("Needs two different items");
+            choose(control("3", "left"), "doer");
+            choose(control("3", "right"), "approver");
+            expect(eb.getTree().root!.children![3]).toEqual(
+                { kind: "compare", left: v("doer"), op: "Equals", right: v("approver") });
+        });
     });
 });
 
@@ -951,12 +1200,19 @@ const not = (g: GroupRow): GroupRow => ({ ...g, nots: 1 });
 const marked = (g: GroupRow): GroupRow => ({ ...g, bracket: true });
 const NONE = new Map<string, ExpressionBuilderFacet>();
 
-/** A level as text: each item's join, `not`, and a group in brackets. */
+/** A level as text: each item's join, `not`, a group in brackets, and a search inside in braces. */
 function show(group: GroupRow): string
 {
-    return levelOf(group).map((it, i) => (i ? it.join + " " : "") + (it.row.nots % 2 ? "not " : "")
-        + (it.row.kind === "group" ? "[" + show(it.row) + "]" : (it.row as TextRow).phrase)).join(" ");
+    const one = (row: Row): string => (row.kind === "group") ? "[" + show(row) + "]"
+        : (row.kind === "filter") ? row.key + (row.op === "where" ? " {" + show(row.where!) + "}" : "")
+            : (row as TextRow).phrase;
+    return levelOf(group).map((it, i) => (i ? it.join + " " : "") + (it.row.nots % 2 ? "not " : "") + one(it.row))
+        .join(" ");
 }
+
+/** A condition with a search inside, on a key the tests name only. */
+const inside = (key: string, ...children: Row[]): FilterRow =>
+    ({ kind: "filter", key, op: "where", values: [], original: [], nots: 0, where: and(...children) });
 
 describe("levels", () =>
 {
@@ -1185,6 +1441,109 @@ describe("level edits", () =>
         expect(moveTarget(root, [], 0, 0, -1)).toBeNull();
         expect(moveTarget(root, [], 2, 2, 1)).toBeNull();
         expect(moveTarget(and(t("a"), t("b")), [], 0, 0, 1)).toEqual({ level: [], index: 2 });
+    });
+});
+
+describe("a search inside and link conditions, in levels (part 2)", () =>
+{
+    test("an item path reaches the rows of a search inside, while its operator is where", () =>
+    {
+        const s = inside("s", t("b"), t("c"));
+        const root = and(t("a"), s);
+
+        expect(levelAt(root, [1])).toBe(s.where);
+        expect(itemAt(root, [1, 0]).item.row).toBe(s.where!.children[0]);
+        expect(itemPathOf(root, s.where!.children[1])).toEqual([1, 1]);
+        // The tree draws one bracket column: the search inside is a grid of its own.
+        expect(levelDepth(root)).toBe(1);
+
+        s.op = "equals";
+        expect(itemPathOf(root, s.where!.children[1])).toBeNull();
+    });
+
+    test("an item moves into a search inside and out of it, and its condition stays when it is left empty", () =>
+    {
+        const root = and(t("a"), inside("s", t("b")), t("d"));
+
+        expect(moveItems(root, [], 2, 2, { level: [1], index: 1 })).toEqual([1, 1]);
+        expect(show(root)).toBe("a and s {b and d}");
+
+        moveItems(root, [1], 0, 1, { level: [], index: 2 });
+        expect(show(root)).toBe("a and s {} and b and d");
+    });
+
+    test("an item into a search inside of an or takes the or, by 4.5", () =>
+    {
+        const root = and(t("a"), inside("s", t("b"), t("c")));
+        setJoin(root, [1, 1], "or");
+        moveItems(root, [], 0, 0, { level: [1], index: 2 });
+
+        expect(show(root)).toBe("s {b or c or a}");
+    });
+
+    test("a condition cannot move into its own search inside", () =>
+    {
+        const root = and(t("a"), inside("s", t("b")));
+
+        expect(refuses(root, [], 1, 1, { level: [1], index: 0 })).toBe(true);
+        expect(moveItems(root, [], 1, 1, { level: [1], index: 1 })).toBeNull();
+    });
+
+    test("moveTarget enters a search inside from above and below, and leaves it at its edges", () =>
+    {
+        const s = inside("s", t("b"), t("c"));
+        const root = and(t("a"), s, t("d"));
+
+        expect(moveTarget(root, [], 0, 0, 1)).toEqual({ level: [1], index: 0 });
+        expect(moveTarget(root, [], 2, 2, -1)).toEqual({ level: [1], index: 2 });
+        expect(moveTarget(root, [1], 0, 0, -1)).toEqual({ level: [], index: 1 });
+        expect(moveTarget(root, [1], 1, 1, 1)).toEqual({ level: [], index: 2 });
+
+        s.op = "equals";
+        expect(moveTarget(root, [], 0, 0, 1)).toEqual({ level: [], index: 2 });
+    });
+
+    test("in a link's grid, its group is the root: a new group uses the link's fields, and nothing leaves it", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+        const link = (root.children[1] as FilterRow).link!;
+        const before = meaning(treeOf(root, RMAP).root);
+
+        const path = groupItems(link, [], 0, 1);
+        expect(itemAt(link, path).item.row).toMatchObject({ kind: "group", linkOf: "rel.signed_off_by" });
+        expect(link.bracket).toBeUndefined();
+        expect(meaning(treeOf(root, RMAP).root)).toEqual(before);
+
+        expect(ungroupItem(link, path)).toBe(true);
+        expect(moveTarget(link, [], 0, 0, -1)).toBeNull();
+        expect(moveTarget(link, [], 1, 1, 1)).toBeNull();
+        expect(moveItems(link, [], 1, 1, { level: [], index: 0 })).toEqual([0]);
+        removeItems(link, [link.children[0]]);
+        expect(treeOf(root, RMAP).root!.children![1].link).toEqual(rel("provenance", { text: "manual" }));
+    });
+
+    test("gridLines gives each line in the order drawn: the link's grid, then the search inside", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+        const lines = (): string[] => Array.from(gridLines(root),
+            ({ row, inLink }) => (row as FilterRow).key + (inLink ? " in the link" : ""));
+
+        expect(lines()).toEqual(["rel.belongs_to_org_unit", "rel.signed_off_by", "provenance in the link",
+            "at in the link", "rel.member_of"]);
+
+        setOp(root.children[1] as FilterRow, "equals");
+        expect(lines()).toEqual(["rel.belongs_to_org_unit", "rel.signed_off_by", "provenance in the link",
+            "at in the link"]);
+    });
+
+    test("readOnlyWhy names only a kept row's reason: part 2 edits the rest", () =>
+    {
+        const root = rootOf(EXAMPLES[3][1], RMAP);
+        const rows = Array.from(allRows(root), ({ row }) => row);
+        rows.push({ kind: "compare", left: "a", op: "equals", right: "b", nots: 0 });
+
+        expect(rows.map(readOnlyWhy).filter(Boolean)).toEqual([]);
+        expect(readOnlyWhy({ kind: "kept", node: { kind: "x" }, what: "A part", nots: 0 })).toBe("A part");
     });
 });
 

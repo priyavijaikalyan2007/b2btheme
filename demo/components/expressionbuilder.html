@@ -6,8 +6,10 @@
   COMPONENT: DemoPage-ExpressionBuilder
   PURPOSE: Standalone demo page for the ExpressionBuilder component (#207),
            shown as a grid of rows (#237). A query with a group, a dashed
-           run that the precedence reads, and a read-only search inside, with
-           the tree it makes and a sample warning placed on a row.
+           run that the precedence reads, a search inside and link
+           conditions as grids under their row, two items named with "the
+           same item as" and a comparison of them, with the tree it makes and
+           a sample warning placed on a row.
   RELATES: [[ExpressionBuilder]], [[GestureRecognizer]], [[DemoShell]]
 -->
 <!DOCTYPE html>
@@ -63,8 +65,11 @@
                 from the toolbar. Drag a row or a group by its handle into, out of or between groups, or use
                 <strong>Move up</strong> and <strong>Move down</strong>, or <kbd>Alt</kbd> with an arrow key.
                 <kbd>Alt</kbd>+<kbd>G</kbd> groups and <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> ungroups.
-                The search inside on the last row is read-only in this version. The API decides what a query
-                means, so this page has no Parse or Print call. It shows the tree the builder reports.
+                <strong>Signed off by</strong> has a search inside and conditions on its link, each a grid under
+                its row. A row moves into and out of the search inside, and none moves into the link's grid.
+                <strong>Created by</strong> and <strong>Reviewed by</strong> each name an item with
+                <strong>the same item as</strong>, and the last row compares the two. The API decides what a
+                query means, so this page has no Parse or Print call. It shows the tree the builder reports.
             </p>
             <div id="eb-demo"></div>
             <div class="d-flex gap-2 mt-2">
@@ -93,8 +98,9 @@
             if (span) { node.span = span; }
             return node;
         };
-        // Two runs of And rows inside an Or, so two dashed brackets, a group inside the first, and a
-        // search inside that this version shows read-only.
+        var item = function(key, name) { return { kind: "filter", key: key, op: "Equals", value: { var: name } }; };
+        // Two runs of And rows inside an Or, so two dashed brackets, and a group inside the first. The second
+        // has a search inside with link conditions, and a comparison of two items the query names.
         var tree = { root: { kind: "or", children: [
             { kind: "and", children: [
                 f("type", "bug"),
@@ -103,7 +109,11 @@
             ] },
             { kind: "and", children: [
                 f("type", "task"),
-                { kind: "nested", key: "rel.signed_off_by", where: f("state", "active") }
+                { kind: "nested", key: "rel.signed_off_by", link: f("provenance", "manual"),
+                    where: f("state", "active") },
+                item("rel.created_by", "doer"),
+                item("rel.reviewed_by", "reviewer"),
+                { kind: "compare", left: { var: "reviewer" }, op: "NotEquals", right: { var: "doer" } }
             ] }
         ] } };
 
@@ -113,7 +123,12 @@
                 { key: "state", label: "State", valueType: "enum", values: ["active", "resolved", "closed"] },
                 { key: "assigned", label: "Assigned to", valueType: "text", values: ["me"] },
                 { key: "priority", label: "Priority", valueType: "enum", values: ["1", "2", "3"] },
-                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true }
+                { key: "rel.created_by", label: "Created by", valueType: "text", relationship: true },
+                { key: "rel.reviewed_by", label: "Reviewed by", valueType: "text", relationship: true },
+                { key: "rel.signed_off_by", label: "Signed off by", valueType: "text", relationship: true, link: [
+                    { key: "provenance", label: "Provenance", valueType: "enum", values: ["manual", "ai"] },
+                    { key: "at", label: "Made", valueType: "date" }
+                ] }
             ],
             tree: tree,
             onChange: function(t) { out.textContent = JSON.stringify(t, null, 2); }
