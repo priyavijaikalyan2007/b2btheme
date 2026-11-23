@@ -1108,7 +1108,8 @@ export class CommandPalette implements CommandPaletteHandle
             const idx = this.visibleItems.indexOf(el);
             if (idx >= 0) { this.highlightIdx = idx; this.executeHighlighted(); }
         });
-        el.addEventListener("mouseenter", () =>
+        // A pointer over a row highlights it, from any pointer (TOUCH_EXPERIENCE.md section 9, item 1).
+        el.addEventListener("pointerenter", () =>
         {
             const idx = this.visibleItems.indexOf(el);
             if (idx >= 0) { this.setHighlight(idx); }
@@ -1274,7 +1275,7 @@ export class CommandPalette implements CommandPaletteHandle
                 self.executeHighlighted();
             }
         });
-        el.addEventListener("mouseenter", function()
+        el.addEventListener("pointerenter", function()
         {
             const idx = self.visibleItems.indexOf(el);
             if (idx >= 0) { self.setHighlight(idx); }
